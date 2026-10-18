@@ -24,3 +24,4 @@ Format: [Keep a Changelog](https://keepachangelog.com/pl/1.1.0/), wersjonowanie:
 - Moduł `feature:projects:impl`: `JsonProjectStore` utrwala listę projektów w `projects.json` (schemat v1, ADR 0009) przez `JsonStore`, z fabryką `projectsModule(...)`.
 - `DirectoryInspector` w `feature:projects:impl`: sprawdzenie katalogu przed dodaniem (gałąź git bez blokad, `CLAUDE.md`, aktywne sesje, nasze hooki w `.claude/settings*.json` wg ADR 0010) z fabryką `projectInspectorModule(...)`.
 - Sidebar projektów w oknie aplikacji (`feature:projects:ui`): dodawanie folderu z dysku (⌘⇧O) z raportem inspektora, usuwanie z potwierdzeniem (⌘⌫) i wyborem, czy zatrzymać aktywne sesje, baner przy problemie z `projects.json`.
+- Moduł `feature:sessions:api`: kontrakty `SessionMonitor` (snapshot sesji, zdarzenia) i `SessionCommands` (start, stop, `stopAllIn`, respawn, usuwanie), reguły przypisania sesji do projektu i liczniki, z `FakeSessions` i testami kontraktowymi w `testFixtures`.
