@@ -13,6 +13,7 @@ Aplikacja **nie uruchamia własnego orkiestratora**. Steruje oficjalnym supervis
 
 | Plik | Zawartość |
 | --- | --- |
+| [00-research.md](00-research.md) | Research wyjściowy: supervisor Claude Code jako backend, hooki, porównanie stacków, istniejące narzędzia (zapis historyczny) |
 | [01-wizja-i-zakres.md](01-wizja-i-zakres.md) | Problem, użytkownik, cele, czego nie robimy |
 | [02-wymagania.md](02-wymagania.md) | Wymagania funkcjonalne (FR) i niefunkcjonalne (NFR) z priorytetami |
 | [03-architektura.md](03-architektura.md) | Stack (Kotlin + Compose Desktop), integracja z Claude Code, moduły, model danych |
