@@ -36,7 +36,7 @@ Natywna aplikacja macOS (Kotlin + Compose Desktop) do zarządzania lokalnymi age
 ./gradlew :app:run                       # uruchomienie aplikacji
 ```
 
-Do czasu zadania AM-101 projekt nie ma jeszcze Gradle; wtedy bramką jest lint dokumentacji w CI.
+Gradle 9.7 z wrapperem i JDK 21 (toolchain). Convention plugins: `am.kotlin`, `am.feature.api`, `am.feature.impl`, `am.feature.ui` w `build-logic/`; wersje tylko w `gradle/libs.versions.toml`. Repozytoria deklaruje wyłącznie `settings.gradle.kts`.
 
 ## Git i GitHub
 

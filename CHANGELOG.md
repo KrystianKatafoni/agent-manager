@@ -9,3 +9,4 @@ Format: [Keep a Changelog](https://keepachangelog.com/pl/1.1.0/), wersjonowanie:
 - Dokumentacja koncepcyjna, plan wdrożenia i roadmapa.
 - Konfiguracja agenta Claude Code: CLAUDE.md, subagenci, skille, hooki i uprawnienia.
 - Automatyzacja GitHub: CI, `@claude`, review PR, cotygodniowy przegląd kompatybilności, wydania.
+- Build Gradle 9.7 (wrapper, JDK 21), katalog wersji i convention plugins `am.kotlin`, `am.feature.api|impl|ui` z testami TestKit.
