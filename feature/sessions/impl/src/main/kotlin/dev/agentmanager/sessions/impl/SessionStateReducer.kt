@@ -68,7 +68,12 @@ internal object SessionStateReducer {
             listing
                 .distinctBy { it.id }
                 .sortedWith(compareBy<RuntimeSession> { it.startedAt }.thenBy { it.id.value })
-                .map { runtime -> known[runtime.id] to runtime.toSession(known[runtime.id], projects, now, baseline) }
+                .map { runtime ->
+                    known[runtime.id].let { before ->
+                        before to
+                            runtime.toSession(before, projects, now, baseline)
+                    }
+                }
         val events = if (baseline) emptyList() else pairs.mapNotNull { (before, after) -> eventFor(before, after) }
         return Reduction(SessionsSnapshot(pairs.map { it.second }, SnapshotStatus.Fresh(now)), events)
     }

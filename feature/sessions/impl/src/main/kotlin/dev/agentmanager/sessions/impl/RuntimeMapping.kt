@@ -20,10 +20,9 @@ internal fun RuntimeSession.toSessionState(): SessionState =
         }
 
         RuntimePhase.BLOCKED -> {
-            if (waitingFor == WaitingFor.Permission) {
-                SessionState.AwaitingPermission(tool = null)
-            } else {
-                SessionState.AwaitingInput(question = null)
+            when (waitingFor) {
+                WaitingFor.Permission -> SessionState.AwaitingPermission(tool = null)
+                WaitingFor.Input, is WaitingFor.Other, null -> SessionState.AwaitingInput(question = null)
             }
         }
 
