@@ -14,12 +14,20 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.agentmanager.projects.ui.ProjectsController
 
 /** Root of the window content. Mission Control moves to `feature:mission-control:ui` once it has data. */
 @Composable
 internal fun AgentManagerApp(modifier: Modifier = Modifier) {
     MissionControlEmpty(modifier)
 }
+
+/** The window content: the projects sidebar next to Mission Control (AM-304). */
+@Composable
+internal fun AgentManagerApp(
+    projects: ProjectsController,
+    modifier: Modifier = Modifier,
+): Unit = TODO("AM-304: $projects $modifier")
 
 /** Mission Control before any project is added. */
 @Composable
