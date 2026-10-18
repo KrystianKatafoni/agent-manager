@@ -95,36 +95,50 @@ data class ShellCommand(val argv: List<String>, val workDir: Path, val env: Map<
 
 ```kotlin
 // agent-runtime:api — port do środowiska, które uruchamia agentów (dziś: supervisor Claude Code)
+// Każda metoda suspend: dowolny dispatcher, nie blokuje wątku, nie rzuca poza CancellationException.
+@JvmInline value class ConversationId(val value: String)   // UUID rozmowy (hook session_id); łączy hooki z pollingiem
+
 interface AgentRuntime {
-    suspend fun listSessions(under: Path? = null): Outcome<List<RuntimeSession>, RuntimeError>
-    suspend fun start(spec: StartSpec): Outcome<SessionId, RuntimeError>
+    suspend fun listSessions(under: Path? = null): Outcome<List<RuntimeSession>, RuntimeError>  // cwd == under lub poniżej
+    suspend fun start(spec: StartSpec): Outcome<SessionId, RuntimeError>    // claude --bg
     suspend fun stop(id: SessionId): Outcome<Unit, RuntimeError>
     suspend fun respawn(id: SessionId): Outcome<Unit, RuntimeError>
-    suspend fun remove(id: SessionId): Outcome<Unit, RuntimeError>
-    suspend fun recentOutput(id: SessionId): Outcome<String, RuntimeError>
-    fun attachCommand(id: SessionId): ShellCommand          // uruchamiane przez terminal w PTY
-    suspend fun health(): RuntimeHealth                     // wersja, Agent View włączony, supervisor żyje
+    suspend fun remove(id: SessionId): Outcome<Unit, RuntimeError>          // nigdy nie usuwa plików projektu
+    suspend fun recentOutput(id: SessionId): Outcome<String, RuntimeError>  // ogon claude logs, już przycięty
+    fun attachCommand(id: SessionId): ShellCommand          // czysta funkcja; uruchamiane przez terminal w PTY
+    suspend fun health(): RuntimeHealth                     // nigdy nie zawodzi: problemy są w RuntimeHealth
 }
 
 data class RuntimeSession(
-    val id: SessionId, val conversationId: String?, val name: String, val cwd: Path,
+    val id: SessionId, val conversationId: ConversationId?, val name: String, val cwd: Path,
     val phase: RuntimePhase, val waitingFor: WaitingFor?, val startedAt: Instant, val pid: Long?,
 )
 enum class RuntimePhase { WORKING, BLOCKED, DONE, FAILED, STOPPED }
 sealed interface WaitingFor { data object Permission : WaitingFor; data object Input : WaitingFor; data class Other(val raw: String) : WaitingFor }
 
+data class StartSpec(                                       // FR-S3; toString ukrywa prompt (ENG-C8)
+    val cwd: Path, val prompt: String, val name: String? = null, val agent: String? = null,
+    val model: String? = null, val permissionMode: PermissionMode? = null,
+)
+enum class PermissionMode { DEFAULT, ACCEPT_EDITS, PLAN, BYPASS_PERMISSIONS }
+
+data class RuntimeHealth(val version: String?, val agentViewEnabled: Boolean, val supervisorRunning: Boolean,
+                         val problems: List<RuntimeError>) { val isReady: Boolean /* problems.isEmpty() */ }
+object RuntimeRequirements { const val MIN_CLAUDE_VERSION = "2.1.139" }   // NFR-9, docs/compat.md
+
 sealed interface RuntimeError {
     data object NotInstalled : RuntimeError
     data class UnsupportedVersion(val found: String, val required: String) : RuntimeError
     data object AgentViewDisabled : RuntimeError
+    data class UnknownSession(val id: SessionId) : RuntimeError
     data class CommandFailed(val exitCode: Int, val stderrTail: String) : RuntimeError
-    data class Unparseable(val detail: String) : RuntimeError
+    data class Unparseable(val detail: String) : RuntimeError   // stała kategoria, nigdy treść wejścia
     data object Timeout : RuntimeError
 }
 
-interface AgentEventSource { val events: Flow<AgentEvent> }  // zdarzenia z hooków HTTP
-data class EventMeta(val conversationId: String, val cwd: Path, val at: Instant)
-sealed interface AgentEvent {
+interface AgentEventSource { val events: Flow<AgentEvent> }  // zdarzenia z hooków HTTP; gorący, bez replay
+data class EventMeta(val conversationId: ConversationId, val cwd: Path, val at: Instant)
+sealed interface AgentEvent {                                 // question/lastMessage: tylko DEBUG, toString je ukrywa
     val meta: EventMeta
     data class NeedsInput(override val meta: EventMeta, val question: String?) : AgentEvent
     data class PermissionRequested(override val meta: EventMeta, val tool: String?) : AgentEvent
@@ -135,8 +149,25 @@ sealed interface AgentEvent {
 
 interface HookInstaller {
     suspend fun status(scope: HookScope): HookStatus
-    suspend fun install(scope: HookScope): Outcome<BackupRef, HookError>   // zawsze z kopią zapasową
-    suspend fun uninstall(scope: HookScope, backup: BackupRef?): Outcome<Unit, HookError>
+    suspend fun install(scope: HookScope): Outcome<BackupRef, HookError>   // zawsze z kopią zapasową; idempotentne
+    suspend fun uninstall(scope: HookScope, backup: BackupRef?): Outcome<Unit, HookError>  // tylko nasze hooki; z backup: przywraca kopię
+}
+sealed interface HookScope {
+    data object Global : HookScope                       // ~/.claude/settings.json
+    data class Project(val dir: Path) : HookScope        // <dir>/.claude/settings.local.json
+}
+enum class HookKind { NOTIFICATION, STOP, STOP_FAILURE, SESSION_START, SESSION_END }
+sealed interface HookStatus {
+    data object NotInstalled : HookStatus
+    data object Installed : HookStatus
+    data class Partial(val missing: Set<HookKind>) : HookStatus
+    data class Unreadable(val reason: String) : HookStatus        // stała kategoria
+}
+@JvmInline value class BackupRef(val value: String)             // nieprzezroczysty uchwyt kopii (hooks-backup/)
+sealed interface HookError {                                     // reason: stała kategoria, nigdy treść pliku
+    data class SettingsUnreadable(val file: Path, val reason: String) : HookError
+    data class WriteFailed(val file: Path, val reason: String) : HookError
+    data class BackupNotFound(val ref: BackupRef) : HookError
 }
 ```
 
