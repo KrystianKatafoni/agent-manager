@@ -11,3 +11,8 @@ tasks.test {
     // Sources of all modules are inputs; never serve a stale result from the build cache.
     outputs.upToDateWhen { false }
 }
+
+// The agent's Stop hook runs quickCheck; architecture rules are fast enough to belong there.
+tasks.named("quickCheck") {
+    dependsOn(tasks.test)
+}

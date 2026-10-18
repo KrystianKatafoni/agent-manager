@@ -23,7 +23,10 @@ object ModuleRules {
 }
 
 /** Fails the build as soon as this project declares a project dependency that [violates] a rule. */
-fun Project.enforceModuleRule(ruleName: String, violates: (String) -> Boolean) {
+fun Project.enforceModuleRule(
+    ruleName: String,
+    violates: (String) -> Boolean,
+) {
     val self = path
     configurations.configureEach {
         val configuration = name

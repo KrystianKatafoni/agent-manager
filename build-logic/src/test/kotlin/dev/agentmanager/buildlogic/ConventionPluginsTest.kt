@@ -14,7 +14,6 @@ import java.io.File
  * other modules rely on. These builds resolve real dependencies, so they need network access.
  */
 class ConventionPluginsTest {
-
     @TempDir
     lateinit var projectDir: File
 
@@ -105,6 +104,26 @@ class ConventionPluginsTest {
         assertEquals(TaskOutcome.SUCCESS, result.task(":compileKotlin")?.outcome)
     }
 
+    @Test
+    fun `quickCheck rejects println through detekt`() {
+        givenModule("am.kotlin")
+        write("src/main/kotlin/sample/Noisy.kt", "package sample\n\nfun noisy() {\n    println(\"debug\")\n}\n")
+
+        val result = runner("quickCheck").buildAndFail()
+
+        assertTrue(result.output.contains("ForbiddenMethodCall"), "Expected detekt violation, got:\n${result.output}")
+    }
+
+    @Test
+    fun `quickCheck passes on clean code`() {
+        givenModule("am.kotlin")
+        write("src/main/kotlin/sample/Quiet.kt", "package sample\n\nfun double(x: Int): Int = x * 2\n")
+
+        val result = build("quickCheck")
+
+        assertEquals(TaskOutcome.SUCCESS, result.task(":quickCheck")?.outcome)
+    }
+
     private fun givenModule(pluginId: String) {
         val catalog = System.getProperty("am.versionCatalog").replace("\\", "/")
         write(
@@ -120,20 +139,26 @@ class ConventionPluginsTest {
                 }
             }
             rootProject.name = "sample"
-            """.trimIndent(),
+            """.trimIndent() + "\n",
         )
         write("build.gradle.kts", "plugins {\n    id(\"$pluginId\")\n}\n")
+        write("config/detekt/detekt.yml", File(System.getProperty("am.detektConfig")).readText())
     }
 
-    private fun write(path: String, content: String) {
+    private fun write(
+        path: String,
+        content: String,
+    ) {
         File(projectDir, path).apply { parentFile.mkdirs() }.writeText(content)
     }
 
-    private fun runner(vararg tasks: String): GradleRunner = GradleRunner.create()
-        .withProjectDir(projectDir)
-        .withPluginClasspath()
-        .withArguments(*tasks, "--stacktrace")
-        .forwardOutput()
+    private fun runner(vararg tasks: String): GradleRunner =
+        GradleRunner
+            .create()
+            .withProjectDir(projectDir)
+            .withPluginClasspath()
+            .withArguments(*tasks, "--stacktrace")
+            .forwardOutput()
 
     private fun build(vararg tasks: String): BuildResult = runner(*tasks).build()
 }

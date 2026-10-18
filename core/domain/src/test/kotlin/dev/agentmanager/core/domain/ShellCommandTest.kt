@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test
 import java.nio.file.Path
 
 class ShellCommandTest {
-
     private val dir = Path.of("/tmp/project")
 
     @Test

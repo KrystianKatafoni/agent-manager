@@ -7,11 +7,12 @@ import java.io.IOException
 import kotlin.coroutines.cancellation.CancellationException
 
 class OutcomeTest {
-
     private sealed interface TestError {
         data object NotFound : TestError
 
-        data class Io(val reason: String) : TestError
+        data class Io(
+            val reason: String,
+        ) : TestError
     }
 
     private val ok: Outcome<Int, TestError> = Outcome.Ok(2)

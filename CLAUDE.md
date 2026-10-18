@@ -32,11 +32,12 @@ Natywna aplikacja macOS (Kotlin + Compose Desktop) do zarządzania lokalnymi age
 ./gradlew :feature:<x>:impl:test         # testy jednego modułu
 ./gradlew :tests:architecture:test       # reguły modułów (Konsist; pominięte = moduł jeszcze nie istnieje)
 ./gradlew :tests:functional:test         # scenariusze UI
+./gradlew quickCheck                     # szybka bramka: format + detekt + architektura (hook Stop)
 ./gradlew spotlessApply                  # formatowanie
 ./gradlew :app:run                       # uruchomienie aplikacji
 ```
 
-Gradle 9.7 z wrapperem i JDK 21 (toolchain). Convention plugins: `am.kotlin`, `am.feature.api`, `am.feature.impl`, `am.feature.ui` w `build-logic/`; wersje tylko w `gradle/libs.versions.toml`. Repozytoria deklaruje wyłącznie `settings.gradle.kts`.
+Gradle 9.7 z wrapperem i JDK 21 (toolchain). Convention plugins: `am.kotlin` (z `am.quality`: Spotless/ktlint, detekt, Kover), `am.feature.api`, `am.feature.impl`, `am.feature.ui` w `build-logic/`; reguły detekt w `config/detekt/detekt.yml`; wersje tylko w `gradle/libs.versions.toml`. Repozytoria deklaruje wyłącznie `settings.gradle.kts`.
 
 ## Git i GitHub
 

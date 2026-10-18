@@ -9,7 +9,9 @@ import kotlin.time.toJavaDuration
 public val T0: Instant = Instant.parse("2026-01-01T09:00:00Z")
 
 /** Manually driven [Clock]: time moves only when the test says so. */
-public class TestClock(start: Instant = T0) : Clock {
+public class TestClock(
+    start: Instant = T0,
+) : Clock {
     private var current: Instant = start
 
     override fun now(): Instant = current
