@@ -40,21 +40,24 @@ public fun ProjectsSidebar(
     modifier: Modifier = Modifier,
 ) {
     val state by controller.state.collectAsState()
-    Column(
-        modifier =
-            modifier
-                .width(width = 260.dp)
-                .fillMaxHeight()
-                .background(color = SidebarColors.background)
-                .padding(all = 12.dp)
-                .testTag(ProjectsTags.SIDEBAR),
-        verticalArrangement = Arrangement.spacedBy(space = 8.dp),
-    ) {
-        Label(ProjectsStrings["sidebar.title"], SidebarColors.secondaryText)
-        state.banner?.let { Banner(it) { controller.onEvent(SidebarEvent.DismissBanner) } }
-        ProjectList(state, controller)
-        TextButton(ProjectsStrings["sidebar.add"], ProjectsTags.ADD_BUTTON) {
-            controller.onIntent(ProjectsIntent.AddRequested)
+    // The dialog popup sits outside the Column, so it takes no slot in its spacing.
+    Box(modifier = modifier) {
+        Column(
+            modifier =
+                Modifier
+                    .width(width = 260.dp)
+                    .fillMaxHeight()
+                    .background(color = SidebarColors.background)
+                    .padding(all = 12.dp)
+                    .testTag(ProjectsTags.SIDEBAR),
+            verticalArrangement = Arrangement.spacedBy(space = 8.dp),
+        ) {
+            Label(ProjectsStrings["sidebar.title"], SidebarColors.secondaryText)
+            state.banner?.let { Banner(it) { controller.onEvent(SidebarEvent.DismissBanner) } }
+            ProjectList(state, controller)
+            TextButton(ProjectsStrings["sidebar.add"], ProjectsTags.ADD_BUTTON) {
+                controller.onIntent(ProjectsIntent.AddRequested)
+            }
         }
         state.dialog?.let { ProjectsDialog(it, controller::onEvent) }
     }

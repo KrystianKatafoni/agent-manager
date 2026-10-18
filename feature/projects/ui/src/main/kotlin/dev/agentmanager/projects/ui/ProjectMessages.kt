@@ -8,6 +8,8 @@ import dev.agentmanager.projects.api.StorageProblem
 
 /** Fixed texts for errors and storage issues; never contain a path or a name (ENG-C8). */
 internal object ProjectMessages {
+    private val maxNameLength = ProjectInputRules.MAX_DISPLAY_NAME_LENGTH.toString()
+
     fun of(error: ProjectError): UiText =
         when (error) {
             is ProjectError.NotAbsolute -> UiText("error.notAbsolute")
@@ -28,20 +30,9 @@ internal object ProjectMessages {
 
     private fun of(problem: NameProblem): UiText =
         when (problem) {
-            NameProblem.BLANK -> {
-                UiText("error.name.blank")
-            }
-
-            NameProblem.TOO_LONG -> {
-                UiText(
-                    "error.name.tooLong",
-                    listOf(ProjectInputRules.MAX_DISPLAY_NAME_LENGTH.toString()),
-                )
-            }
-
-            NameProblem.CONTROL_CHARACTERS -> {
-                UiText("error.name.controlCharacters")
-            }
+            NameProblem.BLANK -> UiText("error.name.blank")
+            NameProblem.TOO_LONG -> UiText("error.name.tooLong", listOf(maxNameLength))
+            NameProblem.CONTROL_CHARACTERS -> UiText("error.name.controlCharacters")
         }
 
     private fun of(problem: StorageProblem): UiText =

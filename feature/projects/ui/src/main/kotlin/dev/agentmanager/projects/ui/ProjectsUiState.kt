@@ -1,6 +1,7 @@
 package dev.agentmanager.projects.ui
 
 import dev.agentmanager.core.domain.ProjectId
+import dev.agentmanager.core.domain.SessionId
 import dev.agentmanager.projects.api.DirectoryReport
 import dev.agentmanager.projects.api.Project
 
@@ -21,8 +22,23 @@ internal data class ProjectsUiState(
 
 /** The dialog flow in progress; at most one at a time. */
 internal sealed interface Dialog {
-    /** The picked folder is being inspected; [SidebarEvent.Dismiss] cancels it. */
-    data object Inspecting : Dialog
+    /** The system folder chooser is open; it is modal, so the sidebar shows nothing over it. */
+    data object Picking : Dialog
+
+    /** A step is running; [INSPECTING] and [CHECKING_SESSIONS] end with [SidebarEvent.Dismiss], [BUSY] does not. */
+    enum class Waiting(
+        val tag: String,
+        val key: String,
+    ) : Dialog {
+        /** The picked folder is being inspected. */
+        INSPECTING(ProjectsTags.INSPECTING, "add.inspecting"),
+
+        /** The sessions of the project are listed before the remove dialog opens. */
+        CHECKING_SESSIONS(ProjectsTags.CHECKING_SESSIONS, "remove.checking"),
+
+        /** A confirmed command (add, stop, remove) is running. */
+        BUSY(ProjectsTags.BUSY, "dialog.busy"),
+    }
 
     /** Inspection report waiting for "Add"; [error] is set when adding failed and the dialog stays. */
     data class ConfirmAdd(
@@ -30,19 +46,11 @@ internal sealed interface Dialog {
         val error: UiText? = null,
     ) : Dialog
 
-    /** Listing the sessions of [project] before the remove dialog opens. */
-    data class CheckingSessions(
-        val project: Project,
-    ) : Dialog
-
-    /** Remove confirmation; [active] = working and blocked sessions, null = they could not be listed. */
+    /** Remove confirmation; [sessions] = working and blocked sessions, null = they could not be listed. */
     data class ConfirmRemove(
         val project: Project,
-        val active: Int?,
+        val sessions: List<SessionId>?,
     ) : Dialog
-
-    /** A confirmed command (add, stop, remove) is running. */
-    data object Busy : Dialog
 
     /** A fixed message without paths, closed with [SidebarEvent.Dismiss]. */
     data class Message(
@@ -52,6 +60,7 @@ internal sealed interface Dialog {
 
 /** Clicks inside the sidebar and its dialogs. */
 internal sealed interface SidebarEvent {
+    /** A row click; ignored while a dialog is open. */
     data class Select(
         val id: ProjectId,
     ) : SidebarEvent

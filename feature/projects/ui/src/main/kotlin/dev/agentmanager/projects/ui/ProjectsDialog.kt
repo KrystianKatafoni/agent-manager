@@ -25,13 +25,15 @@ import androidx.compose.ui.window.PopupProperties
 
 /**
  * The open [dialog] over the whole window, inside it rather than a separate window (AM-304 plan, decision 4).
- * Escape is "Cancel"; the controller ignores it while a confirmed command runs.
+ * Escape is "Cancel"; the controller ignores it while a confirmed command runs. Nothing is shown while the
+ * system folder chooser is open ([Dialog.Picking]).
  */
 @Composable
 internal fun ProjectsDialog(
     dialog: Dialog,
     onEvent: (SidebarEvent) -> Unit,
 ) {
+    if (dialog == Dialog.Picking) return
     Popup(
         popupPositionProvider = WholeWindow,
         onDismissRequest = { onEvent(SidebarEvent.Dismiss) },
@@ -53,11 +55,15 @@ private fun DialogContent(
 ) {
     val cancel = { onEvent(SidebarEvent.Dismiss) }
     when (dialog) {
-        Dialog.Inspecting -> Waiting(ProjectsTags.INSPECTING, "add.inspecting", cancel)
+        Dialog.Picking -> Unit
+
+        // Not shown, see ProjectsDialog.
+        is Dialog.Waiting -> Waiting(dialog, onCancel = cancel.takeIf { dialog != Dialog.Waiting.BUSY })
+
         is Dialog.ConfirmAdd -> ConfirmAdd(dialog, onEvent)
-        is Dialog.CheckingSessions -> Waiting(ProjectsTags.CHECKING_SESSIONS, "remove.checking", cancel)
+
         is Dialog.ConfirmRemove -> ConfirmRemove(dialog, onEvent)
-        Dialog.Busy -> Waiting(ProjectsTags.BUSY, "dialog.busy", onCancel = null)
+
         is Dialog.Message -> Message(dialog.text, cancel)
     }
 }
@@ -65,11 +71,10 @@ private fun DialogContent(
 /** A dialog waiting for a step to finish; [onCancel] null = the step cannot be cancelled. */
 @Composable
 private fun Waiting(
-    tag: String,
-    key: String,
+    step: Dialog.Waiting,
     onCancel: (() -> Unit)?,
 ) {
-    Panel(tag, ProjectsStrings[key]) { onCancel?.let { Cancel(it) } }
+    Panel(step.tag, ProjectsStrings[step.key]) { onCancel?.let { Cancel(it) } }
 }
 
 @Composable
@@ -105,18 +110,19 @@ private fun ConfirmRemove(
     val keepSessions = { onEvent(SidebarEvent.RemoveKeepSessions) }
     Panel(ProjectsTags.CONFIRM_REMOVE, ProjectsStrings["remove.title"]) {
         Label(dialog.project.displayName)
-        when (val active = dialog.active) {
-            null -> {
+        val sessions = dialog.sessions
+        when {
+            sessions == null -> {
                 Label(ProjectsStrings["remove.sessionsUnknown"])
                 TextButton(ProjectsStrings["remove.removeFromList"], ProjectsTags.REMOVE, keepSessions)
             }
 
-            0 -> {
+            sessions.isEmpty() -> {
                 TextButton(ProjectsStrings["remove.confirm"], ProjectsTags.REMOVE, keepSessions)
             }
 
             else -> {
-                Label(ProjectsStrings.format(UiText("remove.activeSessions", listOf(active.toString()))))
+                Label(ProjectsStrings.format(UiText("remove.activeSessions", listOf(sessions.size.toString()))))
                 TextButton(ProjectsStrings["remove.stopAndRemove"], ProjectsTags.STOP_AND_REMOVE) {
                     onEvent(SidebarEvent.StopAndRemove)
                 }

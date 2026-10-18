@@ -56,6 +56,20 @@ class ProjectsControllerTest {
         }
 
     @Test
+    fun `selection does not change while a dialog is open`() =
+        runTest {
+            val other = aProject(id = "other", dir = Path.of("/Users/test/projects/other"))
+            val world = ControllerWorld(projects = FakeProjectsApi(initial = listOf(aProject(), other)))
+            val controller = start(world)
+            act { controller.onEvent(SidebarEvent.Select(aProject().id)) }
+            act { controller.onIntent(ProjectsIntent.RemoveSelectedRequested) }
+
+            act { controller.onEvent(SidebarEvent.Select(other.id)) }
+
+            controller.state.value.selected shouldBe aProject().id
+        }
+
+    @Test
     fun `storage issue banner stays until dismissed`() =
         runTest {
             val world =

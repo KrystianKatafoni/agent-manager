@@ -18,13 +18,10 @@ import androidx.compose.ui.unit.sp
 import dev.agentmanager.projects.ui.ProjectsController
 import dev.agentmanager.projects.ui.ProjectsSidebar
 
-/** Root of the window content. Mission Control moves to `feature:mission-control:ui` once it has data. */
-@Composable
-internal fun AgentManagerApp(modifier: Modifier = Modifier) {
-    MissionControlEmpty(modifier)
-}
-
-/** The window content: the projects sidebar next to Mission Control (AM-304). */
+/**
+ * The window content: the projects sidebar next to Mission Control (AM-304). Mission Control moves to
+ * `feature:mission-control:ui` once it has data.
+ */
 @Composable
 internal fun AgentManagerApp(
     projects: ProjectsController,

@@ -60,7 +60,7 @@ class ProjectsControllerRemoveTest {
             val controller = start(world)
 
             requestRemove(controller)
-            controller.state.value.dialog shouldBe Dialog.ConfirmRemove(project, active = 0)
+            controller.state.value.dialog shouldBe Dialog.ConfirmRemove(project, sessions = emptyList())
             world.projects.calls.shouldBeEmpty()
 
             act { controller.onEvent(SidebarEvent.RemoveKeepSessions) }
@@ -77,7 +77,8 @@ class ProjectsControllerRemoveTest {
 
             requestRemove(controller)
 
-            controller.state.value.dialog shouldBe Dialog.ConfirmRemove(project, active = 2)
+            controller.state.value.dialog shouldBe
+                Dialog.ConfirmRemove(project, sessions = listOf(aSessionId("working"), aSessionId("blocked")))
             world.runtime.calls shouldBe listOf("listSessions")
         }
 
@@ -89,6 +90,23 @@ class ProjectsControllerRemoveTest {
             requestRemove(controller)
 
             act { controller.onEvent(SidebarEvent.StopAndRemove) }
+
+            world.runtime.stops() shouldContainExactly listOf("stop working", "stop blocked")
+            world.projects.calls shouldBe listOf("remove project0001")
+            controller.state.value shouldBe ProjectsUiState()
+        }
+
+    @Test
+    fun `a second stop and remove before the first runs is ignored`() =
+        runTest {
+            val world = world()
+            val controller = start(world)
+            requestRemove(controller)
+
+            act {
+                controller.onEvent(SidebarEvent.StopAndRemove)
+                controller.onEvent(SidebarEvent.StopAndRemove)
+            }
 
             world.runtime.stops() shouldContainExactly listOf("stop working", "stop blocked")
             world.projects.calls shouldBe listOf("remove project0001")
@@ -132,12 +150,12 @@ class ProjectsControllerRemoveTest {
             val controller = start(world)
             world.runtime.failNext(RuntimeError.Timeout)
             requestRemove(controller)
-            controller.state.value.dialog shouldBe Dialog.ConfirmRemove(project, active = null)
+            controller.state.value.dialog shouldBe Dialog.ConfirmRemove(project, sessions = null)
 
             act { controller.onEvent(SidebarEvent.StopAndRemove) }
             world.runtime.stops().shouldBeEmpty()
             world.projects.calls.shouldBeEmpty()
-            controller.state.value.dialog shouldBe Dialog.ConfirmRemove(project, active = null)
+            controller.state.value.dialog shouldBe Dialog.ConfirmRemove(project, sessions = null)
 
             act { controller.onEvent(SidebarEvent.RemoveKeepSessions) }
             world.projects.calls shouldBe listOf("remove project0001")

@@ -62,7 +62,7 @@ class ProjectsControllerAddTest {
             world.picker.willPick(A_PROJECT_DIR)
 
             act { controller.onIntent(ProjectsIntent.AddRequested) }
-            controller.state.value.dialog shouldBe Dialog.Inspecting
+            controller.state.value.dialog shouldBe Dialog.Waiting.INSPECTING
 
             act { world.inspector.release() }
             controller.state.value.dialog shouldBe Dialog.ConfirmAdd(report)
@@ -98,6 +98,24 @@ class ProjectsControllerAddTest {
             val added = Project(ProjectId("project0001"), A_PROJECT_DIR, "agent-manager")
             world.projects.calls shouldBe listOf("add $A_PROJECT_DIR")
             controller.state.value shouldBe ProjectsUiState(projects = listOf(added), selected = added.id)
+        }
+
+    @Test
+    fun `a second confirm before the first runs is ignored`() =
+        runTest {
+            val world = ControllerWorld(inspection = inspection)
+            val controller = start(world)
+            world.picker.willPick(A_PROJECT_DIR)
+            act { controller.onIntent(ProjectsIntent.AddRequested) }
+
+            act {
+                controller.onEvent(SidebarEvent.ConfirmAdd)
+                controller.onEvent(SidebarEvent.ConfirmAdd)
+            }
+
+            world.projects.calls shouldBe listOf("add $A_PROJECT_DIR")
+            controller.state.value.dialog
+                .shouldBeNull()
         }
 
     @Test
@@ -166,7 +184,7 @@ class ProjectsControllerAddTest {
             world.picker.picks shouldBe 1
             world.inspector.inspected.map(Path::toString) shouldBe listOf(A_PROJECT_DIR.toString())
             world.runtime.calls.shouldBeEmpty()
-            controller.state.value.dialog shouldBe Dialog.Inspecting
+            controller.state.value.dialog shouldBe Dialog.Waiting.INSPECTING
         }
 
     @Test

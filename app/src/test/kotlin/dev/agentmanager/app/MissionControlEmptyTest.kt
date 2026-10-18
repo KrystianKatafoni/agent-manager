@@ -23,7 +23,7 @@ class MissionControlEmptyTest {
     @Test
     fun `shows the empty state when there are no projects`() =
         runComposeUiTest {
-            setContent { AgentManagerApp() }
+            setContent { MissionControlEmpty() }
 
             onNodeWithTag(TestTags.EMPTY_STATE).assertIsDisplayed()
             onNodeWithText("Brak projektów").assertIsDisplayed()
