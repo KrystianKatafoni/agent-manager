@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
@@ -14,11 +15,22 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.agentmanager.projects.ui.ProjectsController
+import dev.agentmanager.projects.ui.ProjectsSidebar
 
-/** Root of the window content. Mission Control moves to `feature:mission-control:ui` once it has data. */
+/**
+ * The window content: the projects sidebar next to Mission Control (AM-304). Mission Control moves to
+ * `feature:mission-control:ui` once it has data.
+ */
 @Composable
-internal fun AgentManagerApp(modifier: Modifier = Modifier) {
-    MissionControlEmpty(modifier)
+internal fun AgentManagerApp(
+    projects: ProjectsController,
+    modifier: Modifier = Modifier,
+) {
+    Row(modifier = modifier.fillMaxSize()) {
+        ProjectsSidebar(projects)
+        MissionControlEmpty(Modifier.weight(weight = 1f))
+    }
 }
 
 /** Mission Control before any project is added. */

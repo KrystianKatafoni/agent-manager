@@ -1,6 +1,6 @@
 # ADR 0010: Rozpoznawanie hooków Agent Managera w `.claude/settings*.json`
 
-- **Status:** proponowana
+- **Status:** przyjęta
 - **Data:** 2026-10-18
 - **Dotyczy:** projects:impl (`DirectoryInspector`, AM-303), agent-runtime:impl (`HookInstaller`, AM-602)
 
