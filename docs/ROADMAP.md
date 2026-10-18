@@ -23,9 +23,9 @@
 - [x] AM-101 · Gradle wrapper, katalog wersji, convention plugins w build-logic · moduły: build-logic · zależy: AM-002 · wymagania: ENG-M1, ENG-M2 · issue: #9
 - [x] AM-102 · core:domain (ID, Outcome, Clock, Logger, ShellCommand) · moduły: core:domain · zależy: AM-101 · wymagania: ENG-M6, ENG-I3, ENG-I4 · issue: #10
 - [x] AM-103 · core:testing (TestClock, TestDispatchers, buildery) · moduły: core:testing · zależy: AM-102 · wymagania: ENG-T6 · issue: #11
-- [ ] AM-104 · Testy architektury Konsist + reguła Gradle impl→impl · moduły: tests:architecture, build-logic · zależy: AM-101 · wymagania: ENG-M3–M8, ENG-T5 · issue: #12
-- [ ] AM-105 · Spotless/ktlint, detekt, Kover, `./gradlew check` w CI na macOS, szybki task `quickCheck` dla hooka Stop · moduły: build-logic, .github · zależy: AM-104 · wymagania: ENG-C1, ENG sekcja E · issue: #13
-- [ ] AM-106 · core:process: LoginShellProcessRunner (timeouty, ucinanie wyjścia) · moduły: core:process · zależy: AM-102 · wymagania: ENG-M9 · issue: #14
+- [x] AM-104 · Testy architektury Konsist + reguła Gradle impl→impl · moduły: tests:architecture, build-logic · zależy: AM-101 · wymagania: ENG-M3–M8, ENG-T5 · issue: #12
+- [x] AM-105 · Spotless/ktlint, detekt, Kover, `./gradlew check` w CI na macOS, szybki task `quickCheck` dla hooka Stop · moduły: build-logic, .github · zależy: AM-104 · wymagania: ENG-C1, ENG sekcja E · issue: #13
+- [~] AM-106 · core:process: LoginShellProcessRunner (timeouty, ucinanie wyjścia) · moduły: core:process · zależy: AM-102 · wymagania: ENG-M9 · issue: #14
 - [ ] AM-107 · core:storage: JsonStore (zapis atomowy, migracje, *.broken) · moduły: core:storage · zależy: AM-102 · wymagania: 11 §8 · issue: #15
 - [ ] AM-108 · app: okno Compose, composition root, pusty Mission Control · moduły: app · zależy: AM-102 · wymagania: ENG-M8 · issue: #16
 
