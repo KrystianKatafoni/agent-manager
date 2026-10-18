@@ -20,3 +20,4 @@ Format: [Keep a Changelog](https://keepachangelog.com/pl/1.1.0/), wersjonowanie:
 - Moduł `feature:agent-runtime:api`: kontrakt `AgentRuntime`, `AgentEventSource` i `HookInstaller` z fake'ami i testami kontraktowymi w `testFixtures`.
 - Moduł `feature:agent-runtime:impl`: parser `claude agents --json` i `ClaudeCliAdapter` (lista, start w tle, stop, respawn, usuwanie, logi, attach) z fałszywym `claude` do testów.
 - Health check `ClaudeCliAdapter.health()`: wersja Claude Code ≥ 2.1.139, włączony Agent View i stan supervisora (`claude --version`, `claude daemon status`, `claude agents --json`).
+- Moduł `feature:projects:api`: kontrakty `ProjectsApi` i `ProjectInspector`, reguły `ProjectInputRules` oraz fake'i z testami kontraktowymi w `testFixtures`.

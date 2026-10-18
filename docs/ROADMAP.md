@@ -38,7 +38,7 @@
 
 ## M3 · Projekty
 
-- [ ] AM-301 · projects:api + kontrakt · moduły: projects:api · zależy: AM-103 · wymagania: FR-P1, FR-P3 · issue: #21
+- [~] AM-301 · projects:api + kontrakt · moduły: projects:api · zależy: AM-103 · wymagania: FR-P1, FR-P3 · issue: #21
 - [ ] AM-302 · JsonProjectStore · moduły: projects:impl · zależy: AM-301, AM-107 · wymagania: FR-P1, FR-P3 · issue: #22
 - [ ] AM-303 · DirectoryInspector (git, CLAUDE.md, sesje, hooki) · moduły: projects:impl · zależy: AM-302, AM-106 · wymagania: FR-P2 · issue: #23
 - [ ] AM-304 · projects:ui: sidebar, dodaj z dysku, usuń z dialogiem · moduły: projects:ui · zależy: AM-302, AM-108 · wymagania: FR-P1, FR-P3, FR-P4, FR-P6 · issue: #24
