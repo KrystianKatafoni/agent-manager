@@ -15,3 +15,4 @@ Format: [Keep a Changelog](https://keepachangelog.com/pl/1.1.0/), wersjonowanie:
 - Reguły zależności modułów w Gradle oraz testy architektury Konsist (`tests:architecture`).
 - Bramka jakości: Spotless/ktlint, detekt 2.0, progi pokrycia Kover i szybki task `quickCheck` dla hooka `Stop`.
 - Moduł `core:process`: `ProcessRunner` i `LoginShellProcessRunner` (login shell, timeouty, ucinanie wyjścia) z `FakeProcessRunner` w `testFixtures`.
+- Moduł `core:storage`: `JsonStore` z atomowym zapisem, wersją schematu, migracjami i odkładaniem uszkodzonych plików jako `*.broken`.
