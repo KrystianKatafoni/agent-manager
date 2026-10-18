@@ -1,4 +1,8 @@
-// Public contract of a feature: explicit visibility everywhere, contracts and fakes in testFixtures.
+import dev.agentmanager.buildlogic.ModuleRules
+import dev.agentmanager.buildlogic.enforceModuleRule
+
+// Public contract of a feature (and core modules): explicit visibility everywhere,
+// contracts and fakes in testFixtures, dependencies only on shared core modules.
 plugins {
     id("am.kotlin")
     `java-test-fixtures`
@@ -7,3 +11,5 @@ plugins {
 kotlin {
     explicitApi()
 }
+
+enforceModuleRule("api depends only on core:domain, core:design-tokens, core:testing", ModuleRules::violatesApiRule)

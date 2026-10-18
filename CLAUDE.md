@@ -30,7 +30,7 @@ Natywna aplikacja macOS (Kotlin + Compose Desktop) do zarządzania lokalnymi age
 ```bash
 ./gradlew check                          # pełna bramka (format, detekt, architektura, testy, pokrycie)
 ./gradlew :feature:<x>:impl:test         # testy jednego modułu
-./gradlew :tests:architecture:test       # reguły modułów (Konsist)
+./gradlew :tests:architecture:test       # reguły modułów (Konsist; pominięte = moduł jeszcze nie istnieje)
 ./gradlew :tests:functional:test         # scenariusze UI
 ./gradlew spotlessApply                  # formatowanie
 ./gradlew :app:run                       # uruchomienie aplikacji
