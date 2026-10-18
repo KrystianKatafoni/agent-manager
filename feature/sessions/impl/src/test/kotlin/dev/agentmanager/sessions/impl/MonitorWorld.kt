@@ -65,9 +65,9 @@ internal fun TestScope.monitorWorld(
     val clock = virtualClock()
     val monitor =
         if (pollInterval == null) {
-            sessionMonitorModule(runtime, projects, scope, clock, logger)
+            sessionsModule(runtime, projects, scope, clock, logger).monitor
         } else {
-            sessionMonitorModule(
+            sessionsModule(
                 runtime,
                 projects,
                 scope,
@@ -75,7 +75,7 @@ internal fun TestScope.monitorWorld(
                 logger,
                 pollInterval,
                 maxRetryInterval = 15.seconds,
-            )
+            ).monitor
         }
     return MonitorWorld(fake, runtime, projects, logger, monitor, scope)
 }

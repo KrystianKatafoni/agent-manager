@@ -1,5 +1,6 @@
-// Sessions feature (docs/11 §4, §6, §7): the pure SessionStateReducer and runtime mappings (AM-402) and
-// the polling SessionMonitor (AM-403), exposed through the sessionMonitorModule factory.
+// Sessions feature (docs/11 §4, §6, §7): the pure SessionStateReducer and runtime mappings (AM-402), the
+// polling SessionMonitor (AM-403) and the SessionCommands with their overlay (AM-404), exposed through the
+// sessionsModule factory.
 plugins {
     id("am.feature.impl")
 }

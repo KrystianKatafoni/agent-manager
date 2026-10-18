@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Failed listings of `sessionMonitorModule` (AM-403 plan, rules 3 and 4, docs/11 §7): stale snapshot,
+ * Failed listings of `sessionsModule` (AM-403 plan, rules 3 and 4, docs/11 §7): stale snapshot,
  * backoff and logs without user data (ENG-C8). `pollInterval = 2 s`, `max = 15 s`.
  */
 class PollingFailuresTest {

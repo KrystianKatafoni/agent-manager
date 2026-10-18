@@ -56,7 +56,8 @@ internal fun <T> TestScope.record(flow: Flow<T>): List<T> {
 /**
  * [AgentRuntime] over a [FakeAgentRuntime] that can be switched off: while off every `suspend`
  * operation returns [RuntimeError.NotInstalled] (`FakeAgentRuntime.failNext` fails only once).
- * Records the virtual time at which each listing started; a listing takes [listingTime].
+ * Records the virtual time at which each listing started; a listing takes [listingTime]. A stop of a
+ * session passed to [failStop] returns [RuntimeError.CommandFailed] and leaves the session running.
  */
 internal class SwitchableRuntime(
     val fake: FakeAgentRuntime,
@@ -65,12 +66,18 @@ internal class SwitchableRuntime(
 ) : AgentRuntime by fake {
     private val down = AtomicBoolean(false)
     private val listed = MutableStateFlow(emptyList<Long>())
+    private val failingStops = MutableStateFlow(emptySet<SessionId>())
 
     /** Virtual time in milliseconds at which each `listSessions` call started, in order. */
     val listedAtMillis: List<Long> get() = listed.value
 
     fun available(available: Boolean) {
         down.set(!available)
+    }
+
+    /** Every later stop of [id] fails with [RuntimeError.CommandFailed]; the session keeps running. */
+    fun failStop(id: SessionId) {
+        failingStops.update { it + id }
     }
 
     override suspend fun listSessions(under: Path?): Outcome<List<RuntimeSession>, RuntimeError> {
@@ -83,7 +90,11 @@ internal class SwitchableRuntime(
         if (down.get()) Outcome.Err(RuntimeError.NotInstalled) else fake.start(spec)
 
     override suspend fun stop(id: SessionId): Outcome<Unit, RuntimeError> =
-        if (down.get()) Outcome.Err(RuntimeError.NotInstalled) else fake.stop(id)
+        when {
+            down.get() -> Outcome.Err(RuntimeError.NotInstalled)
+            id in failingStops.value -> Outcome.Err(RuntimeError.CommandFailed(exitCode = 1, stderrTail = STOP_FAILED))
+            else -> fake.stop(id)
+        }
 
     override suspend fun respawn(id: SessionId): Outcome<Unit, RuntimeError> =
         if (down.get()) Outcome.Err(RuntimeError.NotInstalled) else fake.respawn(id)
@@ -93,4 +104,8 @@ internal class SwitchableRuntime(
 
     override suspend fun recentOutput(id: SessionId): Outcome<String, RuntimeError> =
         if (down.get()) Outcome.Err(RuntimeError.NotInstalled) else fake.recentOutput(id)
+
+    private companion object {
+        const val STOP_FAILED = "stop failed"
+    }
 }

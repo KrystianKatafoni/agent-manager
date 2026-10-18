@@ -14,6 +14,7 @@ import dev.agentmanager.projects.api.Project
 import dev.agentmanager.sessions.api.SessionCommands
 import dev.agentmanager.sessions.api.SessionMonitor
 import dev.agentmanager.sessions.api.SessionState
+import dev.agentmanager.sessions.api.SessionsApi
 import dev.agentmanager.sessions.api.SessionsHarness
 import dev.agentmanager.sessions.api.SessionsWorld
 import dev.agentmanager.sessions.api.WorldSession
@@ -25,7 +26,7 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * [SessionsHarness] over the polling monitor: the world becomes a [FakeProjectsApi] (display name =
  * id) and a [FakeAgentRuntime] behind a [SwitchableRuntime]; [settle] advances virtual time by one
- * poll interval. The commands side comes with AM-404.
+ * poll interval. Both sides come from one `sessionsModule`; [failStop] makes the runtime fail that stop.
  */
 internal class PollingHarness(
     private val scope: TestScope,
@@ -36,8 +37,8 @@ internal class PollingHarness(
     private val runtime = SwitchableRuntime(fake, now = { scope.testScheduler.currentTime })
     private val projects = FakeProjectsApi(world.projects.map { Project(it.id, it.dir, it.id.value) })
 
-    override val monitor: SessionMonitor =
-        sessionMonitorModule(
+    private val api: SessionsApi =
+        sessionsModule(
             runtime = runtime,
             projects = projects,
             scope = scope.backgroundScope,
@@ -46,8 +47,9 @@ internal class PollingHarness(
             pollInterval = pollInterval,
         )
 
-    override val commands: SessionCommands
-        get() = throw UnsupportedOperationException("AM-404")
+    override val monitor: SessionMonitor = api.monitor
+
+    override val commands: SessionCommands = api.commands
 
     override suspend fun change(
         id: SessionId,
@@ -65,7 +67,9 @@ internal class PollingHarness(
         runtime.available(available)
     }
 
-    override fun failStop(id: SessionId): Unit = throw UnsupportedOperationException("AM-404")
+    override fun failStop(id: SessionId) {
+        runtime.failStop(id)
+    }
 
     override suspend fun settle() {
         scope.advance(pollInterval)
