@@ -82,7 +82,7 @@ Kroki `/deliver`:
 | Zdarzenie | Skrypt | Działanie |
 | --- | --- | --- |
 | `SessionStart` | `session-context.sh` | Dokleja do kontekstu: gałąź, niezatwierdzone pliki, ostatnie commity, zadania `[~]` i następne `[ ]`, otwarte PR. |
-| `PreToolUse` (Bash) | `guard-bash.sh` | **Blokuje:** force push, push do `main`/`master`, push z gałęzi `main`, `--no-verify`, `gh pr merge` i merge przez API, `rm -rf` na `/`, `~`, `..`, edycję konfiguracji agenta z powłoki. **Pyta:** `git reset --hard`, `git clean`. |
+| `PreToolUse` (Bash) | `guard-bash.sh` | **Blokuje:** force push (wyjątek: `git push --force-with-lease` bieżącej gałęzi `feat/*`, `fix/*`, `chore/*`, `docs/*` po rebase), push do `main`/`master`, push z gałęzi `main`, `--no-verify`, `gh pr merge` i merge przez API, `rm -rf` na `/`, `~`, `..`, edycję konfiguracji agenta z powłoki. **Pyta:** `git reset --hard`, `git clean`. |
 | `PreToolUse` (Edit/Write) | `guard-files.sh` | **Blokuje:** sekrety (`.env`, `*.p12`), konfigurację agenta, edycję przyjętych ADR. **Pyta:** workflowy GitHub, pliki poza repo. |
 | `PostToolUse` (Edit/Write) | `format-kotlin.sh` | Formatuje zmieniony plik Kotlin (`ktlint --format`), asynchronicznie. |
 | `Stop` | `quality-gate.sh` | Gdy zmieniono Kotlin, uruchamia `./gradlew quickCheck`. Przy błędzie nie pozwala zakończyć tury i oddaje skrót błędów. Po 3 rundach przepuszcza z ostrzeżeniem, żeby nie zapętlić agenta. |
@@ -94,7 +94,7 @@ Konfigurację agenta zmienia tylko człowiek. Świadomą zmianę przez agenta od
 
 - **Bez pytania:** Gradle, odczyt i lokalne operacje git, commit, push gałęzi, `gh issue/pr create|view|edit|comment`, skrypty z `scripts/`.
 - **Z pytaniem:** tagi, push tagów, `gh release`, surowe `gh api`.
-- **Nigdy:** force push, push do `main`, `gh pr merge`, usuwanie repo, czytanie sekretów, edycja `.claude/settings.json` i hooków.
+- **Nigdy:** force push (poza `--force-with-lease` własnej gałęzi zadania), push do `main`, `gh pr merge`, usuwanie repo, czytanie sekretów, edycja `.claude/settings.json` i hooków.
 
 Reguły `deny` w uprawnieniach i blokady w hookach się dublują celowo: uprawnienia są pierwszą linią, hooki łapią warianty, których wzorce nie obejmą (np. `git push origin HEAD:main`).
 
