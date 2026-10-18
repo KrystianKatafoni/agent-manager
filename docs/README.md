@@ -27,6 +27,7 @@ Aplikacja **nie uruchamia własnego orkiestratora**. Steruje oficjalnym supervis
 | [12-strategia-testow.md](12-strategia-testow.md) | Piramida testów: jednostkowe, kontraktowe, integracyjne, funkcjonalne, architektury; bramka CI |
 | [13-plan-wdrozenia.md](13-plan-wdrozenia.md) | Plan wdrożenia: etapy M0–M9, cykl dostarczania, gałęzie, wydania, utrzymanie, ryzyka |
 | [14-agent-claude-code.md](14-agent-claude-code.md) | Agent Claude Code budujący i utrzymujący aplikację: role, skille, hooki, uprawnienia, GitHub Actions |
+| [15-stan-projektu.md](15-stan-projektu.md) | Notatka przekazania: stan prac, gdzie i jak pracujemy, ustalenia o środowisku, pułapki |
 | [ROADMAP.md](ROADMAP.md) | Zadania AM-XXX z zależnościami i statusami, źródło prawdy dla agenta |
 | [compat.md](compat.md) | Zgodność z wersjami Claude Code i historia przeglądów |
 | [adr/](adr/) | Decyzje architektoniczne (ADR) |

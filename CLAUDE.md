@@ -6,6 +6,7 @@ Natywna aplikacja macOS (Kotlin + Compose Desktop) do zarządzania lokalnymi age
 
 | Potrzebujesz | Plik |
 | --- | --- |
+| **Stan projektu, środowisko, kontekst (czytaj na starcie)** | `docs/15-stan-projektu.md` |
 | Co budujemy (wymagania FR/NFR) | `docs/02-wymagania.md` |
 | Jak budujemy (zasady ENG-xx, DoD) | `docs/10-wymagania-inzynierskie.md` |
 | Moduły, API, reguły zależności | `docs/11-koncepcja-techniczna.md` |
