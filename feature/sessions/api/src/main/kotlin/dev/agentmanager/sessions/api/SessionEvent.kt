@@ -4,7 +4,8 @@ import kotlin.time.Duration
 
 /**
  * A state transition of a session (FR-N1–N3 consume them). Only transitions are events: sessions
- * already present in the first snapshot emit nothing for the state they were found in.
+ * already present in the first snapshot emit nothing for the state they were found in. A session
+ * that first appears later while waiting emits [BecameBlocked].
  */
 public sealed interface SessionEvent {
     /** The session after the transition, as [SessionMonitor.snapshot] shows it. */

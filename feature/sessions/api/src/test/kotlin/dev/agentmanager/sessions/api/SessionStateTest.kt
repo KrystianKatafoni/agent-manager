@@ -33,7 +33,7 @@ class SessionStateTest {
                 ),
                 arguments(named("AwaitingPermission(null)", SessionState.AwaitingPermission(tool = null)), true, true),
                 arguments(named("Done", SessionState.Done), false, false),
-                arguments(named("Failed(x)", SessionState.Failed(reason = "x")), false, false),
+                arguments(named("Failed", SessionState.Failed), false, false),
                 arguments(named("Stopped", SessionState.Stopped), false, false),
             )
     }

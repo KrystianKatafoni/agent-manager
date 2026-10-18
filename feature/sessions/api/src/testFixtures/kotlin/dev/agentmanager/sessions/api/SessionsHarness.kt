@@ -7,7 +7,7 @@ import dev.agentmanager.core.domain.SessionId
  * inside a `TestScope`; long-running loops of an implementation run in its `backgroundScope`.
  *
  * Changes made through the harness are applied to the world outside the system under test (the
- * supervisor); the system sees them only after [settle].
+ * supervisor); the system sees them at the latest after [settle].
  */
 public interface SessionsHarness {
     /** Read side under test. */

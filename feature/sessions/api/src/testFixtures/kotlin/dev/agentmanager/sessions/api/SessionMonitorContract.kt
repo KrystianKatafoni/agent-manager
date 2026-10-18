@@ -134,6 +134,21 @@ public abstract class SessionMonitorContract {
         }
 
     @Test
+    public fun `session appearing while waiting emits BecameBlocked`(): Unit =
+        runTest {
+            val harness = settled()
+            val events = recordEvents(harness.monitor)
+
+            harness.appear(sessionIn("aaaa0009", P2_DIR, SessionState.AwaitingPermission(tool = "Bash")))
+            harness.settle()
+
+            events shouldHaveSize 1
+            val event = events.single().shouldBeInstanceOf<SessionEvent.BecameBlocked>()
+            event.session.id shouldBe SessionId("aaaa0009")
+            event.session.state shouldBe SessionState.AwaitingPermission(tool = "Bash")
+        }
+
+    @Test
     public fun `finishing a turn emits TurnFinished`(): Unit =
         runTest {
             val event = eventAfterChange(SessionState.Done)
@@ -145,10 +160,10 @@ public abstract class SessionMonitorContract {
     @Test
     public fun `failure emits Failed`(): Unit =
         runTest {
-            val event = eventAfterChange(SessionState.Failed(reason = "api_error"))
+            val event = eventAfterChange(SessionState.Failed)
 
             event.shouldBeInstanceOf<SessionEvent.Failed>()
-            event.session.state shouldBe SessionState.Failed(reason = "api_error")
+            event.session.state shouldBe SessionState.Failed
         }
 
     @Test
@@ -160,7 +175,7 @@ public abstract class SessionMonitorContract {
                         listOf(
                             sessionIn("aaaa0001", P1_DIR, SessionState.AwaitingInput(question = null)),
                             sessionIn("aaaa0002", P1_DIR, SessionState.Done),
-                            sessionIn("aaaa0003", P1_DIR, SessionState.Failed(reason = "api_error")),
+                            sessionIn("aaaa0003", P1_DIR, SessionState.Failed),
                         ),
                 )
             val harness = create(waiting)

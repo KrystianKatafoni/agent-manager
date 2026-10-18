@@ -64,9 +64,14 @@ public class FakeSessions(
         eventFor(after)?.let { transitions.emit(it) }
     }
 
-    /** Adds [session] as if it had been started outside the app; emits no event. */
-    public fun appear(session: WorldSession) {
-        insert(toSession(session))
+    /**
+     * Adds [session] as if it had been started outside the app. A session that appears waiting emits
+     * [SessionEvent.BecameBlocked] (a new request for the user); any other state emits nothing.
+     */
+    public suspend fun appear(session: WorldSession) {
+        val added = toSession(session)
+        insert(added)
+        if (added.state.isWaiting) transitions.emit(SessionEvent.BecameBlocked(added))
     }
 
     /**
@@ -133,9 +138,18 @@ public class FakeSessions(
 
     private fun stopIfActive(session: Session): Outcome<Unit, SessionError> =
         when {
-            !session.state.isActive -> Outcome.Ok(Unit)
-            session.id in failingStops.value -> Outcome.Err(SessionError.Runtime(RuntimeProblem.COMMAND_FAILED))
-            else -> Outcome.Ok(replace(session.copy(state = SessionState.Stopped, lastActivityAt = clock.now())))
+            !session.state.isActive -> {
+                Outcome.Ok(Unit)
+            }
+
+            session.id in failingStops.value -> {
+                Outcome.Err(SessionError.Runtime(RuntimeProblem.COMMAND_FAILED))
+            }
+
+            else -> {
+                replace(session.copy(state = SessionState.Stopped, lastActivityAt = clock.now()))
+                Outcome.Ok(Unit)
+            }
         }
 
     private fun inactive(id: SessionId): Outcome<Session, SessionError> {
@@ -153,15 +167,7 @@ public class FakeSessions(
         state.update { current ->
             current.copy(
                 sessions =
-                    current.sessions.map {
-                        if (it.id ==
-                            session.id
-                        ) {
-                            session
-                        } else {
-                            it
-                        }
-                    },
+                    current.sessions.map { if (it.id == session.id) session else it },
             )
         }
     }
@@ -214,7 +220,7 @@ public class FakeSessions(
             when (session.state) {
                 is SessionState.AwaitingInput, is SessionState.AwaitingPermission -> SessionEvent.BecameBlocked(session)
                 SessionState.Done -> SessionEvent.TurnFinished(session)
-                is SessionState.Failed -> SessionEvent.Failed(session)
+                SessionState.Failed -> SessionEvent.Failed(session)
                 SessionState.Working, SessionState.Stopped -> null
             }
     }

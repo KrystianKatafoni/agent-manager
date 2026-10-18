@@ -11,14 +11,16 @@ import kotlinx.coroutines.flow.StateFlow
  */
 public interface SessionMonitor {
     /**
-     * Latest view of all sessions. Starts as [SessionsSnapshot.Initial] and is refreshed at least every
-     * 3 s (NFR-2). Conflated: a slow reader sees only the newest snapshot.
+     * Latest view of all sessions. [SessionsSnapshot.Initial] until the first listing, then refreshed
+     * at least every 3 s (NFR-2). Conflated: a slow reader sees only the newest snapshot.
      */
     public val snapshot: StateFlow<SessionsSnapshot>
 
     /**
      * State transitions, hot and without replay. Every event is emitted after [snapshot] already
-     * shows [SessionEvent.session]. Sessions already present in the first snapshot emit nothing.
+     * shows [SessionEvent.session]. A session first seen waiting counts as becoming blocked
+     * ([SessionEvent.BecameBlocked], a new request for the user, FR-N1); sessions present at startup
+     * emit nothing.
      */
     public val events: Flow<SessionEvent>
 }

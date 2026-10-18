@@ -8,8 +8,9 @@ import java.time.Instant
 /**
  * One session as Agent Manager sees it.
  *
- * [summary] (FR-S7) and [cwd] are user data: log them at DEBUG level only (ENG-C8); `toString`
- * shows [summary] as `***`.
+ * [summary] (FR-S7), [cwd] and [name] are user data: log them at DEBUG level only (ENG-C8).
+ * `toString` shows [summary] as `***` but, like `RuntimeSession`, prints [cwd] and [name], so log
+ * a whole [Session] at DEBUG level only.
  *
  * @property id short supervisor id, e.g. `7c5dcf5d`.
  * @property project the deepest registered project whose directory contains [cwd], compared by path
@@ -46,7 +47,7 @@ public sealed interface SessionState {
         get() =
             when (this) {
                 Working, is AwaitingInput, is AwaitingPermission -> true
-                Done, is Failed, Stopped -> false
+                Done, Failed, Stopped -> false
             }
 
     /** True for [AwaitingInput] and [AwaitingPermission]: the agent waits for the user. */
@@ -73,10 +74,8 @@ public sealed interface SessionState {
     /** The agent finished its turn. */
     public data object Done : SessionState
 
-    /** The agent ended with an error; [reason] is a fixed category, never input text. */
-    public data class Failed(
-        val reason: String,
-    ) : SessionState
+    /** The agent ended with an error. */
+    public data object Failed : SessionState
 
     /** The session was stopped and can be respawned. */
     public data object Stopped : SessionState

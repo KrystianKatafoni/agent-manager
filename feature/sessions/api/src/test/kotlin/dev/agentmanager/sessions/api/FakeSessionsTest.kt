@@ -61,7 +61,7 @@ class FakeSessionsTest {
         }
 
     @Test
-    fun `started ids are deterministic`() =
+    fun `started sessions get sequential ids and are ordered by start time then id`() =
         runTest {
             val clock = TestClock()
             val fake = FakeSessions(world, clock)

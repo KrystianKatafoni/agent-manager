@@ -13,8 +13,9 @@ import dev.agentmanager.core.domain.SessionId
  */
 public interface SessionCommands {
     /**
-     * Starts a background agent in the directory of [project] (FR-S3); the new session is
-     * [SessionState.Working]. Errors: [SessionError.UnknownProject], [SessionError.Runtime].
+     * Starts a background agent in the directory of [project] (FR-S3). The new session is in
+     * [SessionMonitor.snapshot] before `start` returns and is [SessionState.Working] until the
+     * supervisor reports another state. Errors: [SessionError.UnknownProject], [SessionError.Runtime].
      */
     public suspend fun start(
         project: ProjectId,

@@ -43,7 +43,7 @@ class SessionsSnapshotTest {
                 aSession(id = "aaaa0003", project = P1, state = SessionState.AwaitingPermission("Bash")),
                 aSession(id = "aaaa0004", project = P1, state = SessionState.Done),
                 aSession(id = "aaaa0005", project = P1, state = SessionState.Stopped),
-                aSession(id = "aaaa0006", project = P1, state = SessionState.Failed("x")),
+                aSession(id = "aaaa0006", project = P1, state = SessionState.Failed),
             )
 
         val otherProjectAndNone =

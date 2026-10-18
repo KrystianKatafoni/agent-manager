@@ -20,6 +20,9 @@ class SessionRulesTest {
         "/p/ab,",
         "/p,",
         "/q,",
+        "/p/a/../b,",
+        "/p/a/sub/../x, a",
+        "p/a,",
     )
     fun `session belongs to the deepest project containing its directory`(
         cwd: String,
