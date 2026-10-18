@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test
 
 /** Rules from docs/11-koncepcja-techniczna.md §3 that Gradle alone cannot enforce. */
 class ModuleBoundariesTest {
-
     private val forbiddenInContracts = listOf("java.io.", "java.net.", "java.lang.ProcessBuilder", "androidx.compose.")
 
     @Test
@@ -33,25 +32,37 @@ class ModuleBoundariesTest {
 
     @Test
     fun `impl exposes only its module factory`() {
-        Scopes.featureImpl().requireModules("feature impl modules").flatMap { it.classes() + it.interfaces() + it.objects() }
-            .assertTrue { it.hasInternalModifier || it.hasPrivateModifier }
+        Scopes
+            .featureImpl()
+            .requireModules("feature impl modules")
+            .flatMap {
+                it.classes() + it.interfaces() +
+                    it.objects()
+            }.assertTrue { it.hasInternalModifier || it.hasPrivateModifier }
     }
 
     @Test
     fun `adapters live only in impl modules`() {
-        Scopes.main().flatMap { it.classes() }.withNameEndingWith("Adapter").requireModules("adapters")
+        Scopes
+            .main()
+            .flatMap { it.classes() }
+            .withNameEndingWith("Adapter")
+            .requireModules("adapters")
             .assertTrue { it.path.contains("/impl/src/main/") }
     }
 
     @Test
     fun `objects hold no mutable state`() {
-        Scopes.main().flatMap { it.objects() }.requireModules("objects").assertFalse { obj -> obj.properties().any { it.isVar } }
+        Scopes.main().flatMap { it.objects() }.requireModules("objects").assertFalse { obj ->
+            obj.properties().any { it.isVar }
+        }
     }
 
     private fun expectedPackagePrefix(path: String): String {
         val module = MODULE_PATH.find(path)?.groupValues?.get(1) ?: return "dev.agentmanager"
         val segments = module.split('/').map { it.replace("-", "") }
-        return "dev.agentmanager." + if (segments.first() == "feature") segments.drop(1).joinToString(".") else segments.joinToString(".")
+        return "dev.agentmanager." +
+            if (segments.first() == "feature") segments.drop(1).joinToString(".") else segments.joinToString(".")
     }
 
     private companion object {

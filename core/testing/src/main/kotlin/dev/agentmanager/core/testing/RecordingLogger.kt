@@ -17,7 +17,12 @@ public class RecordingLogger : Logger {
 
     public val entries: List<LogEntry> get() = recorded.toList()
 
-    override fun log(level: LogLevel, message: String, fields: Map<String, Any?>, cause: Throwable?) {
+    override fun log(
+        level: LogLevel,
+        message: String,
+        fields: Map<String, Any?>,
+        cause: Throwable?,
+    ) {
         recorded += LogEntry(level, message, fields, cause)
     }
 

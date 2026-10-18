@@ -7,7 +7,10 @@ import org.junit.jupiter.api.Assumptions.assumeTrue
 /** Production sources of the whole repository, grouped by the module they live in. */
 internal object Scopes {
     private val mainFiles: List<KoFileDeclaration> by lazy {
-        Konsist.scopeFromProject().files.filter { it.path.contains("/src/main/kotlin/") && !it.path.contains("/build-logic/") }
+        Konsist.scopeFromProject().files.filter {
+            it.path.contains("/src/main/kotlin/") &&
+                !it.path.contains("/build-logic/")
+        }
     }
 
     fun main(): List<KoFileDeclaration> = mainFiles
@@ -23,6 +26,7 @@ internal object Scopes {
 }
 
 /** Rules for modules that do not exist yet are reported as skipped instead of passing silently. */
-internal fun <T> List<T>.requireModules(what: String): List<T> = also {
-    assumeTrue(isNotEmpty(), "No $what yet")
-}
+internal fun <T> List<T>.requireModules(what: String): List<T> =
+    also {
+        assumeTrue(isNotEmpty(), "No $what yet")
+    }

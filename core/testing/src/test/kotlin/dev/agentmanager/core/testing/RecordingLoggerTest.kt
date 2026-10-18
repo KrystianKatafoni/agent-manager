@@ -8,7 +8,6 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 class RecordingLoggerTest {
-
     @Test
     fun `records entries in order and filters by level`() {
         val logger = RecordingLogger()

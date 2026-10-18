@@ -32,6 +32,7 @@ tasks.test {
     useJUnitPlatform()
     // TestKit builds resolve the same catalog as the real build.
     systemProperty("am.versionCatalog", rootDir.resolve("../gradle/libs.versions.toml").canonicalPath)
+    systemProperty("am.detektConfig", rootDir.resolve("../config/detekt/detekt.yml").canonicalPath)
     // Each TestKit build downloads dependencies; keep the suite bounded.
     maxParallelForks = 1
 }

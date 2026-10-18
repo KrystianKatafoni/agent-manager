@@ -1,5 +1,4 @@
 import dev.agentmanager.buildlogic.QualityThresholds
-import dev.detekt.gradle.Detekt
 import org.gradle.api.artifacts.VersionCatalogsExtension
 
 // Quality gate for every Kotlin module (ENG-C1, docs/12 §7): ktlint via Spotless, detekt with the
@@ -40,12 +39,13 @@ kover {
     }
 }
 
+// detektMain/detektTest run with type resolution, which rules such as ForbiddenMethodCall need.
 tasks.named("check") {
-    dependsOn("koverVerify")
+    dependsOn("koverVerify", "detektMain", "detektTest")
 }
 
 tasks.register("quickCheck") {
     group = "verification"
     description = "Fast gate for the agent: formatting and static analysis, no tests."
-    dependsOn("spotlessCheck", tasks.withType<Detekt>())
+    dependsOn("spotlessCheck", "detektMain", "detektTest")
 }

@@ -8,7 +8,6 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 class TestClockTest {
-
     @Test
     fun `starts at T0 and moves only when advanced`() {
         val clock = TestClock()

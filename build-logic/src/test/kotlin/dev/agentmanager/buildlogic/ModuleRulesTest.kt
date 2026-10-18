@@ -9,7 +9,6 @@ import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
 class ModuleRulesTest {
-
     @TempDir
     lateinit var projectDir: File
 
@@ -38,7 +37,12 @@ class ModuleRulesTest {
 
         val output = runner().buildAndFail().output
 
-        assertTrue(output.contains("Module rule 'impl never depends on impl or ui' violated: :feature:b:impl -> :feature:a:impl"), output)
+        assertTrue(
+            output.contains(
+                "Module rule 'impl never depends on impl or ui' violated: :feature:b:impl -> :feature:a:impl",
+            ),
+            output,
+        )
     }
 
     @Test
@@ -86,18 +90,26 @@ class ModuleRulesTest {
         modules.forEach { (path, plugin) -> write(buildFile(path), "plugins {\n    id(\"$plugin\")\n}\n") }
     }
 
-    private fun dependsOn(from: String, to: String) {
+    private fun dependsOn(
+        from: String,
+        to: String,
+    ) {
         File(projectDir, buildFile(from)).appendText("\ndependencies {\n    \"implementation\"(project(\"$to\"))\n}\n")
     }
 
     private fun buildFile(path: String) = path.removePrefix(":").replace(':', '/') + "/build.gradle.kts"
 
-    private fun write(path: String, content: String) {
+    private fun write(
+        path: String,
+        content: String,
+    ) {
         File(projectDir, path).apply { parentFile.mkdirs() }.writeText(content)
     }
 
-    private fun runner(): GradleRunner = GradleRunner.create()
-        .withProjectDir(projectDir)
-        .withPluginClasspath()
-        .withArguments("help", "--stacktrace")
+    private fun runner(): GradleRunner =
+        GradleRunner
+            .create()
+            .withProjectDir(projectDir)
+            .withPluginClasspath()
+            .withArguments("help", "--stacktrace")
 }

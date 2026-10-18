@@ -4,7 +4,6 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 class BuildersTest {
-
     @Test
     fun `builders provide valid defaults and accept overrides`() {
         aProjectId().value shouldBe "agent-manager"
