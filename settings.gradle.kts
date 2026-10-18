@@ -17,4 +17,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "agent-manager"
 
-// Modules are added by their roadmap tasks (AM-102 core:domain, …) and by /new-module.
+// Modules are added by their roadmap tasks and by /new-module.
+include(":core:domain")
