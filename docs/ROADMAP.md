@@ -46,7 +46,7 @@
 
 ## M4 · Sesje i Mission Control
 
-- [~] AM-401 · sessions:api (SessionMonitor, SessionCommands) + kontrakty · moduły: sessions:api · zależy: AM-201, AM-301 · wymagania: ENG-I2 · issue: #25
+- [x] AM-401 · sessions:api (SessionMonitor, SessionCommands) + kontrakty · moduły: sessions:api · zależy: AM-201, AM-301 · wymagania: ENG-I2 · issue: #25
 - [ ] AM-402 · SessionStateReducer (czysty, tablicowe testy) · moduły: sessions:impl · zależy: AM-401 · wymagania: FR-S2 · issue: #26
 - [ ] AM-403 · Pętla pollingu + snapshot · moduły: sessions:impl · zależy: AM-402, AM-203 · wymagania: FR-S1, NFR-2, NFR-3 · issue: #27
 - [ ] AM-404 · Komendy: start, stop, respawn, remove, stopAllIn · moduły: sessions:impl · zależy: AM-403 · wymagania: FR-S3, FR-S4 · issue: #28
