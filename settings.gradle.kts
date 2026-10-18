@@ -21,5 +21,6 @@ rootProject.name = "agent-manager"
 include(":app")
 include(":core:domain")
 include(":core:process")
+include(":core:storage")
 include(":core:testing")
 include(":tests:architecture")

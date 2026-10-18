@@ -6,6 +6,7 @@ Natywna aplikacja macOS (Kotlin + Compose Desktop) do zarządzania lokalnymi age
 
 | Potrzebujesz | Plik |
 | --- | --- |
+| **Stan projektu, środowisko, kontekst (czytaj na starcie)** | `docs/15-stan-projektu.md` |
 | Co budujemy (wymagania FR/NFR) | `docs/02-wymagania.md` |
 | Jak budujemy (zasady ENG-xx, DoD) | `docs/10-wymagania-inzynierskie.md` |
 | Moduły, API, reguły zależności | `docs/11-koncepcja-techniczna.md` |
@@ -61,4 +62,5 @@ Krótkie wnioski z review i błędów agenta, dopisywane przez PR (jedna linia k
 
 - W sesjach Claude Code w chmurze GitHub działa tylko przez REST: zamiast `gh pr create` / `gh issue create|close|comment` używaj `gh api repos/KrystianKatafoni/agent-manager/{pulls,issues}…` (GraphQL jest zablokowany).
 - W sesjach w chmurze Maven Central i repozytoria Gradle bywają niedostępne (allowlista sieci); wtedy weryfikacją buildu jest CI w PR.
+- Komunikaty wyjątków kotlinx.serialization cytują fragment wejścia — nie wolno ich logować ani zwracać w błędach; używaj stałych kategorii powodu.
 - Przy `allWarningsAsErrors` nie używaj przestarzałego API: w Compose MP 1.12 testy UI importują `androidx.compose.ui.test.v2.runComposeUiTest`. Źródła Compose (`*-desktop`) są na repo1.maven.org, więc API da się sprawdzić bez `dl.google.com`.
