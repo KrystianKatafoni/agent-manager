@@ -1,5 +1,5 @@
-// Pure core of the sessions feature (docs/11 §4, §7): SessionStateReducer and the runtime mappings
-// (AM-402). The module factory comes with SessionMonitor in AM-403.
+// Sessions feature (docs/11 §4, §6, §7): the pure SessionStateReducer and runtime mappings (AM-402) and
+// the polling SessionMonitor (AM-403), exposed through the sessionMonitorModule factory.
 plugins {
     id("am.feature.impl")
 }
@@ -8,13 +8,17 @@ dependencies {
     implementation(project(":feature:sessions:api"))
     // RuntimeSession, RuntimePhase, WaitingFor and RuntimeError, the input of the reducer (AM-402).
     implementation(project(":feature:agent-runtime:api"))
-    // Outcome, ProjectId and SessionId.
+    // ProjectsApi and Project: the project dirs the monitor attributes sessions to (AM-403).
+    implementation(project(":feature:projects:api"))
+    // Outcome, ProjectId, SessionId, Clock and Logger.
     implementation(project(":core:domain"))
 
-    // aSession and the other sessions builders.
+    // aSession, the sessions builders and SessionMonitorContract.
     testImplementation(testFixtures(project(":feature:sessions:api")))
-    // aRuntimeSession for the listings fed to the reducer.
+    // aRuntimeSession and FakeAgentRuntime for the listings fed to the reducer and the monitor.
     testImplementation(testFixtures(project(":feature:agent-runtime:api")))
-    // T0 and aSessionId.
+    // FakeProjectsApi for the project map of the monitor (AM-403).
+    testImplementation(testFixtures(project(":feature:projects:api")))
+    // T0, aSessionId, TestClock and RecordingLogger.
     testImplementation(project(":core:testing"))
 }

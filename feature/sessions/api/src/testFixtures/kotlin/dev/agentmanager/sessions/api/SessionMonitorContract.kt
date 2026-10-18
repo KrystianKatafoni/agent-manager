@@ -21,6 +21,9 @@ import kotlin.time.toJavaDuration
  * Behaviour every [SessionMonitor] must have (ENG-T2). Runs on [FakeSessions] and, from AM-403/603,
  * on the `sessions:impl` monitor. Each test builds a [SessionsHarness] from a [SessionsWorld] and
  * calls [SessionsHarness.settle] before it reads what the monitor saw.
+ *
+ * Blocked states are checked by kind only: polling cannot see the question or the tool, which come
+ * from hooks (AM-603); details get their own contract test then.
  */
 public abstract class SessionMonitorContract {
     /** Returns a harness whose supervisor and project catalogue look like [world]. */
@@ -121,7 +124,7 @@ public abstract class SessionMonitorContract {
             val event = eventAfterChange(SessionState.AwaitingInput(question = "Which file?"))
 
             event.shouldBeInstanceOf<SessionEvent.BecameBlocked>()
-            event.session.state shouldBe SessionState.AwaitingInput(question = "Which file?")
+            event.session.state.shouldBeInstanceOf<SessionState.AwaitingInput>()
         }
 
     @Test
@@ -130,7 +133,7 @@ public abstract class SessionMonitorContract {
             val event = eventAfterChange(SessionState.AwaitingPermission(tool = "Bash"))
 
             event.shouldBeInstanceOf<SessionEvent.BecameBlocked>()
-            event.session.state shouldBe SessionState.AwaitingPermission(tool = "Bash")
+            event.session.state.shouldBeInstanceOf<SessionState.AwaitingPermission>()
         }
 
     @Test
@@ -145,7 +148,7 @@ public abstract class SessionMonitorContract {
             events shouldHaveSize 1
             val event = events.single().shouldBeInstanceOf<SessionEvent.BecameBlocked>()
             event.session.id shouldBe SessionId("aaaa0009")
-            event.session.state shouldBe SessionState.AwaitingPermission(tool = "Bash")
+            event.session.state.shouldBeInstanceOf<SessionState.AwaitingPermission>()
         }
 
     @Test
