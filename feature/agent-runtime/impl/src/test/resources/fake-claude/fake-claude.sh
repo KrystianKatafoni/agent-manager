@@ -13,7 +13,8 @@
 #   version       printed by `claude --version`
 #   agent-view    enabled | env | setting: how Agent View is switched (off by env or by setting)
 #   daemon        running | stopped | absent: answer of `claude daemon status` (absent = older CLI)
-#   mode          normal | garbage | hang | fail <code> <stderr...> | bg-child
+#   mode          normal | garbage | hang | fail <code> <stderr...> | bg-child | untrusted
+#                 (untrusted: `--bg` refuses the cwd like 2.1.302 in a workspace without trust)
 #   calls.log     argv of every call: arguments end with \037, calls end with \036
 set -u
 
@@ -72,7 +73,7 @@ fail)
     sed '1s/^fail [0-9]* \{0,1\}//' "$state/mode" >&2
     exit "$code"
     ;;
-normal | bg-child) ;;
+normal | bg-child | untrusted) ;;
 *)
     die "unknown mode $mode" 2
     ;;
@@ -82,16 +83,30 @@ has_session() {
     cut -f 1 "$sessions" | grep -qxF -- "$1"
 }
 
-# need_id <verb> [<id>]: exactly one id that the supervisor knows.
+# need_id <verb> [<id>]: exactly one id that the supervisor knows; 2.1.302 messages otherwise
+# (recordings in fixtures/cli/recorded/*-unknown-id.*).
 need_id() {
     [ $# -eq 2 ] || die "usage: claude $1 <id>" 2
-    has_session "$2" || die "no session $2"
+    has_session "$2" && return 0
+    case $1 in
+    respawn | rm) die_raw "No job matching '$2'" ;;
+    *) die_raw "No job matching '$2'. Run 'claude agents' to list running sessions." ;;
+    esac
 }
 
-# update_session <id> <state> <pid>: also clears waitingFor.
-update_session() {
-    awk -F "$TAB" -v OFS="$TAB" -v id="$1" -v st="$2" -v pid="$3" \
-        '$1 == id { $5 = st; $6 = "-"; $8 = pid } { print }' "$sessions" >"$sessions.tmp"
+# stop_session <id>: like 2.1.302, a done session stays done; any other becomes stopped.
+# The process goes away, so pid and waitingFor are cleared.
+stop_session() {
+    awk -F "$TAB" -v OFS="$TAB" -v id="$1" \
+        '$1 == id { if ($5 != "done") $5 = "stopped"; $6 = "-"; $8 = "-" } { print }' "$sessions" >"$sessions.tmp"
+    mv "$sessions.tmp" "$sessions"
+}
+
+# respawn_session <id>: a new process (pid of this call) started now; a done session stays done.
+respawn_session() {
+    awk -F "$TAB" -v OFS="$TAB" -v id="$1" -v pid="$$" -v now="$(cat "$state/now")" \
+        '$1 == id { if ($5 != "done") $5 = "working"; $6 = "-"; $7 = now; $8 = pid } { print }' \
+        "$sessions" >"$sessions.tmp"
     mv "$sessions.tmp" "$sessions"
 }
 
@@ -101,7 +116,8 @@ remove_session() {
     rm -f "$state/logs/$1"
 }
 
-# list_json <all>: the `kind: background` format of fixtures/agents-json/synthetic/background-all-phases.json.
+# list_json <all>: the `kind: background` format of fixtures/agents-json/recorded/2.1.302-all-background-*.json.
+# `status` is printed only while the session has a process (a pid), as in the recordings.
 list_json() {
     awk -F "$TAB" -v all="$1" '
         function esc(s,    out, i, c) {
@@ -122,7 +138,10 @@ list_json() {
             printf ", %s, %s, %s", field("name", $3), field("cwd", $4), field("state", $5)
             if ($6 != "-") printf ", %s", field("waitingFor", $6)
             printf ", \"startedAt\": %s", $7
-            if ($8 != "-") printf ", \"pid\": %s", $8
+            if ($8 != "-") {
+                printf ", \"pid\": %s", $8
+                printf ", \"status\": \"%s\"", ($5 == "working" ? "busy" : ($5 == "blocked" ? "waiting" : "idle"))
+            }
             printf "}"
         }
         END { if (n) printf "\n"; printf "]\n" }
@@ -205,6 +224,8 @@ start_bg() {
         shift
     done
     [ "$have_prompt" -eq 1 ] && [ -n "$prompt" ] || die "a prompt is required with --bg"
+    [ "$mode" != untrusted ] ||
+        die_raw "Workspace not trusted. Run \`claude\` in $(pwd -P) once and accept the trust prompt, then retry."
 
     n=$(cat "$state/counter" 2>/dev/null || printf 0)
     while :; do
@@ -224,8 +245,13 @@ start_bg() {
     fi
 
     printf '%s\t-\t%s\t%s\tworking\t-\t%s\t%s\n' "$id" "$name" "$cwd" "$now" "$$" >>"$sessions"
-    printf 'Starting background service…\n'
+    # 2.1.302 (fixtures/cli/recorded/2.1.302-bg.*): banner on stderr, id line and hints on stdout.
+    printf 'Starting background service…\n' >&2
     printf 'backgrounded · %s · %s\n' "$id" "$name"
+    printf '  claude agents             list sessions\n'
+    printf '  claude attach %s    open in this terminal\n' "$id"
+    printf '  claude logs %s      show recent output\n' "$id"
+    printf '  claude stop %s      stop this session\n' "$id"
 }
 
 # `claude daemon status` of 2.1.302; without --json, which the CLI ignores with a warning.
@@ -263,15 +289,18 @@ agents)
     ;;
 stop | kill)
     need_id "$@"
-    update_session "$2" stopped -
+    stop_session "$2"
+    printf 'stopped %s\n' "$2"
     ;;
 respawn)
     need_id "$@"
-    update_session "$2" working "$$"
+    respawn_session "$2"
+    printf 'respawned %s\n' "$2"
     ;;
 rm)
     need_id "$@"
     remove_session "$2"
+    printf 'removed %s\n' "$2"
     ;;
 logs)
     need_id "$@"
