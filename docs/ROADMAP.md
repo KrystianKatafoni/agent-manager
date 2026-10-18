@@ -33,8 +33,8 @@
 
 - [x] AM-201 · agent-runtime:api + kontrakt AgentRuntime w testFixtures · moduły: agent-runtime:api · zależy: AM-103 · wymagania: ENG-I1–I8, ENG-T2 · issue: #17
 - [x] AM-202 · Parser `claude agents --json` + nagrane fixtures · moduły: agent-runtime:impl · zależy: AM-201 · wymagania: FR-S2, NFR-8 · issue: #18
-- [~] AM-203 · ClaudeCliAdapter + fałszywy `claude` do testów · moduły: agent-runtime:impl, agent-runtime:api (testFixtures), core:process · zależy: AM-202, AM-106 · wymagania: FR-S3, FR-S4 · issue: #19
-- [ ] AM-204 · Health check: wersja ≥ 2.1.139, Agent View, supervisor · moduły: agent-runtime:impl · zależy: AM-203 · wymagania: NFR-9 · issue: #20
+- [x] AM-203 · ClaudeCliAdapter + fałszywy `claude` do testów · moduły: agent-runtime:impl, agent-runtime:api (testFixtures), core:process · zależy: AM-202, AM-106 · wymagania: FR-S3, FR-S4 · issue: #19
+- [~] AM-204 · Health check: wersja ≥ 2.1.139, Agent View, supervisor · moduły: agent-runtime:impl · zależy: AM-203 · wymagania: NFR-9 · issue: #20
 
 ## M3 · Projekty
 

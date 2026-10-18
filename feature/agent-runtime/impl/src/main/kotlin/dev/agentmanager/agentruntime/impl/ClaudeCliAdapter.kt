@@ -28,7 +28,7 @@ import kotlin.time.Duration
  *
  * @property homeDir working directory of every command except `start`, and of `attachCommand`.
  * @property executable `claude` on the login-shell PATH, or an absolute path.
- * @property commandTimeout limit of `agents`, `logs`, `stop`, `respawn`, `rm`.
+ * @property commandTimeout limit of `agents`, `logs`, `stop`, `respawn`, `rm` and of each health command.
  * @property startTimeout limit of `--bg`.
  */
 internal data class CliConfig(
@@ -46,6 +46,7 @@ internal class ClaudeCliAdapter(
     private val config: CliConfig,
 ) : AgentRuntime {
     private val exe: String get() = config.executable
+    private val healthCheck = ClaudeHealthCheck(process, logger, config)
 
     /**
      * Filters on the client by path components ([isUnder]); [under] must be a real path (no symbolic
@@ -89,14 +90,8 @@ internal class ClaudeCliAdapter(
     override fun attachCommand(id: SessionId): ShellCommand =
         ShellCommand(ClaudeCommands.byId(exe, "attach", id), config.homeDir)
 
-    // Until AM-204 checks the installation, the adapter reports itself as not ready.
-    override suspend fun health(): RuntimeHealth =
-        RuntimeHealth(
-            version = null,
-            agentViewEnabled = false,
-            supervisorRunning = false,
-            problems = listOf(RuntimeError.Unparseable(HEALTH_NOT_CHECKED)),
-        )
+    /** See [ClaudeHealthCheck.run]: version, then supervisor, then Agent View. */
+    override suspend fun health(): RuntimeHealth = healthCheck.run()
 
     private suspend fun list(): Outcome<List<RuntimeSession>, RuntimeError> =
         process.exec(ClaudeCommands.list(exe), config.homeDir, config.commandTimeout).flatMap { result ->
@@ -137,11 +132,11 @@ internal class ClaudeCliAdapter(
 }
 
 private const val NO_ID = "bg-output:no-id"
-private const val HEALTH_NOT_CHECKED = "health:not-checked"
 private const val DEFAULT_MAX_BYTES = 1024 * 1024
 private const val LOGS_MAX_BYTES = 4 * 1024 * 1024
 
-private suspend fun ProcessRunner.exec(
+/** Runs [argv] in [workDir]; a process failure becomes a [RuntimeError] without paths. */
+internal suspend fun ProcessRunner.exec(
     argv: List<String>,
     workDir: Path,
     timeout: Duration,
@@ -161,7 +156,8 @@ private fun toRuntimeError(error: ProcessError): RuntimeError =
         is ProcessError.IoFailed -> RuntimeError.CommandFailed(-1, "process:io-failed")
     }
 
-private fun commandFailed(
+/** [RuntimeError.CommandFailed] with the redacted stderr tail of [result]. */
+internal fun commandFailed(
     result: ProcessResult,
     secrets: List<String>,
 ): RuntimeError = RuntimeError.CommandFailed(result.exitCode, StderrTail.of(result.stderr, secrets))

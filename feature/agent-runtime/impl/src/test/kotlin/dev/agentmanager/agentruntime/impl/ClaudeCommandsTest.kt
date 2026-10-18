@@ -83,6 +83,21 @@ class ClaudeCommandsTest {
         ClaudeCommands.start(exe, spec) shouldBe listOf(exe, "--bg", "--", "Fix it")
     }
 
+    @Test
+    fun `version is claude double dash version`() {
+        ClaudeCommands.version(exe) shouldBe listOf(exe, "--version")
+    }
+
+    @Test
+    fun `daemonStatus is daemon status without json`() {
+        ClaudeCommands.daemonStatus(exe) shouldBe listOf(exe, "daemon", "status")
+    }
+
+    @Test
+    fun `agentViewProbe is agents json without all`() {
+        ClaudeCommands.agentViewProbe(exe) shouldBe listOf(exe, "agents", "--json")
+    }
+
     @ParameterizedTest
     @ValueSource(strings = ["attach", "logs", "stop", "respawn", "rm"])
     fun `byId puts the verb and the id after the executable`(verb: String) {

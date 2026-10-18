@@ -12,7 +12,9 @@ import dev.agentmanager.core.process.LoginShellProcessRunner
 import dev.agentmanager.core.process.ProcessError
 import dev.agentmanager.core.process.ProcessResult
 import dev.agentmanager.core.testing.T0
+import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.fail
+import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -176,5 +178,48 @@ class FakeClaudeTest {
 
             claude.run("--version").stdout shouldBe "2.1.302 (Claude Code)\n"
             runner.run(ShellCommand(listOf(claude.executable, "--version"), dir)).getOrNull().shouldNotBeNull()
+            claude.setVersion("2.1.100")
+            claude.run("--version").stdout shouldBe "2.1.100 (Claude Code)\n"
+        }
+
+    @Test
+    fun `daemon status reports each state`() =
+        runTest {
+            val claude = FakeClaude.install(dir.resolve("c"), RuntimeWorld(version = "2.1.302"))
+
+            val running = claude.run("daemon", "status")
+            claude.setDaemon(FakeClaude.Daemon.STOPPED)
+            val stopped = claude.run("daemon", "status")
+            claude.setDaemon(FakeClaude.Daemon.ABSENT)
+            val absent = claude.run("daemon", "status")
+
+            assertSoftly {
+                running.exitCode shouldBe 0
+                running.stdout.lines().map { it.trim() } shouldContainAll
+                    listOf("pid:     698", "version: 2.1.302", "bg sessions:", "control.sock: reachable")
+                running.stdout.lines().map { it.substringBefore(':').trim() } shouldContainAll
+                    listOf("pid", "version", "uptime", "origin")
+                stopped shouldBe ProcessResult(1, "not running\n", "")
+                absent shouldBe ProcessResult(2, "", "fake-claude: unknown command daemon\n")
+            }
+            claude.calls() shouldBe List(3) { listOf("daemon", "status") }
+        }
+
+    @Test
+    fun `agents fails when Agent View is disabled`() =
+        runTest {
+            val byEnv = FakeClaude.install(dir.resolve("env"), RuntimeWorld(agentViewEnabled = false))
+            val bySetting = FakeClaude.install(dir.resolve("setting"), RuntimeWorld(sessions = listOf(working)))
+            bySetting.setAgentView(FakeClaude.AgentView.SETTING)
+
+            assertSoftly {
+                byEnv.run("agents", "--json") shouldBe
+                    ProcessResult(1, "", "'claude agents --json' is disabled by CLAUDE_CODE_DISABLE_AGENT_VIEW.\n")
+                byEnv.run("agents", "--json", "--all").exitCode shouldBe 1
+                bySetting.run("agents", "--json") shouldBe
+                    ProcessResult(1, "", "'claude agents --json' is disabled by the 'disableAgentView' setting.\n")
+            }
+            bySetting.setAgentView(FakeClaude.AgentView.ENABLED)
+            bySetting.listed() shouldContainExactly listOf(working)
         }
 }

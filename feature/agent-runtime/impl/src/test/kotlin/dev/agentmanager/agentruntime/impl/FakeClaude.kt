@@ -42,6 +42,48 @@ internal class FakeClaude private constructor(
         stateDir.resolve("mode").writeText(mode)
     }
 
+    /** Switches how later `agents` calls see Agent View. */
+    fun setAgentView(agentView: AgentView) {
+        stateDir.resolve("agent-view").writeText("${agentView.token}\n")
+    }
+
+    /** Switches the answer of later `daemon status` calls. */
+    fun setDaemon(daemon: Daemon) {
+        stateDir.resolve("daemon").writeText("${daemon.token}\n")
+    }
+
+    /** Switches what later `--version` calls print before ` (Claude Code)`. */
+    fun setVersion(version: String) {
+        stateDir.resolve("version").writeText("$version\n")
+    }
+
+    /** Agent View as the fake reports it: on, or off with the 2.1.302 message of each switch. */
+    enum class AgentView(
+        val token: String,
+    ) {
+        ENABLED("enabled"),
+
+        /** Off by `CLAUDE_CODE_DISABLE_AGENT_VIEW`. */
+        ENV("env"),
+
+        /** Off by the `disableAgentView` setting. */
+        SETTING("setting"),
+    }
+
+    /** Supervisor as `claude daemon status` reports it. */
+    enum class Daemon(
+        val token: String,
+    ) {
+        /** Exit 0 with `pid:`, `version:`, `uptime:`, `origin:` and `bg sessions:` lines. */
+        RUNNING("running"),
+
+        /** Exit 1 with `not running`, the idle state of 2.1.302. */
+        STOPPED("stopped"),
+
+        /** An older CLI without the `daemon` command: exit 2. */
+        ABSENT("absent"),
+    }
+
     /** Pids written by the `hang` (`hang.pid`) or `bg-child` (`bg-child.pid`) mode; empty before they run. */
     fun pids(file: String): List<Long> {
         val path = stateDir.resolve(file)
@@ -69,7 +111,8 @@ internal class FakeClaude private constructor(
 
         /**
          * Installs the fake in [dir] with the supervisor state of [world]; new sessions get [now] as
-         * their start time. [RuntimeWorld.agentViewEnabled] is not modelled yet (health is AM-204).
+         * their start time. A world with [RuntimeWorld.agentViewEnabled] false switches Agent View off
+         * by env ([AgentView.ENV]); the supervisor starts as [Daemon.RUNNING].
          */
         fun install(
             dir: Path,
@@ -84,6 +127,9 @@ internal class FakeClaude private constructor(
             state.resolve("now").writeText("${now.toEpochMilli()}\n")
             state.resolve("version").writeText("${world.version}\n")
             state.resolve("mode").writeText("normal\n")
+            val agentView = if (world.agentViewEnabled) AgentView.ENABLED else AgentView.ENV
+            state.resolve("agent-view").writeText("${agentView.token}\n")
+            state.resolve("daemon").writeText("${Daemon.RUNNING.token}\n")
 
             val script = dir.resolve("fake-claude.sh")
             script.writeText(scriptText())
