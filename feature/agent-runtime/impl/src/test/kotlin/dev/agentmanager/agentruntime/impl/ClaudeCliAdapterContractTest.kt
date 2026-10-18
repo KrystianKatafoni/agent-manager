@@ -15,7 +15,7 @@ import kotlin.io.path.createDirectories
 
 /**
  * [AgentRuntimeContract] on the real adapter, the real [LoginShellProcessRunner] and the fake
- * `claude` from [FakeClaude] (docs/12 §3). Health is not covered here until AM-204.
+ * `claude` from [FakeClaude] (docs/12 §3). Health: [ClaudeCliAdapterHealthContractTest].
  */
 class ClaudeCliAdapterContractTest : AgentRuntimeContract() {
     @TempDir

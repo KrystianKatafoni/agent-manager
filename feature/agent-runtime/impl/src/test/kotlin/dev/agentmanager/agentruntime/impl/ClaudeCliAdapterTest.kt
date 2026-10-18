@@ -3,7 +3,6 @@ package dev.agentmanager.agentruntime.impl
 import dev.agentmanager.agentruntime.api.AgentRuntime
 import dev.agentmanager.agentruntime.api.PermissionMode
 import dev.agentmanager.agentruntime.api.RuntimeError
-import dev.agentmanager.agentruntime.api.RuntimeHealth
 import dev.agentmanager.agentruntime.api.StartSpec
 import dev.agentmanager.agentruntime.api.aStartSpec
 import dev.agentmanager.core.domain.LogLevel
@@ -340,7 +339,7 @@ class ClaudeCliAdapterTest {
         outcome shouldBe Outcome.Err(RuntimeError.CommandFailed(-1, category))
     }
 
-    // --- attach, health, privacy, factory ---
+    // --- attach, privacy, factory (health: ClaudeCliAdapterHealthTest) ---
 
     @Test
     fun `attachCommand is claude attach id in the home dir`() {
@@ -350,24 +349,6 @@ class ClaudeCliAdapterTest {
 
         runner.calls.shouldBeEmpty()
     }
-
-    @Test
-    fun `health is not ready until it is implemented`() =
-        runTest {
-            val runner = FakeProcessRunner()
-
-            val health = adapter(runner).health()
-
-            health shouldBe
-                RuntimeHealth(
-                    version = null,
-                    agentViewEnabled = false,
-                    supervisorRunning = false,
-                    problems = listOf(RuntimeError.Unparseable("health:not-checked")),
-                )
-            health.isReady shouldBe false
-            runner.calls.shouldBeEmpty()
-        }
 
     @Test
     fun `prompt never appears in logs or errors`() =

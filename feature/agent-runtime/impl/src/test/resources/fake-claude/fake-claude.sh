@@ -1,5 +1,5 @@
 #!/bin/sh
-# Fake `claude` for the ClaudeCliAdapter tests (AM-203). POSIX sh and awk only: no jq, no Python.
+# Fake `claude` for the ClaudeCliAdapter tests (AM-203, health AM-204). POSIX sh and awk only: no jq, no Python.
 #
 # Usage: fake-claude.sh <state-dir> <claude arguments...>
 # FakeClaude.kt installs it behind an absolute `bin/claude` wrapper, so the real `claude` never runs.
@@ -11,6 +11,8 @@
 #   counter       last number used for a new id (ids are `printf %08x`)
 #   now           epoch ms used as startedAt of new sessions (no system clock)
 #   version       printed by `claude --version`
+#   agent-view    enabled | env | setting: how Agent View is switched (off by env or by setting)
+#   daemon        running | stopped | absent: answer of `claude daemon status` (absent = older CLI)
 #   mode          normal | garbage | hang | fail <code> <stderr...> | bg-child
 #   calls.log     argv of every call: arguments end with \037, calls end with \036
 set -u
@@ -33,7 +35,20 @@ die() {
     exit "${2:-1}"
 }
 
+# die_raw <message>: like the real CLI, without the fake-claude prefix, exit 1.
+die_raw() {
+    printf '%s\n' "$1" >&2
+    exit 1
+}
+
+# state_word <file> <default>: first word of a state file.
+state_word() {
+    if [ -s "$state/$1" ]; then sed -n '1p' "$state/$1" | cut -d ' ' -f 1; else printf '%s' "$2"; fi
+}
+
 [ -f "$sessions" ] || : >"$sessions"
+agent_view=$(state_word agent-view enabled)
+daemon=$(state_word daemon running)
 
 mode=normal
 if [ -s "$state/mode" ]; then
@@ -114,7 +129,21 @@ list_json() {
     ' "$sessions"
 }
 
+# 2.1.302 messages of a switched-off Agent View; the CLI ends with exit 1.
+agent_view_disabled() {
+    label="'claude agents'"
+    for arg in "$@"; do
+        [ "$arg" = --json ] && label="'claude agents --json'"
+    done
+    case $agent_view in
+    env) die_raw "$label is disabled by CLAUDE_CODE_DISABLE_AGENT_VIEW." ;;
+    setting) die_raw "$label is disabled by the 'disableAgentView' setting." ;;
+    *) die "unknown agent-view $agent_view" 2 ;;
+    esac
+}
+
 agents() {
+    [ "$agent_view" = enabled ] || agent_view_disabled "$@"
     json=0
     all=0
     while [ $# -gt 0 ]; do
@@ -199,7 +228,32 @@ start_bg() {
     printf 'backgrounded · %s · %s\n' "$id" "$name"
 }
 
+# `claude daemon status` of 2.1.302; without --json, which the CLI ignores with a warning.
+daemon_cmd() {
+    [ "$daemon" != absent ] || die "unknown command daemon" 2
+    [ "${1-}" = status ] && [ $# -eq 1 ] || die "usage: claude daemon status" 2
+    case $daemon in
+    running)
+        printf 'pid:     698\n'
+        printf 'version: %s\n' "$(cat "$state/version")"
+        printf 'uptime:  1m 2s\n'
+        printf 'origin:  agents\n'
+        printf 'bg sessions:\n'
+        printf '  control.sock: reachable\n'
+        ;;
+    stopped)
+        printf 'not running\n'
+        exit 1
+        ;;
+    *) die "unknown daemon $daemon" 2 ;;
+    esac
+}
+
 case ${1-} in
+daemon)
+    shift
+    daemon_cmd "$@"
+    ;;
 --version | -v)
     printf '%s (Claude Code)\n' "$(cat "$state/version")"
     ;;
