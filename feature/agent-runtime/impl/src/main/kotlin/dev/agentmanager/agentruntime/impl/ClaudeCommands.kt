@@ -11,6 +11,15 @@ internal object ClaudeCommands {
     /** `[exe, agents, --json, --all]`; no `--cwd`, which needs 2.1.141. */
     fun list(executable: String): List<String> = listOf(executable, "agents", "--json", "--all")
 
+    /** `[exe, --version]`. */
+    fun version(executable: String): List<String> = listOf(executable, "--version")
+
+    /** `[exe, daemon, status]`; no `--json`, which the CLI does not know. */
+    fun daemonStatus(executable: String): List<String> = listOf(executable, "daemon", "status")
+
+    /** `[exe, agents, --json]`; only the exit code and the message matter. */
+    fun agentViewProbe(executable: String): List<String> = listOf(executable, "agents", "--json")
+
     /**
      * `[exe, --bg, --name n?, --agent a?, --model m?, --permission-mode p?, --, prompt]`.
      * [PermissionMode.DEFAULT] passes no flag: the CLI has no `default` value and starts in its default mode.
@@ -115,7 +124,7 @@ internal object StderrTail {
 }
 
 /** Cleanup of text a terminal program wrote. */
-private object TerminalText {
+internal object TerminalText {
     // CSI (`ESC [ … final`), OSC (`ESC ] … BEL|ST`) and the remaining two-character escapes.
     private val ESCAPES =
         Regex(
