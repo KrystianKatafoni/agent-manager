@@ -17,3 +17,4 @@ Format: [Keep a Changelog](https://keepachangelog.com/pl/1.1.0/), wersjonowanie:
 - Moduł `core:process`: `ProcessRunner` i `LoginShellProcessRunner` (login shell, timeouty, ucinanie wyjścia) z `FakeProcessRunner` w `testFixtures`.
 - Moduł `core:storage`: `JsonStore` z atomowym zapisem, wersją schematu, migracjami i odkładaniem uszkodzonych plików jako `*.broken`.
 - Moduł `app`: okno Compose Desktop z pustym Mission Control, composition root `CoreDeps` i logowanie przez SLF4J (`./gradlew :app:run`).
+- Moduł `feature:agent-runtime:api`: kontrakt `AgentRuntime`, `AgentEventSource` i `HookInstaller` z fake'ami i testami kontraktowymi w `testFixtures`.
