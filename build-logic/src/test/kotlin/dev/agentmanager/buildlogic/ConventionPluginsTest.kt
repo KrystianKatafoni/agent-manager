@@ -105,6 +105,29 @@ class ConventionPluginsTest {
     }
 
     @Test
+    fun `am-app compiles a composable function`() {
+        givenModule("am.app")
+        write(
+            "src/main/kotlin/sample/app/Root.kt",
+            """
+            package sample.app
+
+            import androidx.compose.foundation.text.BasicText
+            import androidx.compose.runtime.Composable
+
+            @Composable
+            fun Root() {
+                BasicText("Agent Manager")
+            }
+            """.trimIndent(),
+        )
+
+        val result = build("compileKotlin")
+
+        assertEquals(TaskOutcome.SUCCESS, result.task(":compileKotlin")?.outcome)
+    }
+
+    @Test
     fun `quickCheck rejects println through detekt`() {
         givenModule("am.kotlin")
         write("src/main/kotlin/sample/Noisy.kt", "package sample\n\nfun noisy() {\n    println(\"debug\")\n}\n")

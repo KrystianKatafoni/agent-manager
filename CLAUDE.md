@@ -38,7 +38,7 @@ Natywna aplikacja macOS (Kotlin + Compose Desktop) do zarządzania lokalnymi age
 ./gradlew :app:run                       # uruchomienie aplikacji
 ```
 
-Gradle 9.7 z wrapperem i JDK 21 (toolchain). Convention plugins: `am.kotlin` (z `am.quality`: Spotless/ktlint, detekt, Kover), `am.feature.api`, `am.feature.impl`, `am.feature.ui` w `build-logic/`; reguły detekt w `config/detekt/detekt.yml`; wersje tylko w `gradle/libs.versions.toml`. Repozytoria deklaruje wyłącznie `settings.gradle.kts`.
+Gradle 9.7 z wrapperem i JDK 21 (toolchain). Convention plugins: `am.kotlin` (z `am.quality`: Spotless/ktlint, detekt, Kover), `am.feature.api`, `am.feature.impl`, `am.feature.ui`, `am.app` w `build-logic/`; reguły detekt w `config/detekt/detekt.yml`; wersje tylko w `gradle/libs.versions.toml`. Repozytoria deklaruje wyłącznie `settings.gradle.kts`.
 
 ## Git i GitHub
 
@@ -63,3 +63,4 @@ Krótkie wnioski z review i błędów agenta, dopisywane przez PR (jedna linia k
 - W sesjach Claude Code w chmurze GitHub działa tylko przez REST: zamiast `gh pr create` / `gh issue create|close|comment` używaj `gh api repos/KrystianKatafoni/agent-manager/{pulls,issues}…` (GraphQL jest zablokowany).
 - W sesjach w chmurze Maven Central i repozytoria Gradle bywają niedostępne (allowlista sieci); wtedy weryfikacją buildu jest CI w PR.
 - Komunikaty wyjątków kotlinx.serialization cytują fragment wejścia — nie wolno ich logować ani zwracać w błędach; używaj stałych kategorii powodu.
+- Przy `allWarningsAsErrors` nie używaj przestarzałego API: w Compose MP 1.12 testy UI importują `androidx.compose.ui.test.v2.runComposeUiTest`. Źródła Compose (`*-desktop`) są na repo1.maven.org, więc API da się sprawdzić bez `dl.google.com`.

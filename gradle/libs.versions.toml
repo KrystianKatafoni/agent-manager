@@ -6,6 +6,7 @@ kotlinx-serialization = "1.11.0"
 junit = "6.1.3"
 kotest = "6.2.6"
 konsist = "0.18.1"
+slf4j = "2.0.17"
 spotless = "8.10.4"
 ktlint = "1.8.0"
 detekt = "2.0.0-alpha.6"
@@ -25,6 +26,9 @@ kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-c
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
 compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "compose-multiplatform" }
+kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
+slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 
 # Tests
 junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
@@ -33,6 +37,7 @@ junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher
 kotest-assertions = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 konsist = { module = "com.lemonappdev:konsist", version.ref = "konsist" }
+compose-ui-test = { module = "org.jetbrains.compose.ui:ui-test", version.ref = "compose-multiplatform" }
 
 [plugins]
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

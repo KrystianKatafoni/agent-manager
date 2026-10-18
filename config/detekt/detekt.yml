@@ -14,6 +14,11 @@ coroutines:
   GlobalCoroutineUsage:
     active: true
 
+naming:
+  FunctionNaming:
+    # Composable functions are nouns in PascalCase (Compose API guidelines).
+    ignoreAnnotated: ['Composable']
+
 potential-bugs:
   UnsafeCallOnNullableType:
     active: true
