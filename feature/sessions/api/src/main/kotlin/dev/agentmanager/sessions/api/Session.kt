@@ -1,0 +1,76 @@
+package dev.agentmanager.sessions.api
+
+import dev.agentmanager.core.domain.ProjectId
+import dev.agentmanager.core.domain.SessionId
+import java.nio.file.Path
+import java.time.Instant
+
+/**
+ * One session as Agent Manager sees it.
+ *
+ * [summary] (FR-S7) and [cwd] are user data: log them at DEBUG level only (ENG-C8); `toString`
+ * shows [summary] as `***`.
+ *
+ * @property id short supervisor id, e.g. `7c5dcf5d`.
+ * @property project the deepest registered project whose directory contains [cwd], compared by path
+ *   components (see [SessionRules.projectFor]); null when no project contains it.
+ * @property name display name of the session.
+ * @property cwd working directory the agent runs in.
+ * @property state what the agent is doing now.
+ * @property startedAt when the session was started.
+ * @property lastActivityAt last state change or hook event (FR-S1).
+ * @property summary short summary of the session; null when unknown.
+ */
+public data class Session(
+    val id: SessionId,
+    val project: ProjectId?,
+    val name: String,
+    val cwd: Path,
+    val state: SessionState,
+    val startedAt: Instant,
+    val lastActivityAt: Instant,
+    val summary: String?,
+) {
+    override fun toString(): String = TODO("AM-401: toString hiding summary")
+}
+
+/**
+ * What a session is doing (FR-S2). [isActive] is the single "active session" rule: the agent keeps
+ * running (supervisor `WORKING` or `BLOCKED`).
+ */
+public sealed interface SessionState {
+    /** True for [Working], [AwaitingInput] and [AwaitingPermission]. */
+    public val isActive: Boolean get() = TODO("AM-401: active rule")
+
+    /** True for [AwaitingInput] and [AwaitingPermission]: the agent waits for the user. */
+    public val isWaiting: Boolean get() = TODO("AM-401: waiting rule")
+
+    /** The agent is working on its turn. */
+    public data object Working : SessionState
+
+    /**
+     * The agent waits for a reply or the next prompt. [question] is user data (ENG-C8); `toString`
+     * shows it as `***`.
+     */
+    public data class AwaitingInput(
+        val question: String?,
+    ) : SessionState {
+        override fun toString(): String = TODO("AM-401: toString hiding question")
+    }
+
+    /** The agent asks for permission to use [tool]; null when the tool is unknown. */
+    public data class AwaitingPermission(
+        val tool: String?,
+    ) : SessionState
+
+    /** The agent finished its turn. */
+    public data object Done : SessionState
+
+    /** The agent ended with an error; [reason] is a fixed category, never input text. */
+    public data class Failed(
+        val reason: String,
+    ) : SessionState
+
+    /** The session was stopped and can be respawned. */
+    public data object Stopped : SessionState
+}
