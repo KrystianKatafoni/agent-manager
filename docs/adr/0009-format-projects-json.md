@@ -1,6 +1,6 @@
 # ADR 0009: Format pliku `projects.json` (schemat v1)
 
-- **Status:** proponowana
+- **Status:** przyjęta
 - **Data:** 2026-10-18
 - **Dotyczy:** `feature:projects:impl`, plik `projects.json` w katalogu danych aplikacji
 
