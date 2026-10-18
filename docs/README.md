@@ -1,6 +1,6 @@
 # Agent Manager — dokumentacja projektu
 
-> Wersja 0.1 · 18.10.2026 · status: koncepcja zatwierdzona, przed implementacją
+> Wersja 0.1 · 18.10.2026 · status: koncepcja zatwierdzona, etap M0 (fundament repo)
 > Nazwa robocza: **Agent Manager** (projekt w Claude: *AgentToolMac*)
 
 Agent Manager to natywna aplikacja desktopowa na macOS 15 Sequoia do zarządzania lokalnymi agentami Claude Code. Zbiera w jednym oknie projekty, sesje agentów, ich stan i terminal, a gdy agent czegoś potrzebuje, daje znać popupem i głosem.
@@ -25,6 +25,12 @@ Aplikacja **nie uruchamia własnego orkiestratora**. Steruje oficjalnym supervis
 | [10-wymagania-inzynierskie.md](10-wymagania-inzynierskie.md) | Zasady budowy: moduły, hermetyczność, interfejsy, clean code, testy, Definition of Done |
 | [11-koncepcja-techniczna.md](11-koncepcja-techniczna.md) | Koncepcja techniczna: mapa modułów, reguły zależności, kontrakty API, przepływ danych, izolacja zmian |
 | [12-strategia-testow.md](12-strategia-testow.md) | Piramida testów: jednostkowe, kontraktowe, integracyjne, funkcjonalne, architektury; bramka CI |
+| [13-plan-wdrozenia.md](13-plan-wdrozenia.md) | Plan wdrożenia: etapy M0–M9, cykl dostarczania, gałęzie, wydania, utrzymanie, ryzyka |
+| [14-agent-claude-code.md](14-agent-claude-code.md) | Agent Claude Code budujący i utrzymujący aplikację: role, skille, hooki, uprawnienia, GitHub Actions |
+| [ROADMAP.md](ROADMAP.md) | Zadania AM-XXX z zależnościami i statusami, źródło prawdy dla agenta |
+| [compat.md](compat.md) | Zgodność z wersjami Claude Code i historia przeglądów |
+| [adr/](adr/) | Decyzje architektoniczne (ADR) |
+| [plans/](plans/) | Plany zadań tworzone przez agenta `architect` |
 | [screenshots/](screenshots/) | 17 zrzutów mockupów (PNG, 1440 px × 1,5), diagram architektury i diagram modułów |
 | [Agent-Manager-podsumowanie.pdf](Agent-Manager-podsumowanie.pdf) | 13-stronicowe podsumowanie całej koncepcji, z koncepcją techniczną |
 
