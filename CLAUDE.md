@@ -58,4 +58,5 @@ Do czasu zadania AM-101 projekt nie ma jeszcze Gradle; wtedy bramką jest lint d
 
 Krótkie wnioski z review i błędów agenta, dopisywane przez PR (jedna linia każdy).
 
-- (pusto)
+- W sesjach Claude Code w chmurze GitHub działa tylko przez REST: zamiast `gh pr create` / `gh issue create|close|comment` używaj `gh api repos/KrystianKatafoni/agent-manager/{pulls,issues}…` (GraphQL jest zablokowany).
+- W sesjach w chmurze Maven Central i repozytoria Gradle bywają niedostępne (allowlista sieci); wtedy weryfikacją buildu jest CI w PR.
