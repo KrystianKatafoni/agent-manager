@@ -22,9 +22,9 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
-import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -49,7 +49,8 @@ class SessionsStateTest {
             state.publish(ok(aRuntimeSession()), projects)
             val seen =
                 mutableListOf<Pair<SessionEvent, SessionsSnapshot>>().also { seen ->
-                    backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) {
+                    // Unconfined: the collector runs inside emit, so it sees the snapshot of that moment.
+                    backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
                         state.events.collect { seen += it to state.snapshot.value }
                     }
                 }

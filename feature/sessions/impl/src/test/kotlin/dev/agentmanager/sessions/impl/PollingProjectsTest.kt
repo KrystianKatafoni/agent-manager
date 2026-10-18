@@ -91,6 +91,8 @@ class PollingProjectsTest {
             world.runtime.listedAtMillis shouldBe millis(0, 1_000)
             advance(1.seconds)
 
+            // Not the proof of the wakeup (the first listing already reads the new dirs when it publishes);
+            // listedAtMillis above is. This only checks that the session ends up attributed.
             world.session(S1).project shouldBe added.id
         }
 

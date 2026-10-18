@@ -15,6 +15,7 @@ import dev.agentmanager.sessions.api.SessionEvent
 import dev.agentmanager.sessions.api.SessionMonitor
 import dev.agentmanager.sessions.api.SessionsSnapshot
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -45,9 +46,13 @@ internal class PollingSessionMonitor(
 
     override val events: Flow<SessionEvent> get() = state.events
 
-    /** Starts the project watcher and the loop; both stop when [scope] is cancelled. */
+    /**
+     * Starts the project watcher and the loop; both stop when [scope] is cancelled. The watcher starts
+     * undispatched, so its subscription and the baseline skipped by `drop(1)` are set before the loop can
+     * list; a change right after [start] is never lost, also on a multi-threaded dispatcher.
+     */
     fun start(scope: CoroutineScope) {
-        scope.launch {
+        scope.launch(start = CoroutineStart.UNDISPATCHED) {
             projects.projects
                 .map { it.dirs() }
                 .distinctUntilChanged()

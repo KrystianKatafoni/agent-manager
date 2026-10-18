@@ -21,6 +21,10 @@ import java.nio.file.Path
  * Single owner of the published state. [publish] reads the current snapshot, reduces, sets [snapshot],
  * then emits the events, all under one Mutex (AM-402 review: calls of reduce are serialized). AM-404
  * commands publish through the same instance.
+ *
+ * Events are emitted under the mutex, after [snapshot] is set. With a full buffer (64 events) a
+ * collector that stops collecting therefore also holds back every later snapshot update; consumers
+ * (AM-405) must not collect [events] on a thread that may block or stall.
  */
 internal class SessionsState(
     private val clock: Clock,
@@ -32,7 +36,10 @@ internal class SessionsState(
     /** Latest snapshot, [SessionsSnapshot.Initial] until the first [publish]. */
     val snapshot: StateFlow<SessionsSnapshot> = current.asStateFlow()
 
-    /** Transitions without replay; each one is emitted after [snapshot] shows it. */
+    /**
+     * Transitions without replay; each one is emitted after [snapshot] shows it, under the publish mutex.
+     * A stalled collector with a full buffer stalls [publish] and so the snapshot too.
+     */
     val events: SharedFlow<SessionEvent> = emitted.asSharedFlow()
 
     /** Reduces [listing] against the current snapshot at the clock's time and publishes the result. */
