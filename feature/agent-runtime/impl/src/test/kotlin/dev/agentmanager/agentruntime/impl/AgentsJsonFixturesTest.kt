@@ -20,6 +20,9 @@ import io.kotest.matchers.string.shouldNotContain
 import io.kotest.matchers.string.shouldStartWith
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.Arguments.arguments
+import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import java.nio.file.Files
 import java.nio.file.Path
@@ -49,6 +52,33 @@ class AgentsJsonFixturesTest {
         parseFixture(file) shouldBe
             AgentsListing(sessions = emptyList(), notices = listOf(EntrySkipped(0, SkipReason.INTERACTIVE)))
     }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("recordedBackground")
+    fun `recorded 2_1_302 background output yields the recorded phases`(
+        file: String,
+        expected: List<Triple<String, RuntimePhase, WaitingFor?>>,
+    ) {
+        val listing = parseFixture(file)
+
+        listing.sessions.map { Triple(it.id.value, it.phase, it.waitingFor) } shouldContainExactly expected
+        listing.notices.filterIsInstance<UnknownPhase>().shouldBeEmpty()
+    }
+
+    @Test
+    fun `recorded 2_1_302 sessions keep a pid only while their process lives`() {
+        val done = recordedSession("recorded/2.1.302-all-background-done.json", "00000001")
+        val stopped = recordedSession("recorded/2.1.302-all-background-done-after-stop.json", "00000001")
+
+        done.pid shouldBe 4242L
+        stopped.pid shouldBe null
+        stopped.phase shouldBe RuntimePhase.DONE
+    }
+
+    private fun recordedSession(
+        file: String,
+        id: String,
+    ): RuntimeSession = parseFixture(file).sessions.single { it.id.value == id }
 
     @Test
     fun `background-all-phases yields one session per phase`() {
@@ -170,4 +200,39 @@ class AgentsJsonFixturesTest {
 
     private fun RuntimeSession.blocked(reason: WaitingFor): RuntimeSession =
         copy(phase = RuntimePhase.BLOCKED, waitingFor = reason)
+
+    companion object {
+        private val OTHER_DONE = Triple("00000003", RuntimePhase.DONE, null)
+
+        @JvmStatic
+        fun recordedBackground(): List<Arguments> =
+            listOf(
+                arguments(
+                    "recorded/2.1.302-all-background-working.json",
+                    listOf(OTHER_DONE, Triple("00000002", RuntimePhase.WORKING, null)),
+                ),
+                arguments(
+                    "recorded/2.1.302-all-background-blocked-permission.json",
+                    listOf(OTHER_DONE, Triple("00000002", RuntimePhase.BLOCKED, WaitingFor.Permission)),
+                ),
+                arguments(
+                    "recorded/2.1.302-all-background-done.json",
+                    listOf(OTHER_DONE, Triple("00000001", RuntimePhase.DONE, null)),
+                ),
+                arguments(
+                    "recorded/2.1.302-all-background-done-after-stop.json",
+                    listOf(OTHER_DONE, Triple("00000001", RuntimePhase.DONE, null)),
+                ),
+                arguments(
+                    "recorded/2.1.302-all-background-respawned.json",
+                    listOf(OTHER_DONE, Triple("00000001", RuntimePhase.DONE, null)),
+                ),
+                arguments(
+                    "recorded/2.1.302-all-background-stopped.json",
+                    listOf(OTHER_DONE, Triple("00000002", RuntimePhase.STOPPED, null)),
+                ),
+                arguments("recorded/2.1.302-background-stopped-hidden.json", emptyList<Any>()),
+                arguments("recorded/2.1.302-all-background-removed.json", listOf(OTHER_DONE)),
+            )
+    }
 }
