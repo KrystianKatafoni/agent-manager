@@ -31,7 +31,9 @@ public data class Session(
     val lastActivityAt: Instant,
     val summary: String?,
 ) {
-    override fun toString(): String = TODO("AM-401: toString hiding summary")
+    override fun toString(): String =
+        "Session(id=$id, project=$project, name=$name, cwd=$cwd, state=$state, startedAt=$startedAt, " +
+            "lastActivityAt=$lastActivityAt, summary=${summary?.let { HIDDEN }})"
 }
 
 /**
@@ -40,10 +42,15 @@ public data class Session(
  */
 public sealed interface SessionState {
     /** True for [Working], [AwaitingInput] and [AwaitingPermission]. */
-    public val isActive: Boolean get() = TODO("AM-401: active rule")
+    public val isActive: Boolean
+        get() =
+            when (this) {
+                Working, is AwaitingInput, is AwaitingPermission -> true
+                Done, is Failed, Stopped -> false
+            }
 
     /** True for [AwaitingInput] and [AwaitingPermission]: the agent waits for the user. */
-    public val isWaiting: Boolean get() = TODO("AM-401: waiting rule")
+    public val isWaiting: Boolean get() = this is AwaitingInput || this is AwaitingPermission
 
     /** The agent is working on its turn. */
     public data object Working : SessionState
@@ -55,7 +62,7 @@ public sealed interface SessionState {
     public data class AwaitingInput(
         val question: String?,
     ) : SessionState {
-        override fun toString(): String = TODO("AM-401: toString hiding question")
+        override fun toString(): String = "AwaitingInput(question=${question?.let { HIDDEN }})"
     }
 
     /** The agent asks for permission to use [tool]; null when the tool is unknown. */
@@ -74,3 +81,6 @@ public sealed interface SessionState {
     /** The session was stopped and can be respawned. */
     public data object Stopped : SessionState
 }
+
+/** Placeholder `toString` prints instead of user data (ENG-C8). */
+internal const val HIDDEN = "***"

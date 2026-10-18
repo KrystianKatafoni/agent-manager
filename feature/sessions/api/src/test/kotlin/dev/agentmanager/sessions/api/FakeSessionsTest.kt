@@ -74,8 +74,9 @@ class FakeSessionsTest {
             fake.snapshot.value.sessions
                 .map { it.id to it.startedAt } shouldBe
                 listOf(
-                    existing to T0,
+                    // Ordered by start time, then id: 00000001 sorts before aaaa0001 at T0.
                     SessionId("00000001") to T0,
+                    existing to T0,
                     SessionId("00000002") to T0.plus(1.minutes.toJavaDuration()),
                 )
         }

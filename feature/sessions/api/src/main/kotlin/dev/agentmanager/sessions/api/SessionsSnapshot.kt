@@ -17,8 +17,13 @@ public data class SessionsSnapshot(
      * Pure: active sessions (see [SessionState.isActive]) whose [Session.project] is [project]
      * (FR-P6). Sessions of nested projects and sessions without a project are not counted.
      */
-    @Suppress("UnusedParameter") // Skeleton for the test-first step; the implementation uses it.
-    public fun countsFor(project: ProjectId): SessionCounts = TODO("AM-401: countsFor")
+    public fun countsFor(project: ProjectId): SessionCounts {
+        val active = sessions.filter { it.project == project && it.state.isActive }
+        return SessionCounts(
+            working = active.count { it.state == SessionState.Working },
+            waiting = active.count { it.state.isWaiting },
+        )
+    }
 
     public companion object {
         /** Before the first listing: no sessions, [SnapshotStatus.Loading]. */

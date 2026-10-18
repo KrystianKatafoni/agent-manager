@@ -70,10 +70,14 @@ public data class NewSessionSpec(
     val permissionMode: SessionPermissionMode? = null,
 ) {
     init {
-        TODO("AM-401: NewSessionSpec validation")
+        require(prompt.isNotBlank()) { "NewSessionSpec prompt must not be blank" }
+        require(name?.isNotBlank() ?: true) { "NewSessionSpec name must not be blank" }
+        require(agent?.isNotBlank() ?: true) { "NewSessionSpec agent must not be blank" }
+        require(model?.isNotBlank() ?: true) { "NewSessionSpec model must not be blank" }
     }
 
-    override fun toString(): String = TODO("AM-401: toString hiding prompt")
+    override fun toString(): String =
+        "NewSessionSpec(prompt=$HIDDEN, name=$name, agent=$agent, model=$model, permissionMode=$permissionMode)"
 }
 
 /** Claude Code permission mode a session starts with. */
