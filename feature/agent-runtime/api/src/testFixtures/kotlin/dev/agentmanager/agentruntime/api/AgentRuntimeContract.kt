@@ -15,12 +15,18 @@ import java.nio.file.Path
 
 /**
  * Behaviour every [AgentRuntime] must have for session operations (ENG-T2). Runs on
- * [FakeAgentRuntime] and, from AM-203, on the CLI adapter with a fake `claude` on `PATH`.
+ * [FakeAgentRuntime] and, from AM-203, on the CLI adapter with a fake `claude` executable.
  * Health is covered separately by [AgentRuntimeHealthContract].
  */
 public abstract class AgentRuntimeContract {
     /** Returns a runtime whose supervisor starts in the state described by [world]. */
     public abstract fun create(world: RuntimeWorld): AgentRuntime
+
+    /**
+     * Existing directory used as `cwd` by every `start` in this contract; the CLI adapter runs
+     * `claude --bg` in it. Read only inside test methods, so an override may use injected temp dirs.
+     */
+    protected open val startCwd: Path = A_PROJECT_DIR
 
     private val first = aRuntimeSession(id = SessionId("7c5dcf5d"), name = "fix-login")
     private val second =
@@ -71,7 +77,7 @@ public abstract class AgentRuntimeContract {
     public fun `started session appears in the list as working with its name and cwd`(): Unit =
         runTest {
             val runtime = create(RuntimeWorld())
-            val cwd = Path.of("/Users/test/projects/new")
+            val cwd = startCwd
 
             val id = runtime.start(aStartSpec(cwd = cwd, name = "new-feature")).getOrNull().shouldNotBeNull()
 
@@ -88,8 +94,8 @@ public abstract class AgentRuntimeContract {
         runTest {
             val runtime = create(RuntimeWorld(sessions = listOf(first)))
 
-            val a = runtime.start(aStartSpec(name = "one")).getOrNull().shouldNotBeNull()
-            val b = runtime.start(aStartSpec(name = "two")).getOrNull().shouldNotBeNull()
+            val a = runtime.start(aStartSpec(cwd = startCwd, name = "one")).getOrNull().shouldNotBeNull()
+            val b = runtime.start(aStartSpec(cwd = startCwd, name = "two")).getOrNull().shouldNotBeNull()
 
             a shouldNotBe b
             a shouldNotBe first.id
@@ -171,7 +177,7 @@ public abstract class AgentRuntimeContract {
 
             assertSoftly {
                 runtime.listSessions() shouldBe expected
-                runtime.start(aStartSpec()) shouldBe expected
+                runtime.start(aStartSpec(cwd = startCwd)) shouldBe expected
                 runtime.stop(first.id) shouldBe expected
                 runtime.respawn(first.id) shouldBe expected
                 runtime.remove(first.id) shouldBe expected

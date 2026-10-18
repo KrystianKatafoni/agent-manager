@@ -142,6 +142,23 @@ class LoginShellProcessRunnerTest {
         }
 
     @Test
+    fun `returns when the process exits although a background child keeps its output open`() =
+        // Without a bounded drain the readers wait for EOF, i.e. for the 30 s child; the wall-clock
+        // limit of runTest catches that, the run timeout cannot (the process itself exits at once).
+        runTest(timeout = 10.seconds) {
+            val pidFile = dir.resolve("child.pid")
+            val command = cmd("sh", "-c", "sleep 30 & echo \$! > child.pid; printf started; printf warn >&2")
+
+            try {
+                val result = runner.run(command, RunOptions(timeout = 5.seconds)).getOrNull()
+
+                result shouldBe ProcessResult(exitCode = 0, stdout = "started", stderr = "warn")
+            } finally {
+                killFrom(pidFile)
+            }
+        }
+
+    @Test
     fun `kills the process when the caller is cancelled`() =
         runTest {
             val pidFile = dir.resolve("self.pid")
@@ -179,6 +196,16 @@ class LoginShellProcessRunnerTest {
             logger.entries.map { it.message } shouldBe listOf("process start")
             logger.entries.toString().contains("secret-value") shouldBe false
         }
+
+    /** Kills a background child the test left behind on purpose, with its own children. */
+    private fun killFrom(pidFile: Path) {
+        if (!pidFile.exists()) return
+        val pid = pidFile.readText().trim().toLongOrNull() ?: return
+        ProcessHandle.of(pid).ifPresent { child ->
+            child.descendants().forEach { it.destroyForcibly() }
+            child.destroyForcibly()
+        }
+    }
 
     /** Polls briefly: a killed orphan is reaped by init shortly after the signal. */
     private suspend fun isAlive(pidFile: Path): Boolean =
