@@ -46,8 +46,8 @@ internal data class Overlaid(
 
 /**
  * Pure (ENG-C9): lays pending expectations over a successful listing; drops confirmed, contradicted and
- * expired ones. Of several expectations for one session the last one wins; [Overlaid.pending] keeps the
- * order of the input.
+ * expired ones. Of several expectations for one session the last one wins, except that a move of a session
+ * not listed yet keeps it appearing in the new phase; [Overlaid.pending] keeps the order of the input's ids.
  */
 internal object CommandOverlay {
     fun apply(
@@ -55,15 +55,26 @@ internal object CommandOverlay {
         pending: List<Expected>,
         now: Instant,
     ): Overlaid {
-        val latest = pending.filter { now < it.until }.associateBy { it.id }
+        val latest =
+            pending.filter { now < it.until }.fold(mapOf<SessionId, Expected>()) { acc, expected ->
+                acc + (expected.id to expected.after(acc[expected.id]))
+            }
         val listed = listing.map { it.id }.toSet()
         val kept = latest.values.filter { it.holdsOver(listing.firstOrNull { session -> session.id == it.id }) }
         val byId = kept.associateBy { it.id }
         val sessions =
             listing.mapNotNull { it.overlaid(byId[it.id]) } +
                 kept.filterIsInstance<Expected.Appears>().filterNot { it.id in listed }.map { it.session }
-        return Overlaid(sessions, pending.filter { it in kept })
+        return Overlaid(sessions, kept)
     }
+
+    /** [this] newer expectation over an [older] one for the same session. */
+    private fun Expected.after(older: Expected?): Expected =
+        if (this is Expected.Moves && older is Expected.Appears) {
+            Expected.Appears(older.session.copy(phase = to, waitingFor = null), until)
+        } else {
+            this
+        }
 
     /** True while [listed] (null = not listed) does not show the expectation yet and does not contradict it. */
     private fun Expected.holdsOver(listed: RuntimeSession?): Boolean =

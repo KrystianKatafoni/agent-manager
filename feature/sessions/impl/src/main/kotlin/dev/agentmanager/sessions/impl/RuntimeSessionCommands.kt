@@ -55,7 +55,16 @@ internal class RuntimeSessionCommands(
             is Outcome.Ok -> {
                 val id = started.value
                 val session =
-                    RuntimeSession(id, null, spec.name ?: id.value, dir, RuntimePhase.WORKING, null, clock.now(), null)
+                    RuntimeSession(
+                        id = id,
+                        conversationId = null,
+                        name = spec.name ?: id.value,
+                        cwd = dir,
+                        phase = RuntimePhase.WORKING,
+                        waitingFor = null,
+                        startedAt = clock.now(),
+                        pid = null,
+                    )
                 done("start", id, Expected.Appears(session, state.expiry()))
                 Outcome.Ok(id)
             }
@@ -63,19 +72,19 @@ internal class RuntimeSessionCommands(
     }
 
     override suspend fun stop(id: SessionId): Outcome<Unit, SessionError> =
-        checked(id) { session ->
+        checked("stop", id) { session ->
             if (!session.state.isActive) return@checked Outcome.Ok(Unit)
             runtime.stop(id).then("stop", id) { Expected.Moves(id, session.phase(), RuntimePhase.STOPPED, it) }
         }
 
     override suspend fun respawn(id: SessionId): Outcome<Unit, SessionError> =
-        checked(id) { session ->
+        checked("respawn", id) { session ->
             if (session.state.isActive) return@checked Outcome.Err(SessionError.SessionActive(id))
             runtime.respawn(id).then("respawn", id) { Expected.Moves(id, session.phase(), RuntimePhase.WORKING, it) }
         }
 
     override suspend fun remove(id: SessionId): Outcome<Unit, SessionError> =
-        checked(id) { session ->
+        checked("remove", id) { session ->
             if (session.state.isActive) return@checked Outcome.Err(SessionError.SessionActive(id))
             runtime.remove(id).then("remove", id) { Expected.Disappears(id, it) }
         }
@@ -84,6 +93,8 @@ internal class RuntimeSessionCommands(
         if (projects.projects.value.none { it.id == project }) return Outcome.Err(SessionError.UnknownProject(project))
         return when (val listed = state.refresh()) {
             is Outcome.Err -> failed("stopAllIn", null, listed.error)
+
+            // Same targets as SessionsSnapshot.countsFor: the project's active sessions, overlay included.
             is Outcome.Ok -> stopAll(listed.value.sessions.filter { it.project == project && it.state.isActive })
         }
     }
@@ -123,20 +134,21 @@ internal class RuntimeSessionCommands(
         return moves to failed
     }
 
-    /** Runs [command] on [id] as a fresh listing shows it; a failed listing or an unknown id ends here. */
+    /** Runs [run] for [command] on [id] as a fresh listing shows it; a failed listing or an unknown id ends here. */
     private suspend fun checked(
+        command: String,
         id: SessionId,
-        command: suspend (Session) -> Outcome<Unit, SessionError>,
+        run: suspend (Session) -> Outcome<Unit, SessionError>,
     ): Outcome<Unit, SessionError> =
         when (val listed = state.refresh()) {
             is Outcome.Err -> {
-                failed("check", id, listed.error)
+                failed(command, id, listed.error)
             }
 
             is Outcome.Ok -> {
                 listed.value.sessions
                     .firstOrNull { it.id == id }
-                    ?.let { command(it) }
+                    ?.let { run(it) }
                     ?: Outcome.Err(SessionError.UnknownSession(id))
             }
         }
@@ -148,8 +160,14 @@ internal class RuntimeSessionCommands(
         effect: (Instant) -> Expected,
     ): Outcome<Unit, SessionError> =
         when (this) {
-            is Outcome.Ok -> Outcome.Ok(done(command, id, effect(state.expiry())))
-            is Outcome.Err -> failed(command, id, error)
+            is Outcome.Ok -> {
+                done(command, id, effect(state.expiry()))
+                Outcome.Ok(Unit)
+            }
+
+            is Outcome.Err -> {
+                failed(command, id, error)
+            }
         }
 
     /** Logs the command and publishes its [expected] effect over a fresh listing. */

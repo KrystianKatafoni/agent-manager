@@ -150,6 +150,21 @@ internal class CommandOverlayTest {
     }
 
     @Test
+    fun `stop right after start shows the session stopped`() {
+        val started = session(S1, phase = RuntimePhase.WORKING, waitingFor = WaitingFor.Input)
+        val appears = Expected.Appears(started, UNTIL)
+        val stop = Expected.Moves(SessionId(S1), RuntimePhase.WORKING, RuntimePhase.STOPPED, UNTIL.plusSeconds(1))
+        val stopped = started.copy(phase = RuntimePhase.STOPPED, waitingFor = null)
+
+        val first = CommandOverlay.apply(emptyList(), listOf(appears, stop), NOW)
+        val second = CommandOverlay.apply(emptyList(), first.pending, NOW)
+
+        first.sessions shouldBe listOf(stopped)
+        second.sessions shouldBe listOf(stopped)
+        second.pending shouldBe listOf(Expected.Appears(stopped, UNTIL.plusSeconds(1)))
+    }
+
+    @Test
     fun `expectations of other sessions do not touch a session`() {
         val listing = listOf(session(S1), session(S2, phase = RuntimePhase.BLOCKED, waitingFor = WaitingFor.Input))
         val moves = Expected.Moves(SessionId(S1), RuntimePhase.WORKING, RuntimePhase.STOPPED, UNTIL)
