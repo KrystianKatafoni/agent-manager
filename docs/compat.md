@@ -13,9 +13,9 @@ Agent Manager steruje supervisorem sesji Claude Code (Agent View, research previ
 
 | Element | Używany w | Na co uważać |
 | --- | --- | --- |
-| `claude agents --json [--all] [--cwd]` | `agent-runtime:impl` (parser) | pola `id`, `sessionId`, `name`, `cwd`, `state`, `status`, `waitingFor`; nowe wartości `state`. Zaobserwowane w 2.1.302 (sesja interaktywna): `pid`, `cwd`, `kind`, `startedAt` (epoch millis), `sessionId`, `name`, `status`; brak `id`, `state`, `waitingFor`. Pola sesji w tle wciąż niezweryfikowane nagraniem (fixtures: `feature/agent-runtime/impl/src/test/resources/fixtures/agents-json/`) |
-| `claude --bg`, `--name`, `--agent`, `--resume` | `agent-runtime:impl` | zmiany flag |
-| `claude attach / logs / stop / respawn / rm` | `agent-runtime:impl`, `terminal` | zmiany zachowania, nowe potwierdzenia |
+| `claude agents --json [--all] [--cwd]` | `agent-runtime:impl` (parser; adapter nie używa `--cwd`, które jest dopiero od 2.1.141, i filtruje `under` sam) | pola `id`, `sessionId`, `name`, `cwd`, `state`, `status`, `waitingFor`; nowe wartości `state`. Zaobserwowane w 2.1.302 (sesja interaktywna): `pid`, `cwd`, `kind`, `startedAt` (epoch millis), `sessionId`, `name`, `status`; brak `id`, `state`, `waitingFor`. Pola sesji w tle wciąż niezweryfikowane nagraniem (fixtures: `feature/agent-runtime/impl/src/test/resources/fixtures/agents-json/`) |
+| `claude --bg`, `--name`, `--agent`, `--model`, `--permission-mode`, `--resume` | `agent-runtime:impl` (`ClaudeCliAdapter`) | zmiany flag; adapter parsuje linię `backgrounded · <id> · <name>` (z dokumentacji, niezweryfikowane nagraniem). `--permission-mode` w 2.1.302 przyjmuje `acceptEdits`, `auto`, `bypassPermissions`, `manual`, `dontAsk`, `plan` — dla `DEFAULT` flaga jest pomijana. Prompt idzie po `--` |
+| `claude attach / logs / stop / respawn / rm` | `agent-runtime:impl`, `terminal` | zmiany zachowania, nowe potwierdzenia. 2.1.302: `attach`/`logs` przyjmują `<id\|name>`, `stop`/`rm` `<id>`, `respawn` `<id>\|--all`; `rm` usuwa też worktree i może odmówić (`kept <id>` → `CommandFailed`). Kod wyjścia i komunikat dla nieznanego id nieopisane — adapter sprawdza listę ponownie |
 | Hooki HTTP: `Notification`, `Stop`, `StopFailure`, `SessionStart`, `SessionEnd` | `agent-runtime:impl` (serwer), `sessions:impl` | nazwy pól (`session_id`, `last_assistant_message`), typy powiadomień |
 | `disableAgentView`, `CLAUDE_CODE_DISABLE_AGENT_VIEW` | health check | wyłączony backend |
 
