@@ -13,7 +13,9 @@ internal object ProjectsTags {
     const val INSPECTING = "projects.dialog.inspecting"
     const val CONFIRM_ADD = "projects.dialog.add"
     const val ADD = "projects.dialog.add.confirm"
+    const val CHECKING_SESSIONS = "projects.dialog.remove.checking"
     const val CONFIRM_REMOVE = "projects.dialog.remove"
+    const val BUSY = "projects.dialog.busy"
 
     /** The only remove button: no active sessions, or they could not be listed. */
     const val REMOVE = "projects.dialog.remove.confirm"
