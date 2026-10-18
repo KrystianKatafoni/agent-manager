@@ -20,7 +20,7 @@
 
 ## M1 · Szkielet i bramka jakości
 
-- [ ] AM-101 · Gradle wrapper, katalog wersji, convention plugins w build-logic · moduły: build-logic · zależy: AM-002 · wymagania: ENG-M1, ENG-M2 · issue: #9
+- [x] AM-101 · Gradle wrapper, katalog wersji, convention plugins w build-logic · moduły: build-logic · zależy: AM-002 · wymagania: ENG-M1, ENG-M2 · issue: #9
 - [ ] AM-102 · core:domain (ID, Outcome, Clock, Logger, ShellCommand) · moduły: core:domain · zależy: AM-101 · wymagania: ENG-M6, ENG-I3, ENG-I4 · issue: #10
 - [ ] AM-103 · core:testing (TestClock, TestDispatchers, buildery) · moduły: core:testing · zależy: AM-102 · wymagania: ENG-T6 · issue: #11
 - [ ] AM-104 · Testy architektury Konsist + reguła Gradle impl→impl · moduły: tests:architecture, build-logic · zależy: AM-101 · wymagania: ENG-M3–M8, ENG-T5 · issue: #12
