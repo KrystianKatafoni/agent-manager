@@ -19,5 +19,6 @@ rootProject.name = "agent-manager"
 
 // Modules are added by their roadmap tasks and by /new-module.
 include(":core:domain")
+include(":core:storage")
 include(":core:testing")
 include(":tests:architecture")
