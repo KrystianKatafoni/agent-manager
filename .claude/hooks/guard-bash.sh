@@ -17,11 +17,22 @@ has() { printf '%s' "$cmd" | grep -Eq -- "$1"; }
 
 # --- git push ---------------------------------------------------------------
 if has '(^|[;&|[:space:]])git[[:space:]]+push'; then
-  has '(--force|--force-with-lease|[[:space:]]-f([[:space:]]|$)|[[:space:]]\+[^[:space:]]+)' &&
-    decide deny "Force push jest zabroniony w tym repo (CLAUDE.md, zasada 6)."
+  current=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+  # Only exception (CLAUDE.md, zasada 6): updating your own task branch after a rebase.
+  if has '--force-with-lease'; then
+    case "$current" in
+      feat/*|fix/*|chore/*|docs/*)
+        branch_re=$(printf '%s' "$current" | sed 's/[.[\*^$/]/\\&/g')
+        printf '%s' "$cmd" | grep -Eq "^[[:space:]]*git[[:space:]]+push[[:space:]]+--force-with-lease([[:space:]]+origin([[:space:]]+(HEAD|$branch_re))?)?[[:space:]]*$" ||
+          decide deny "--force-with-lease tylko w postaci: git push --force-with-lease [origin [HEAD|$current]] (bieżąca gałąź zadania)."
+        ;;
+      *) decide deny "--force-with-lease jest dozwolone tylko na własnej gałęzi feat/*, fix/*, chore/*, docs/*." ;;
+    esac
+  fi
+  has '(--force([[:space:]]|=|$)|[[:space:]]-f([[:space:]]|$)|[[:space:]]\+[^[:space:]]+)' &&
+    decide deny "Force push jest zabroniony w tym repo (CLAUDE.md, zasada 6). Po rebase użyj: git push --force-with-lease."
   has '[[:space:]](origin[[:space:]]+)?(HEAD:)?(refs/heads/)?(main|master)([[:space:]]|$)|:(main|master)([[:space:]]|$)' &&
     decide deny "Push do main/master jest zabroniony. Wypchnij gałąź zadania i otwórz PR przez /ship."
-  current=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
   if [ "$current" = "main" ] || [ "$current" = "master" ]; then
     decide deny "Jesteś na gałęzi $current. Utwórz gałąź zadania (feat/AM-XXX-…) zanim cokolwiek wypchniesz."
   fi

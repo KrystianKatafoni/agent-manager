@@ -22,7 +22,7 @@ Natywna aplikacja macOS (Kotlin + Compose Desktop) do zarządzania lokalnymi age
 3. **Najpierw testy**, potem kod. Każda nowa logika ma test jednostkowy, każdy interfejs `api` test kontraktowy, każda funkcja użytkownika test funkcjonalny.
 4. **Bez prawdziwego Claude Code, sieci i zegara systemowego w testach.** Fake'i z `testFixtures`, fałszywy `claude` na `PATH`, `runTest` i `TestClock`.
 5. **Błędy przez `Outcome`**, nie wyjątki, na granicach modułów. Zakazane: `!!`, `GlobalScope`, `runBlocking` poza `main`/testami, `println`.
-6. **Nigdy nie pushuj do `main`, nie używaj `--force`, `--no-verify` ani `gh pr merge`.** Scala człowiek. Hooki to blokują; nie próbuj ich obchodzić.
+6. **Nigdy nie pushuj do `main`, nie używaj `--force`, `--no-verify` ani `gh pr merge`.** Scala człowiek. Hooki to blokują; nie próbuj ich obchodzić. Jedyny wyjątek: po rebase własnej gałęzi zadania (`feat/*`, `fix/*`, `chore/*`, `docs/*`) wolno `git push --force-with-lease`.
 7. **Nie zmieniaj konfiguracji agenta** (`.claude/settings.json`, `.claude/hooks/`) bez wyraźnej prośby człowieka.
 
 ## Polecenia
