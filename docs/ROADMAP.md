@@ -42,7 +42,7 @@
 - [x] AM-302 · JsonProjectStore · moduły: projects:impl · zależy: AM-301, AM-107 · wymagania: FR-P1, FR-P3 · issue: #22
 - [x] AM-303 · DirectoryInspector (git, CLAUDE.md, sesje, hooki) · moduły: projects:impl · zależy: AM-302, AM-106 · wymagania: FR-P2 · issue: #23
 - [x] AM-304 · projects:ui: sidebar, dodaj z dysku, usuń z dialogiem · moduły: projects:ui, app · zależy: AM-302, AM-108 · wymagania: FR-P1, FR-P3, FR-P4 · issue: #24
-- [ ] AM-305 · projects:ui: zmiana nazwy i liczniki sesji w sidebarze · moduły: projects:ui, app · zależy: AM-304, AM-403 · wymagania: FR-P6 · issue: #74
+- [ ] AM-305 · projects:ui: zmiana nazwy, liczniki sesji w sidebarze i usuwanie przez `stopAllIn` · moduły: projects:ui, app · zależy: AM-304, AM-404 · wymagania: FR-P6, FR-P4 · issue: #74
 
 ## M4 · Sesje i Mission Control
 
