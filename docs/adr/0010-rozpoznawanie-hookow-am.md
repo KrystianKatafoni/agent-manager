@@ -16,7 +16,7 @@ Hook jest „nasz”, gdy handler w `hooks.<Zdarzenie>[*].hooks[*]` spełnia wsz
 - `url` ma schemat `http`, host `127.0.0.1` albo `localhost` i ścieżkę `/hooks`; port może być dowolny, bo jest konfigurowalny,
 - `headers` ma klucz `X-AM-Token` (wielkość liter nie ma znaczenia).
 
-Zdarzenie liczy się tylko wtedy, gdy jego nazwa odpowiada `HookKind`: `Notification`, `Stop`, `StopFailure`, `SessionStart`, `SessionEnd`. `matcher` i inne pola są pomijane. AM-602 zapisuje hooki w kształcie z docs/03, który spełnia tę regułę, a `HookInstaller.status` i `uninstall` stosują tę samą regułę. `projects:impl` czyta oba pliki sam, tylko do odczytu, i łączy wynik w `HooksPresence`.
+Zdarzenie liczy się tylko wtedy, gdy jego nazwa odpowiada `HookKind`: `Notification`, `Stop`, `StopFailure`, `SessionStart`, `SessionEnd`. `matcher` i inne pola są pomijane. Host `[::1]` i ścieżka `/hooks/` (z ukośnikiem na końcu) są celowo odrzucane, bo AM-602 ich nie zapisuje; AM-602 ma dzielić z `OurHooksTest` tę samą tabelę przypadków, żeby obie implementacje odrzucały je tak samo. `"hooks": null` traktujemy jak „`hooks` nie jest obiektem”, czyli plik nieczytelny (`Err` → `UNREADABLE`), a nie brak hooków. AM-602 zapisuje hooki w kształcie z docs/03, który spełnia tę regułę, a `HookInstaller.status` i `uninstall` stosują tę samą regułę. `projects:impl` czyta oba pliki sam, tylko do odczytu, i łączy wynik w `HooksPresence`.
 
 ## Rozważone alternatywy
 

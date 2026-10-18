@@ -22,3 +22,4 @@ Format: [Keep a Changelog](https://keepachangelog.com/pl/1.1.0/), wersjonowanie:
 - Health check `ClaudeCliAdapter.health()`: wersja Claude Code ≥ 2.1.139, włączony Agent View i stan supervisora (`claude --version`, `claude daemon status`, `claude agents --json`).
 - Moduł `feature:projects:api`: kontrakty `ProjectsApi` i `ProjectInspector`, reguły `ProjectInputRules` oraz fake'i z testami kontraktowymi w `testFixtures`.
 - Moduł `feature:projects:impl`: `JsonProjectStore` utrwala listę projektów w `projects.json` (schemat v1, ADR 0009) przez `JsonStore`, z fabryką `projectsModule(...)`.
+- `DirectoryInspector` w `feature:projects:impl`: sprawdzenie katalogu przed dodaniem (gałąź git bez blokad, `CLAUDE.md`, aktywne sesje, nasze hooki w `.claude/settings*.json` wg ADR 0010) z fabryką `projectInspectorModule(...)`.
