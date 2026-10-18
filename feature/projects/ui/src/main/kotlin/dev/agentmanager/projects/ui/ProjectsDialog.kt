@@ -55,9 +55,9 @@ private fun DialogContent(
 ) {
     val cancel = { onEvent(SidebarEvent.Dismiss) }
     when (dialog) {
+        // Not shown, see ProjectsDialog.
         Dialog.Picking -> Unit
 
-        // Not shown, see ProjectsDialog.
         is Dialog.Waiting -> Waiting(dialog, onCancel = cancel.takeIf { dialog != Dialog.Waiting.BUSY })
 
         is Dialog.ConfirmAdd -> ConfirmAdd(dialog, onEvent)
