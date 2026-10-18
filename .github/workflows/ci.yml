@@ -43,6 +43,19 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
       - if: steps.gradle.outputs.present == 'true'
         run: ./gradlew check --no-daemon
+      - name: Test summary (annotation, readable via the API)
+        if: steps.gradle.outputs.present == 'true' && always()
+        run: |
+          files=$(find . -path '*/build/test-results/*' -name 'TEST-*.xml' 2>/dev/null)
+          if [ -z "$files" ]; then echo "::warning::No test results found"; exit 0; fi
+          total=0; failed=0; skipped=0
+          for f in $files; do
+            t=$(sed -n 's/.*<testsuite [^>]*tests="\([0-9]*\)".*/\1/p' "$f" | head -1)
+            e=$(sed -n 's/.*<testsuite [^>]*failures="\([0-9]*\)".*/\1/p' "$f" | head -1)
+            k=$(sed -n 's/.*<testsuite [^>]*skipped="\([0-9]*\)".*/\1/p' "$f" | head -1)
+            total=$((total + ${t:-0})); failed=$((failed + ${e:-0})); skipped=$((skipped + ${k:-0}))
+          done
+          echo "::notice title=Tests::$total tests, $failed failed, $skipped skipped in $(echo "$files" | wc -l | tr -d ' ') suites"
       - if: steps.gradle.outputs.present == 'true' && failure()
         uses: actions/upload-artifact@v4
         with:
