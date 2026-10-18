@@ -1,11 +1,26 @@
 plugins {
     `kotlin-dsl`
+    alias(libs.plugins.spotless)
+}
+
+spotless {
+    kotlin {
+        target("src/**/*.kt")
+        ktlint(libs.versions.ktlint.get())
+    }
+    kotlinGradle {
+        target("*.kts", "src/**/*.kts")
+        ktlint(libs.versions.ktlint.get())
+    }
 }
 
 dependencies {
     implementation(libs.kotlin.gradle.plugin)
     implementation(libs.compose.compiler.gradle.plugin)
     implementation(libs.compose.gradle.plugin)
+    implementation(libs.spotless.gradle.plugin)
+    implementation(libs.detekt.gradle.plugin)
+    implementation(libs.kover.gradle.plugin)
 
     testImplementation(gradleTestKit())
     testImplementation(platform(libs.junit.bom))

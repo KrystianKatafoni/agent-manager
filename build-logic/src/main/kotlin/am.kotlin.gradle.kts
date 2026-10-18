@@ -3,6 +3,7 @@ import org.gradle.api.artifacts.VersionCatalogsExtension
 // Base for every Kotlin module: JVM 21, warnings as errors, JUnit Platform with Kotest assertions.
 plugins {
     id("org.jetbrains.kotlin.jvm")
+    id("am.quality")
 }
 
 val libs = the<VersionCatalogsExtension>().named("libs")
