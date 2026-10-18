@@ -14,3 +14,4 @@ Format: [Keep a Changelog](https://keepachangelog.com/pl/1.1.0/), wersjonowanie:
 - Moduł `core:testing`: `TestClock`, `testDispatchers`, `RecordingLogger`, buildery danych testowych.
 - Reguły zależności modułów w Gradle oraz testy architektury Konsist (`tests:architecture`).
 - Bramka jakości: Spotless/ktlint, detekt 2.0, progi pokrycia Kover i szybki task `quickCheck` dla hooka `Stop`.
+- Moduł `app`: okno Compose Desktop z pustym Mission Control, composition root `CoreDeps` i logowanie przez SLF4J (`./gradlew :app:run`).
