@@ -10,6 +10,13 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
     repositories {
+        // JediTerm is published only here (not on Maven Central); nothing else may come from it (AM-501, ADR 0012).
+        exclusiveContent {
+            forRepository {
+                maven("https://packages.jetbrains.team/maven/p/ij/intellij-dependencies")
+            }
+            filter { includeGroup("org.jetbrains.jediterm") }
+        }
         mavenCentral()
         google()
     }
@@ -34,4 +41,5 @@ include(":feature:projects:impl")
 include(":feature:projects:ui")
 include(":feature:sessions:api")
 include(":feature:sessions:impl")
+include(":feature:terminal:impl")
 include(":tests:architecture")

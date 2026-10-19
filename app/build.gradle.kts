@@ -39,6 +39,33 @@ dependencies {
     testImplementation(testFixtures(project(":feature:command-palette:api")))
 }
 
+// AM-501 spike: a separate source set, not part of `main` or the .dmg. `check` compiles it so it does not rot.
+// Run with `./gradlew :app:runTerminalSpike [-PspikeBlending=true]`; AM-503 removes it (docs/plans/AM-501.md).
+val terminalSpike =
+    kotlin.target.compilations.create("terminalSpike") {
+        associateWith(kotlin.target.compilations.getByName("main"))
+    }
+
+configurations["terminalSpikeImplementation"].extendsFrom(configurations["implementation"])
+configurations["terminalSpikeRuntimeOnly"].extendsFrom(configurations["runtimeOnly"])
+
+dependencies {
+    "terminalSpikeImplementation"(project(":feature:terminal:impl"))
+}
+
+tasks.register<JavaExec>("runTerminalSpike") {
+    group = "application"
+    description = "Opens the AM-501 JediTerm-in-SwingPanel test window (-PspikeBlending=true enables interop blending)."
+    mainClass = "dev.agentmanager.app.terminalspike.TerminalSpikeMainKt"
+    classpath = terminalSpike.output.allOutputs + terminalSpike.runtimeDependencyFiles
+    javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(21) }
+    if (providers.gradleProperty("spikeBlending").orNull == "true") {
+        systemProperty("compose.interop.blending", "true")
+    }
+}
+
+tasks.named("check") { dependsOn("compileTerminalSpikeKotlin") }
+
 compose.desktop {
     application {
         mainClass = "dev.agentmanager.app.MainKt"
