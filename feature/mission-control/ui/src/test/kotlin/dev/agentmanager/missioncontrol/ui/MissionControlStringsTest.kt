@@ -44,7 +44,7 @@ internal class MissionControlStringsTest {
     }
 
     @ParameterizedTest(name = "{0}")
-    @MethodSource("fixedTexts")
+    @MethodSource("fixedTexts", "previewTexts")
     fun `fixed texts say what the plan says`(
         key: String,
         expected: String,
@@ -168,15 +168,20 @@ internal class MissionControlStringsTest {
                 arguments("dialog.cancel", "Anuluj"),
                 arguments("list.loading", "Wczytywanie sesji…"),
                 arguments("details.none", "Wybierz sesję"),
+                arguments("fresh.live", "na żywo"),
+                arguments("fresh.loading", "wczytywanie"),
+                arguments("fresh.short.stale", "nieaktualne od {0}"),
+            )
+
+        @JvmStatic
+        fun previewTexts(): List<Arguments> =
+            listOf(
                 arguments("preview.title", "Podgląd · {0}"),
                 arguments("preview.loading", "Wczytywanie outputu…"),
                 arguments("preview.empty", "Brak outputu"),
                 arguments("preview.failed", "Nie udało się wczytać outputu"),
                 arguments("preview.close", "Zamknij  space"),
                 arguments("action.preview", "Podgląd  space"),
-                arguments("fresh.live", "na żywo"),
-                arguments("fresh.loading", "wczytywanie"),
-                arguments("fresh.short.stale", "nieaktualne od {0}"),
             )
     }
 }
