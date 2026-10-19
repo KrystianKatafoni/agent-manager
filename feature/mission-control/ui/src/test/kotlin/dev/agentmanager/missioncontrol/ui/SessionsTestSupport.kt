@@ -3,8 +3,10 @@ package dev.agentmanager.missioncontrol.ui
 import dev.agentmanager.core.domain.Outcome
 import dev.agentmanager.core.domain.SessionId
 import dev.agentmanager.sessions.api.FakeSessions
+import dev.agentmanager.sessions.api.RecentOutput
 import dev.agentmanager.sessions.api.SessionCommands
 import dev.agentmanager.sessions.api.SessionError
+import dev.agentmanager.sessions.api.SessionMonitor
 import dev.agentmanager.sessions.api.SessionsApi
 import kotlinx.coroutines.CompletableDeferred
 
@@ -37,5 +39,32 @@ internal class GatedCommands(
         started += "remove ${id.value}"
         gate.await()
         return inner.remove(id)
+    }
+}
+
+/**
+ * A monitor whose [recentOutput] waits while the test [hold]s it: every read records its id in [started], waits for
+ * the current gate and then delegates to [inner]. Open by default; [release] lets the waiting reads continue.
+ * Gives the "slow read" state without a real clock.
+ */
+internal class GatedOutput(
+    private val inner: SessionMonitor,
+) : SessionMonitor by inner {
+    private var gate = CompletableDeferred<Unit>().also { it.complete(Unit) }
+    val started = mutableListOf<SessionId>()
+
+    /** Reads that start from now on wait until [release]. */
+    fun hold() {
+        gate = CompletableDeferred()
+    }
+
+    fun release() {
+        gate.complete(Unit)
+    }
+
+    override suspend fun recentOutput(id: SessionId): Outcome<RecentOutput, SessionError> {
+        started += id
+        gate.await()
+        return inner.recentOutput(id)
     }
 }

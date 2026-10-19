@@ -60,9 +60,18 @@ private fun toneOf(view: GlobalView): Tone =
 @Composable
 internal fun GlobalPage(
     page: Screen.Global,
+    preview: PreviewUi?,
     onEvent: (MissionControlEvent) -> Unit,
 ) {
-    SessionPage(page.banner, page.loading, page.rows, page.details, onEvent, filters = {}) { GlobalHeader(page) }
+    SessionPage(
+        page.banner,
+        page.loading,
+        page.rows,
+        page.details,
+        preview,
+        onEvent,
+        filters = {},
+    ) { GlobalHeader(page) }
 }
 
 @Composable

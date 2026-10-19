@@ -205,7 +205,8 @@ internal class SessionRemoveControllerTest {
             fake.calls.shouldBeEmpty()
             log.entries.shouldBeEmpty()
             ids(fake) shouldBe listOf("a")
-            controller.actions.value shouldBe SessionActionsState(canStop = false, canRespawn = true, canRemove = true)
+            controller.actions.value shouldBe
+                SessionActionsState(canStop = false, canRespawn = true, canRemove = true, canPreview = true)
         }
 
     @Test
@@ -214,7 +215,8 @@ internal class SessionRemoveControllerTest {
             val fake = world(session("a", 1))
             val controller = start(fake)
             select(controller, "a")
-            controller.actions.value shouldBe SessionActionsState(canStop = false, canRespawn = true, canRemove = true)
+            controller.actions.value shouldBe
+                SessionActionsState(canStop = false, canRespawn = true, canRemove = true, canPreview = true)
 
             send(controller, MissionControlIntent.RemoveSelected)
 
@@ -299,7 +301,8 @@ internal class SessionRemoveControllerTest {
                 .shouldBeNull()
             controller.details()?.busy shouldBe SessionAction.REMOVE
             controller.details()?.actions shouldBe emptySet()
-            controller.actions.value shouldBe SessionActionsState(canStop = false, canRespawn = false)
+            controller.actions.value shouldBe
+                SessionActionsState(canStop = false, canRespawn = false, canPreview = true)
 
             gated.gate.complete(Unit)
             runCurrent()

@@ -52,17 +52,28 @@ public class MissionControlController(
     private val monitor = sessions.monitor
     private val runner = SessionActionRunner(sessions.commands, logger)
     private val ui = MutableStateFlow(ActionUi())
+    private val preview = PreviewState(monitor, selection, scope)
 
     /** Read by the composables only. */
     internal val state: StateFlow<MissionControlUiState> =
-        combine(monitor.snapshot, projects.projects, selection, now, ui) { snapshot, list, picked, at, acting ->
-            MissionControlReducer.reduce(snapshot, list, picked, at, zone).withActions(snapshot, picked, acting)
+        combine(
+            monitor.snapshot,
+            projects.projects,
+            selection,
+            now,
+            combine(ui, preview.shown, ::Pair),
+        ) { snapshot, list, picked, at, (acting, shown) ->
+            MissionControlReducer
+                .reduce(snapshot, list, picked, at, zone)
+                .withActions(snapshot, picked, acting)
+                .copy(preview = shown)
         }.stateIn(
             scope,
             SharingStarted.Eagerly,
             MissionControlReducer
                 .reduce(monitor.snapshot.value, projects.projects.value, selection.value, now.value, zone)
-                .withActions(monitor.snapshot.value, selection.value, ui.value),
+                .withActions(monitor.snapshot.value, selection.value, ui.value)
+                .copy(preview = preview.shown.value),
         )
 
     init {
@@ -94,12 +105,16 @@ public class MissionControlController(
 
     /**
      * Actions of the selected visible session, for the palette (AM-410).
-     * All false while an action runs or a dialog is open.
+     * [SessionActionsState.canStop], `canRespawn` and `canRemove` are false while an action runs or a dialog is open;
+     * `canPreview` stays true while an action runs and is false only with a dialog open.
      * The target of a run is read again from the snapshot, so this may lag one step behind.
      */
     public val actions: StateFlow<SessionActionsState> =
-        combine(monitor.snapshot, selection, ui, ::actionsOf)
-            .stateIn(scope, SharingStarted.Eagerly, actionsOf(monitor.snapshot.value, selection.value, ui.value))
+        combine(monitor.snapshot, selection, ui, preview.open, ::actionsOf).stateIn(
+            scope,
+            SharingStarted.Eagerly,
+            actionsOf(monitor.snapshot.value, selection.value, ui.value, preview.open.value),
+        )
 
     /** Handles [intent] from the palette and window keys; ignored without a shown project, view or rows. */
     public fun onIntent(intent: MissionControlIntent) {
@@ -117,8 +132,17 @@ public class MissionControlController(
             MissionControlIntent.RespawnSelected -> run(SessionAction.RESPAWN)
             MissionControlIntent.RemoveSelected -> askToRemove()
             is MissionControlIntent.SelectFilter -> Unit
+            MissionControlIntent.TogglePreview -> togglePreview()
             is MissionControlIntent.ShowView -> selection.update { it.copy(view = intent.view, session = null) }
         }
+    }
+
+    /**
+     * Ignored while a dialog is open; otherwise [PreviewState.toggle] reads the target from fresh data. The guard
+     * protects the [onEvent] path (a click on "Podgląd" or "Zamknij"); [onIntent] already ignores intents then.
+     */
+    private fun togglePreview() {
+        if (ui.value.dialog == null) preview.toggle()
     }
 
     /** Opens the confirmation for the selected inactive session; nothing is called until it is confirmed. */
@@ -172,6 +196,7 @@ public class MissionControlController(
             is MissionControlEvent.SelectFilter -> selection.update { it.withFilter(event.filter) }
             is MissionControlEvent.SelectSession -> selection.update { it.copy(session = event.id) }
             is MissionControlEvent.Run -> if (event.action == SessionAction.REMOVE) askToRemove() else run(event.action)
+            MissionControlEvent.TogglePreview -> togglePreview()
             MissionControlEvent.ConfirmRemove -> confirmRemove()
             MissionControlEvent.Dismiss -> ui.update { it.copy(dialog = null) }
         }
@@ -182,6 +207,7 @@ private fun actionsOf(
     snapshot: SessionsSnapshot,
     picked: Selection,
     acting: ActionUi,
+    previewOpen: Boolean,
 ): SessionActionsState {
     val target = SessionActions.target(snapshot.sessions, picked)
     val blocked = acting.busy != null || acting.dialog != null
@@ -191,6 +217,8 @@ private fun actionsOf(
         canRespawn = SessionAction.RESPAWN in available,
         canRemove = SessionAction.REMOVE in available,
         dialogOpen = acting.dialog != null,
+        canPreview = target != null && acting.dialog == null,
+        previewOpen = previewOpen,
     )
 }
 

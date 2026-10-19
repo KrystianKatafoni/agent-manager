@@ -46,8 +46,8 @@ public fun MissionControl(
             when (val screen = state.screen) {
                 Screen.NoProjects -> Empty("empty.noProjects", "empty.noProjects.hint")
                 Screen.NoSelection -> Empty("empty.noSelection", hint = null)
-                is Screen.Project -> ProjectPage(screen, controller::onEvent)
-                is Screen.Global -> GlobalPage(screen, controller::onEvent)
+                is Screen.Project -> ProjectPage(screen, state.preview, controller::onEvent)
+                is Screen.Global -> GlobalPage(screen, state.preview, controller::onEvent)
             }
         }
         ModeBarView(state.modeBar)
@@ -73,10 +73,11 @@ private fun Empty(
 @Composable
 private fun ProjectPage(
     page: Screen.Project,
+    preview: PreviewUi?,
     onEvent: (MissionControlEvent) -> Unit,
 ) {
     val filters = @Composable { Filters(page.filter, onEvent) }
-    SessionPage(page.banner, page.loading, page.rows, page.details, onEvent, filters) { Header(page.header) }
+    SessionPage(page.banner, page.loading, page.rows, page.details, preview, onEvent, filters) { Header(page.header) }
 }
 
 /** The list and the details panel shared by the project page and the global views. */
@@ -87,6 +88,7 @@ internal fun SessionPage(
     loading: Boolean,
     rows: List<SessionRow>,
     details: SessionDetails?,
+    preview: PreviewUi?,
     onEvent: (MissionControlEvent) -> Unit,
     filters: @Composable () -> Unit,
     header: @Composable () -> Unit,
@@ -104,10 +106,12 @@ internal fun SessionPage(
             if (loading) {
                 Text(UiText("list.loading"), tag = MissionControlTags.LOADING)
             } else {
-                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                val listWeight = if (preview == null) 1f else LIST_SHARE
+                Column(modifier = Modifier.weight(weight = listWeight).verticalScroll(rememberScrollState())) {
                     rows.forEach { row -> SessionRowView(row) { onEvent(MissionControlEvent.SelectSession(row.id)) } }
                 }
             }
+            preview?.let { SessionPreviewView(it, onEvent, Modifier.weight(weight = 1f - LIST_SHARE)) }
         }
         Details(details, onEvent)
     }
@@ -201,7 +205,7 @@ private fun Details(
             Label(MissionControlStrings[details.glyph.key])
         }
         details.summary?.let { Label(it) }
-        SessionActionsView(details) { onEvent(MissionControlEvent.Run(it)) }
+        SessionActionsView(details, onEvent)
         Field("details.worktree", details.worktree.toString())
         Field("details.id", details.id.value)
         Field("details.startedAt", timeFormat.format(details.startedAt))
@@ -253,6 +257,9 @@ private fun Text(
 ) {
     Box(modifier = modifier.testTag(tag).padding(all = 8.dp)) { Label(MissionControlStrings.format(text)) }
 }
+
+/** The list takes this share of the middle column while the preview is open; the preview takes the rest. */
+private const val LIST_SHARE = 0.6f
 
 /** Start and last activity in the details panel, in the zone of the Mac. */
 private val timeFormat: DateTimeFormatter =

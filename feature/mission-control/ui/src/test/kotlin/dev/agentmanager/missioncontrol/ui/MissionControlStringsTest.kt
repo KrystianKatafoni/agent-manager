@@ -90,6 +90,12 @@ internal class MissionControlStringsTest {
                 "row.noProject",
                 "row.project",
                 "header.global",
+                "preview.title",
+                "preview.loading",
+                "preview.empty",
+                "preview.failed",
+                "preview.close",
+                "action.preview",
             )
 
         private val errors: List<SessionError> =
@@ -133,6 +139,7 @@ internal class MissionControlStringsTest {
                     UiText("modeBar.working", listOf("4")),
                     UiText("header.global", listOf("3")),
                     UiText("row.project", listOf("Agent Manager")),
+                    UiText("preview.title", listOf("fix-login")),
                 )
 
         fun allKeys(): Set<String> = generated().map { it.key }.toSet() + UI_KEYS
@@ -161,6 +168,12 @@ internal class MissionControlStringsTest {
                 arguments("dialog.cancel", "Anuluj"),
                 arguments("list.loading", "Wczytywanie sesji…"),
                 arguments("details.none", "Wybierz sesję"),
+                arguments("preview.title", "Podgląd · {0}"),
+                arguments("preview.loading", "Wczytywanie outputu…"),
+                arguments("preview.empty", "Brak outputu"),
+                arguments("preview.failed", "Nie udało się wczytać outputu"),
+                arguments("preview.close", "Zamknij  space"),
+                arguments("action.preview", "Podgląd  space"),
                 arguments("fresh.live", "na żywo"),
                 arguments("fresh.loading", "wczytywanie"),
                 arguments("fresh.short.stale", "nieaktualne od {0}"),
