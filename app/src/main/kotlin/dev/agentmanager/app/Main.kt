@@ -34,13 +34,16 @@ fun main() {
     // The registry only merges lists on Default; commands run in the window scope on Main (see MainWindow).
     val commandsScope = CoroutineScope(SupervisorJob() + core.dispatchers.default)
     val registry = commandPaletteModule(commandsScope, core.logger)
+    val modules = AppModules(projects, sessions, inspector, registry)
+    val keys = WindowKeys()
     application {
         Window(
             onCloseRequest = ::exitApplication,
+            onKeyEvent = keys::onKeyEvent,
             title = Strings["app.title"],
             state = rememberWindowState(size = DpSize(width = 1280.dp, height = 800.dp)),
         ) {
-            MainWindow(core, projects, sessions, inspector, registry)
+            MainWindow(core, modules, keys)
         }
     }
 }

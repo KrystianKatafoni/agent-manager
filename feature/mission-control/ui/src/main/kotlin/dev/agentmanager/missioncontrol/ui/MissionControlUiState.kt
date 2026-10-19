@@ -7,14 +7,14 @@ import java.nio.file.Path
 import java.time.Instant
 
 /** Which sessions of the project the list shows (FR-S9, first half). */
-internal enum class SessionFilter {
+public enum class SessionFilter {
     ALL,
     ACTIVE,
     FINISHED,
     ;
 
     /** [ALL] always; [ACTIVE] = [SessionState.isActive]; [FINISHED] = not active. */
-    fun matches(state: SessionState): Boolean =
+    internal fun matches(state: SessionState): Boolean =
         when (this) {
             ALL -> true
             ACTIVE -> state.isActive

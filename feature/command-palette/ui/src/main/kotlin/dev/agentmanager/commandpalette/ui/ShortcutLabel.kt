@@ -44,16 +44,6 @@ internal object ShortcutLabel {
         }
 }
 
-private val namedKeys =
-    mapOf(
-        ChordKey.Named.ENTER to Key.Enter,
-        ChordKey.Named.ESCAPE to Key.Escape,
-        ChordKey.Named.SPACE to Key.Spacebar,
-        ChordKey.Named.BACKSPACE to Key.Backspace,
-        ChordKey.Named.UP to Key.DirectionUp,
-        ChordKey.Named.DOWN to Key.DirectionDown,
-    )
-
 /**
  * The Compose menu binding of this shortcut: only one chord with ⌘; null otherwise (shown in the palette only).
  * Letters and digits use the AWT key codes, which equal their upper-case character codes.
@@ -63,7 +53,7 @@ public fun Shortcut.toKeyShortcut(): KeyShortcut? {
     val key =
         when (val chordKey = chord.key) {
             is ChordKey.Letter -> Key(chordKey.char.uppercaseChar().code)
-            is ChordKey.Named -> namedKeys.getValue(chordKey)
+            is ChordKey.Named -> KeyChords.named.getValue(chordKey)
         }
     return KeyShortcut(
         key = key,

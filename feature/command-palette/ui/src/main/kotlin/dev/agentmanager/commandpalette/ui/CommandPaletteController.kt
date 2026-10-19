@@ -1,8 +1,10 @@
 package dev.agentmanager.commandpalette.ui
 
+import androidx.compose.ui.input.key.KeyEvent
 import dev.agentmanager.commandpalette.api.Command
 import dev.agentmanager.commandpalette.api.CommandGroup
 import dev.agentmanager.commandpalette.api.CommandRegistry
+import dev.agentmanager.commandpalette.api.KeyChord
 import dev.agentmanager.core.domain.Logger
 import dev.agentmanager.core.domain.info
 import kotlinx.coroutines.CoroutineScope
@@ -24,6 +26,7 @@ public class CommandPaletteController(
     private val logger: Logger,
 ) {
     private val state = MutableStateFlow(PaletteState())
+    private var pending: KeyChord? = null
 
     /** True while the palette is shown; `app` disables the window-menu project items then. */
     public val isOpen: StateFlow<Boolean> =
@@ -36,12 +39,32 @@ public class CommandPaletteController(
 
     /** Opens with an empty query, limited to [group] when given (`g p` in AM-409); ignored when already open. */
     public fun open(group: CommandGroup? = null) {
-        if (!state.value.open) state.value = PaletteState(open = true, group = group)
+        if (state.value.open) return
+        pending = null
+        state.value = PaletteState(open = true, group = group)
     }
 
     /** Closes without running anything. */
     public fun close() {
+        pending = null
         state.value = PaletteState()
+    }
+
+    /**
+     * A key of the main window (`Window.onKeyEvent`, ADR 0011). Runs the registered command whose shortcut has no ⌘
+     * and matches this key, or this key after a pending first chord (`g p`). The first chord waits with no time
+     * limit; Escape or any other key cancels it. Ignored while the palette is open. ⌘ shortcuts stay with `MenuBar`.
+     * @return true when the key was used: a run, a pending first chord or a cancel.
+     */
+    public fun onKeyEvent(event: KeyEvent): Boolean = event.toChord()?.let(::onChord) ?: false
+
+    /** [onKeyEvent] without Compose types. */
+    internal fun onChord(chord: KeyChord): Boolean {
+        if (state.value.open) return false
+        val step = ShortcutMatcher.step(pending, chord, registry.commands.value)
+        pending = (step as? ShortcutStep.Wait)?.first
+        if (step is ShortcutStep.Run) run(step.command)
+        return step != ShortcutStep.NoMatch
     }
 
     internal fun onEvent(event: PaletteEvent) {

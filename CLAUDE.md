@@ -68,3 +68,4 @@ Krótkie wnioski z review i błędów agenta, dopisywane przez PR (jedna linia k
 - `data class` z polem-lambdą (np. `Command.run`) nigdy nie jest równa kopii, więc `stateIn` emituje przy każdej zmianie źródła; efekty uboczne w łańcuchu (logi) deduplikuj osobno.
 - `runCurrent` i `flatMapLatest` są eksperymentalne — przy `allWarningsAsErrors` potrzebny `@OptIn(ExperimentalCoroutinesApi::class)`.
 - Plany z nowym composable i kontrolerem zaniżają rozmiar o ok. 30% (ktlint rozbija wywołania z nazwanymi argumentami); przy szacunku > 300 linii zaplanuj podział od razu.
+- Stan po `stateIn` bywa o krok w tyle przy szybkich klawiszach — gdy plan mówi, skąd czytać stan (np. bieżące `selection` w `update`), kod musi to odwzorować albo plan trzeba poprawić w tym samym PR.
