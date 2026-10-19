@@ -12,7 +12,6 @@ import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.test.waitUntilExactlyOneExists
-import dev.agentmanager.agentruntime.api.FakeAgentRuntime
 import dev.agentmanager.core.domain.NoOpLogger
 import dev.agentmanager.core.testing.TestClock
 import dev.agentmanager.missioncontrol.ui.MissionControlController
@@ -21,6 +20,7 @@ import dev.agentmanager.projects.api.FakeProjectsApi
 import dev.agentmanager.projects.ui.DirectoryPicker
 import dev.agentmanager.projects.ui.ProjectsController
 import dev.agentmanager.sessions.api.FakeSessions
+import dev.agentmanager.sessions.api.SessionsApi
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import kotlin.time.Duration.Companion.hours
@@ -32,18 +32,21 @@ import kotlin.time.Duration.Companion.hours
 @OptIn(ExperimentalTestApi::class)
 class MissionControlEmptyTest {
     @Test
+    @Suppress("LongMethod")
     fun `window shows the sidebar next to Mission Control`() =
         runComposeUiTest {
             // Given the window on fakes, both controllers in the composition scope like the window scope
             setContent {
                 val scope = rememberCoroutineScope()
                 val projects = remember { FakeProjectsApi() }
+                // One fake behind the sidebar counts and Mission Control, like `sessionsModule` in the real window.
+                val sessions = remember { FakeSessions() }
                 val controller =
                     remember {
                         ProjectsController(
                             projects = projects,
                             inspector = FakeProjectInspector(projects = projects),
-                            runtime = FakeAgentRuntime(),
+                            sessions = SessionsApi(monitor = sessions, commands = sessions),
                             picker = DirectoryPicker { null },
                             scope = scope,
                             logger = NoOpLogger,
@@ -53,7 +56,7 @@ class MissionControlEmptyTest {
                     remember {
                         // A one-hour tick: the age loop must not keep the UI test busy.
                         val selection = controller.selection
-                        MissionControlController(FakeSessions(), projects, selection, TestClock(), scope, 1.hours)
+                        MissionControlController(sessions, projects, selection, TestClock(), scope, 1.hours)
                     }
                 AgentManagerApp(projects = controller, missionControl = missionControl)
             }
