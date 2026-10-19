@@ -22,11 +22,12 @@ Zasada podziału: **to, co musi się zdarzyć zawsze, jest hookiem; to, co wymag
 
 | Agent | Model | Uprawnienia | Co robi |
 | --- | --- | --- | --- |
-| `am-lead` | opus | może delegować tylko do 6 poniższych | Wybiera zadanie, prowadzi cykl `/deliver`, rozmawia z człowiekiem. Sam pisze kod tylko w drobnych poprawkach. |
+| `am-lead` | opus | może delegować tylko do 7 poniższych | Wybiera zadanie, prowadzi cykl `/deliver`, rozmawia z człowiekiem. Nie pisze kodu, nie uruchamia bramki i nie commituje; to robią subagenci na Sonnecie. |
 | `architect` | opus | czyta wszystko, pisze `docs/plans/`, `docs/adr/` | Plan zadania: moduły, zmiany w `api`, testy, ryzyka. Szkic ADR przy nowej decyzji. |
 | `test-engineer` | sonnet | pisze tylko w katalogach testów | Testy przed kodem: jednostkowe, kontraktowe, funkcjonalne. Testy mają najpierw nie przechodzić. |
 | `implementer` | sonnet | pisze tylko w modułach z planu | Kod, aż testy przejdą. Maks. 3 rundy naprawy, potem eskalacja do `am-lead`. |
 | `reviewer` | opus | tylko odczyt, pamięć projektu | Review wg checklisty (granice modułów, testy, `Outcome`, DoD). Zwraca `WERDYKT: OK` albo listę poprawek. Zapamiętuje powtarzające się błędy. |
+| `shipper` | sonnet | bramka, roadmapa, CHANGELOG, commity, push, PR | Uruchamia `./gradlew check`, aktualizuje dokumentację zadania i wysyła PR przez `/ship`. Czerwonej bramki nie naprawia, tylko zwraca błędy do `am-lead`. |
 | `release-manager` | sonnet | CHANGELOG, wersja, gałąź `release/*` | Przygotowuje wydanie. Taguje tylko na wyraźne polecenie człowieka. |
 | `maintainer` | sonnet | czyta, tworzy issue | Zgodność z nowymi wersjami Claude Code, przegląd PR Dependabota, triage zgłoszeń. |
 
@@ -44,7 +45,8 @@ flowchart LR
   D --> E[implementer:<br/>kod, testy zielone]
   E --> F[reviewer]
   F -- poprawki --> E
-  F -- OK --> G[/ship:<br/>commit, push, PR/]
+  F -- OK --> G[shipper: bramka,<br/>/ship: commit, push, PR]
+  G -- bramka czerwona --> E
   G --> R[Claude review<br/>w GitHub Actions]
   R --> H2[człowiek<br/>scala PR]
   H2 --> S[/roadmap-sync/]
@@ -58,10 +60,12 @@ Kroki `/deliver`:
 3. Plan od `architect` w `docs/plans/AM-XXX.md`.
 4. Punkt kontrolny: zmiana `api` innego feature lub nowy ADR → pytanie do człowieka.
 5. Testy od `test-engineer` (muszą nie przechodzić).
-6. Implementacja od `implementer`.
-7. `./gradlew check`.
+6. Implementacja od `implementer` (sam doprowadza `./gradlew check` do zielonego).
+7. Kontrola zakresu przez `am-lead` (`git diff --stat`), bez uruchamiania bramki.
 8. Review od `reviewer`, maks. 2 rundy poprawek.
-9. `/ship`.
+9. `shipper`: `./gradlew check`, roadmapa i CHANGELOG, `/ship`. Czerwona bramka wraca do `implementer`.
+
+Podział modeli: planowanie i decyzje na Opusie (`am-lead`, `architect`, `reviewer`), wykonanie na Sonnecie (`test-engineer`, `implementer`, `shipper`).
 
 ## 4. Skille
 

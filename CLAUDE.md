@@ -49,7 +49,7 @@ Gradle 9.7 z wrapperem i JDK 21 (toolchain). Convention plugins: `am.kotlin` (z 
 
 ## Agenci i skille w tym repo
 
-- `claude --agent am-lead` — sesja prowadząca, deleguje do subagentów: `architect`, `test-engineer`, `implementer`, `reviewer`, `release-manager`, `maintainer`.
+- `claude --agent am-lead` — sesja prowadząca, deleguje do subagentów: `architect`, `test-engineer`, `implementer`, `reviewer`, `shipper`, `release-manager`, `maintainer`. Planuje Opus (`am-lead`, `architect`); testy, implementację, bramkę, push i PR robi Sonnet (`test-engineer`, `implementer`, `shipper`).
 - Skille: `/deliver [AM-XXX]`, `/ship`, `/new-module <feature>`, `/adr <tytuł>`, `/review-pr <nr>`, `/release`, `/compat-check`, `/triage <opis>`, `/roadmap-sync`.
 
 ## Definition of Done (skrót)
