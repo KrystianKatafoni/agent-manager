@@ -2,15 +2,15 @@
 
 package dev.agentmanager.projects.ui
 
-import dev.agentmanager.agentruntime.api.FakeAgentRuntime
-import dev.agentmanager.agentruntime.api.RuntimeError
-import dev.agentmanager.agentruntime.api.RuntimePhase
-import dev.agentmanager.agentruntime.api.RuntimeWorld
-import dev.agentmanager.agentruntime.api.aRuntimeSession
+import dev.agentmanager.core.domain.ProjectId
 import dev.agentmanager.core.testing.aSessionId
 import dev.agentmanager.projects.api.FakeProjectsApi
 import dev.agentmanager.projects.api.StorageIssue
 import dev.agentmanager.projects.api.aProject
+import dev.agentmanager.sessions.api.RuntimeProblem
+import dev.agentmanager.sessions.api.SessionError
+import dev.agentmanager.sessions.api.WorldProject
+import dev.agentmanager.sessions.api.WorldSession
 import io.kotest.assertions.withClue
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.nulls.shouldBeNull
@@ -29,7 +29,8 @@ class ProjectsControllerTest {
         runTest {
             val world = ControllerWorld(projects = FakeProjectsApi(initial = listOf(aProject())))
             val controller = start(world)
-            controller.state.value shouldBe ProjectsUiState(projects = listOf(aProject()))
+            controller.state.value shouldBe
+                ProjectsUiState(projects = listOf(aProject()), sessions = NO_ACTIVE_SESSIONS)
 
             world.projects.remove(aProject().id)
             runCurrent()
@@ -100,15 +101,19 @@ class ProjectsControllerTest {
     fun `logs hold project ids only, never paths or names`() =
         runTest {
             val dir = Path.of("/Users/$SECRET/projects/$SECRET-name")
-            val session = aRuntimeSession(id = aSessionId("working"), cwd = dir, phase = RuntimePhase.WORKING)
-            val world = ControllerWorld(runtime = FakeAgentRuntime(RuntimeWorld(sessions = listOf(session))))
+            // The project is added during the test, so the sessions fake has to know it up front.
+            val world =
+                ControllerWorld(
+                    running = listOf(WorldSession(aSessionId("working"), dir)),
+                    extraProjects = listOf(WorldProject(ProjectId("project0001"), dir)),
+                )
             val controller = start(world)
 
             world.picker.willPick(dir)
             act { controller.onIntent(ProjectsIntent.AddRequested) }
             act { controller.onEvent(SidebarEvent.ConfirmAdd) }
             act { controller.onIntent(ProjectsIntent.RemoveSelectedRequested) }
-            world.runtime.failNext(RuntimeError.CommandFailed(exitCode = 1, stderrTail = SECRET))
+            world.sessions.failNext(SessionError.Runtime(RuntimeProblem.COMMAND_FAILED))
             act { controller.onEvent(SidebarEvent.StopAndRemove) }
             act { controller.onEvent(SidebarEvent.Dismiss) }
             act { controller.onIntent(ProjectsIntent.RemoveSelectedRequested) }

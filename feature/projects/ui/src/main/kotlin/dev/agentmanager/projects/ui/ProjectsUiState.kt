@@ -1,9 +1,9 @@
 package dev.agentmanager.projects.ui
 
 import dev.agentmanager.core.domain.ProjectId
-import dev.agentmanager.core.domain.SessionId
 import dev.agentmanager.projects.api.DirectoryReport
 import dev.agentmanager.projects.api.Project
+import dev.agentmanager.sessions.api.SessionCounts
 
 /**
  * What the sidebar shows.
@@ -12,12 +12,14 @@ import dev.agentmanager.projects.api.Project
  * @property selected selected project, null = none (the initial state).
  * @property banner fixed text of the start-up storage issue until the user dismisses it.
  * @property dialog the one open dialog, null = none.
+ * @property sessions per-project counts of active sessions from the sessions snapshot.
  */
 internal data class ProjectsUiState(
     val projects: List<Project> = emptyList(),
     val selected: ProjectId? = null,
     val banner: UiText? = null,
     val dialog: Dialog? = null,
+    val sessions: SessionsView = SessionsView.Unknown,
 )
 
 /** The dialog flow in progress; at most one at a time. */
@@ -25,7 +27,7 @@ internal sealed interface Dialog {
     /** The system folder chooser is open; it is modal, so the sidebar shows nothing over it. */
     data object Picking : Dialog
 
-    /** A step is running; [INSPECTING] and [CHECKING_SESSIONS] end with [SidebarEvent.Dismiss], [BUSY] does not. */
+    /** A step is running; [INSPECTING] ends with [SidebarEvent.Dismiss], [BUSY] does not. */
     enum class Waiting(
         val tag: String,
         val key: String,
@@ -33,10 +35,7 @@ internal sealed interface Dialog {
         /** The picked folder is being inspected. */
         INSPECTING(ProjectsTags.INSPECTING, "add.inspecting"),
 
-        /** The sessions of the project are listed before the remove dialog opens. */
-        CHECKING_SESSIONS(ProjectsTags.CHECKING_SESSIONS, "remove.checking"),
-
-        /** A confirmed command (add, stop, remove) is running. */
+        /** A confirmed command (add, stop, remove, rename) is running. */
         BUSY(ProjectsTags.BUSY, "dialog.busy"),
     }
 
@@ -46,10 +45,17 @@ internal sealed interface Dialog {
         val error: UiText? = null,
     ) : Dialog
 
-    /** Remove confirmation; [sessions] = working and blocked sessions, null = they could not be listed. */
+    /** Remove confirmation; [active] = counts frozen when the dialog opened, null = the snapshot was not fresh. */
     data class ConfirmRemove(
         val project: Project,
-        val sessions: List<SessionId>?,
+        val active: SessionCounts?,
+    ) : Dialog
+
+    /** New name of [project] typed so far in [draft]; [error] is set when saving failed and the dialog stays. */
+    data class Rename(
+        val project: Project,
+        val draft: String,
+        val error: UiText? = null,
     ) : Dialog
 
     /** A fixed message without paths, closed with [SidebarEvent.Dismiss]. */
@@ -64,6 +70,19 @@ internal sealed interface SidebarEvent {
     data class Select(
         val id: ProjectId,
     ) : SidebarEvent
+
+    /** "Rename…" in the row menu of project [id]; ignored while a dialog is open. */
+    data class RenameRequested(
+        val id: ProjectId,
+    ) : SidebarEvent
+
+    /** The user typed [text] into the field of [Dialog.Rename]. */
+    data class NameChanged(
+        val text: String,
+    ) : SidebarEvent
+
+    /** "Save" or Enter in [Dialog.Rename]. */
+    data object ConfirmRename : SidebarEvent
 
     /** "Add" in [Dialog.ConfirmAdd]. */
     data object ConfirmAdd : SidebarEvent

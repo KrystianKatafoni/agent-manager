@@ -27,10 +27,9 @@ dependencies {
 
     testImplementation(project(":core:testing"))
     testImplementation(libs.compose.ui.test)
-    // FakeProjectsApi, FakeProjectInspector and FakeAgentRuntime for the window test.
+    // FakeProjectsApi and FakeProjectInspector for the window test.
     testImplementation(testFixtures(project(":feature:projects:api")))
-    testImplementation(testFixtures(project(":feature:agent-runtime:api")))
-    // FakeSessions behind Mission Control in the window test (AM-405).
+    // FakeSessions behind the sidebar counts and Mission Control in the window test (AM-405, AM-305).
     testImplementation(testFixtures(project(":feature:sessions:api")))
 }
 

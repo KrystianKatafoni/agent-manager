@@ -5,22 +5,21 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsNodeInteraction
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.test.waitUntilDoesNotExist
 import androidx.compose.ui.test.waitUntilExactlyOneExists
-import dev.agentmanager.agentruntime.api.FakeAgentRuntime
-import dev.agentmanager.agentruntime.api.RuntimePhase
-import dev.agentmanager.agentruntime.api.RuntimeWorld
-import dev.agentmanager.agentruntime.api.aRuntimeSession
 import dev.agentmanager.core.domain.ProjectId
 import dev.agentmanager.core.testing.aSessionId
 import dev.agentmanager.projects.api.A_PROJECT_DIR
@@ -29,10 +28,15 @@ import dev.agentmanager.projects.api.FakeProjectsApi
 import dev.agentmanager.projects.api.GitInfo
 import dev.agentmanager.projects.api.HooksPresence
 import dev.agentmanager.projects.api.InspectionWorld
+import dev.agentmanager.projects.api.NameProblem
+import dev.agentmanager.projects.api.ProjectError
 import dev.agentmanager.projects.api.StorageIssue
 import dev.agentmanager.projects.api.aProject
+import dev.agentmanager.sessions.api.SessionState
+import dev.agentmanager.sessions.api.WorldSession
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 
 /**
@@ -42,13 +46,12 @@ import org.junit.jupiter.api.Test
 @OptIn(ExperimentalTestApi::class)
 class ProjectsSidebarTest {
     private val project = aProject(id = "project0001", dir = A_PROJECT_DIR)
-    private val working = aRuntimeSession(id = aSessionId("working"), cwd = A_PROJECT_DIR, phase = RuntimePhase.WORKING)
+    private val working = WorldSession(aSessionId("working"), A_PROJECT_DIR)
+    private val blocked =
+        WorldSession(aSessionId("blocked"), A_PROJECT_DIR.resolve("src"), SessionState.AwaitingInput(null))
 
-    private fun withSessions(): ControllerWorld =
-        ControllerWorld(
-            projects = FakeProjectsApi(initial = listOf(project)),
-            runtime = FakeAgentRuntime(RuntimeWorld(sessions = listOf(working))),
-        )
+    private fun withSessions(vararg sessions: WorldSession = arrayOf(working)): ControllerWorld =
+        ControllerWorld(projects = FakeProjectsApi(initial = listOf(project)), running = sessions.toList())
 
     private fun ComposeUiTest.showSidebar(world: ControllerWorld) {
         setContent {
@@ -82,7 +85,29 @@ class ProjectsSidebarTest {
         await(ProjectsTags.CONFIRM_REMOVE)
     }
 
-    private fun FakeAgentRuntime.stops(): List<String> = calls.filter { it.startsWith("stop") }
+    /** Nothing inside the node tagged [tag] (or the node itself) shows [text]. */
+    private fun ComposeUiTest.assertNoText(
+        tag: String,
+        text: String,
+    ) = onAllNodes(hasText(text, substring = true) and (hasTestTag(tag) or hasAnyAncestor(hasTestTag(tag))))
+        .assertCountEquals(0)
+
+    /** Opens the ⋯ menu of the project and picks "Rename…". */
+    private fun ComposeUiTest.askToRename(id: ProjectId) {
+        await(ProjectsTags.rowMenu(id)).performClick()
+        await(ProjectsTags.ROW_MENU_RENAME).performClick()
+        await(ProjectsTags.RENAME_DIALOG)
+    }
+
+    /** Waits until [text] is shown inside the node tagged [tag] (the sidebar collects the snapshot asynchronously). */
+    private fun ComposeUiTest.awaitText(
+        tag: String,
+        text: String,
+    ) = waitUntil {
+        onAllNodes(hasText(text, substring = true) and (hasTestTag(tag) or hasAnyAncestor(hasTestTag(tag))))
+            .fetchSemanticsNodes()
+            .isNotEmpty()
+    }
 
     @Test
     fun `empty list shows the add button`() =
@@ -182,7 +207,7 @@ class ProjectsSidebarTest {
 
             // Then
             awaitGone(ProjectsTags.row(project.id))
-            world.runtime.stops() shouldBe listOf("stop working")
+            world.sessions.calls shouldBe listOf("stopAllIn project0001")
             world.projects.calls shouldBe listOf("remove project0001")
         }
 
@@ -201,8 +226,109 @@ class ProjectsSidebarTest {
 
             // Then
             awaitGone(ProjectsTags.row(project.id))
-            world.runtime.stops().shouldBeEmpty()
+            world.sessions.calls.shouldBeEmpty()
             world.projects.calls shouldBe listOf("remove project0001")
+        }
+
+    @Test
+    fun `FR-P4 failed stop keeps the project`() =
+        runComposeUiTest {
+            // Given a project with a working session that cannot be stopped
+            val world = withSessions()
+            world.sessions.failStop(working.id)
+            showSidebar(world)
+
+            // When
+            askToRemove(project.id)
+            await(ProjectsTags.STOP_AND_REMOVE).performClick()
+
+            // Then a fixed message, the row stays and nothing is removed
+            await(ProjectsTags.MESSAGE)
+            textIn(ProjectsTags.MESSAGE, ProjectsStrings["remove.stopFailed"]).assertIsDisplayed()
+            onNodeWithTag(ProjectsTags.row(project.id)).assertExists()
+            world.projects.calls.shouldBeEmpty()
+            world.sessions.calls shouldBe listOf("stopAllIn project0001")
+        }
+
+    @Test
+    fun `FR-P6 renaming a project shows the new name in the sidebar`() =
+        runComposeUiTest {
+            // Given a project
+            val world = ControllerWorld(projects = FakeProjectsApi(initial = listOf(project)))
+            showSidebar(world)
+
+            // When the user opens "Rename…", types a new name and saves
+            askToRename(project.id)
+            await(ProjectsTags.RENAME_FIELD).assertTextEquals("agent-manager").performTextReplacement("Moja aplikacja")
+            await(ProjectsTags.RENAME_SAVE).assertTextContains(ProjectsStrings["rename.save"]).performClick()
+
+            // Then
+            awaitGone(ProjectsTags.RENAME_DIALOG)
+            await(ProjectsTags.row(project.id)).assertTextContains("Moja aplikacja", substring = true)
+            world.projects.calls shouldBe listOf("rename project0001")
+        }
+
+    @Test
+    fun `FR-P6 invalid name shows a fixed message in the dialog`() =
+        runComposeUiTest {
+            // Given a project
+            val world = ControllerWorld(projects = FakeProjectsApi(initial = listOf(project)))
+            showSidebar(world)
+
+            // When the user saves a blank name
+            askToRename(project.id)
+            await(ProjectsTags.RENAME_FIELD).performTextReplacement("   ")
+            await(ProjectsTags.RENAME_SAVE).performClick()
+
+            // Then the dialog stays with the typed text and a fixed message, and the name is unchanged
+            val message = ProjectMessages.of(ProjectError.InvalidDisplayName(NameProblem.BLANK))
+            awaitText(ProjectsTags.RENAME_DIALOG, ProjectsStrings.format(message))
+            await(ProjectsTags.RENAME_FIELD).assertTextEquals("   ")
+            await(ProjectsTags.row(project.id)).assertTextContains("agent-manager", substring = true)
+
+            // And cancelling closes it without another write
+            await(ProjectsTags.CANCEL).performClick()
+            awaitGone(ProjectsTags.RENAME_DIALOG)
+            world.projects.calls shouldBe listOf("rename project0001")
+        }
+
+    @Test
+    fun `FR-P6 sidebar shows waiting and working counts per project`() =
+        runComposeUiTest {
+            // Given one working and one waiting session in the project and none in the other
+            val other = aProject(id = "project0002", dir = A_PROJECT_DIR.resolveSibling("other"), displayName = "other")
+            val world =
+                ControllerWorld(
+                    projects = FakeProjectsApi(initial = listOf(project, other)),
+                    running = listOf(working, blocked),
+                )
+
+            // When
+            showSidebar(world)
+
+            // Then the project shows both counts, the other one none (zeros are not shown)
+            awaitText(ProjectsTags.row(project.id), ProjectsStrings.format(UiText("row.waiting", listOf("1"))))
+            textIn(ProjectsTags.row(project.id), ProjectsStrings.format(UiText("row.working", listOf("1"))))
+                .assertIsDisplayed()
+            assertNoText(ProjectsTags.row(other.id), "czeka")
+            assertNoText(ProjectsTags.row(other.id), "pracuje")
+        }
+
+    @Test
+    @Suppress("ForbiddenMethodCall") // runBlocking is allowed in tests (ENG-C3); setState suspends.
+    fun `FR-P6 counts change when a session starts waiting`() =
+        runComposeUiTest {
+            // Given a project with one working session
+            val world = withSessions()
+            showSidebar(world)
+            awaitText(ProjectsTags.row(project.id), ProjectsStrings.format(UiText("row.working", listOf("1"))))
+
+            // When the session starts waiting for the user
+            runBlocking { world.sessions.setState(working.id, SessionState.AwaitingPermission("Bash")) }
+
+            // Then the row shows "waiting: 1" and no "working" count any more
+            awaitText(ProjectsTags.row(project.id), ProjectsStrings.format(UiText("row.waiting", listOf("1"))))
+            assertNoText(ProjectsTags.row(project.id), "pracuje")
         }
 
     @Test

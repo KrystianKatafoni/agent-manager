@@ -42,3 +42,15 @@ internal object ProjectMessages {
             StorageProblem.NEWER_SCHEMA -> UiText("error.storage.newerSchema")
         }
 }
+
+/** A fixed log category per variant, never the path or name it may hold (ENG-C8). */
+internal fun ProjectError.category(): String =
+    when (this) {
+        is ProjectError.NotAbsolute -> "notAbsolute"
+        is ProjectError.NotFound -> "notFound"
+        is ProjectError.NotADirectory -> "notADirectory"
+        is ProjectError.AlreadyAdded -> "alreadyAdded"
+        is ProjectError.UnknownProject -> "unknownProject"
+        is ProjectError.InvalidDisplayName -> "invalidDisplayName"
+        is ProjectError.StorageFailed -> "storageFailed"
+    }

@@ -52,7 +52,7 @@ fun main() {
             val controller =
                 remember {
                     val picker = AwtDirectoryPicker(window, core.dispatchers.main)
-                    ProjectsController(projects, inspector, runtime, picker, scope, core.logger)
+                    ProjectsController(projects, inspector, sessions, picker, scope, core.logger)
                 }
             val missionControl =
                 remember {
