@@ -38,7 +38,7 @@ Dokument opisuje, jak zbudować Agent Manager tak, żeby spełnić [wymagania in
 | `notifications` | `NotificationCenter`, `NotificationSettingsRepo` | `NotificationPolicy` (czysta), `MacSayAdapter`, `SoundAdapter`, `DockBadgeAdapter` | okna popupów, ekran ustawień |
 | `terminal` | `TerminalApi`, `TerminalSession` | JediTerm + pty4j, profile powłoki, OSC 133 | karty, panele, szukanie |
 | `appearance` | `AppearanceApi`, katalog schematów i typografii | `JsonThemeStore`, wbudowany katalog, przełączanie dzień/noc | ekran Wygląd |
-| `command-palette` | `CommandRegistry`, `Command` | wyszukiwanie rozmyte, rejestr skrótów | paleta ⌘K |
+| `command-palette` | `CommandRegistry`, `Command`, `CommandMatcher` (czyste wyszukiwanie) | rejestr komend (w pamięci, bez duplikatów id i skrótów) | paleta ⌘K |
 | `mission-control` | – | – | główny ekran, składa UI innych feature |
 
 Moduł `app` zawiera tylko `main`, composition root, okna i nawigację.
@@ -263,13 +263,18 @@ interface AppearanceApi {
     suspend fun update(change: (AppearanceSettings) -> AppearanceSettings)
 }
 
-// command-palette:api
+// command-palette:api (komendy składa `app`, ADR 0011; typy skrótu bez Compose, ENG-I8)
 interface CommandRegistry {
     fun register(provider: CommandProvider): AutoCloseable
     val commands: StateFlow<List<Command>>
 }
-data class Command(val id: String, val title: String, val keywords: List<String>,
-                   val shortcut: KeyShortcut?, val run: suspend () -> Unit)
+interface CommandProvider { val commands: StateFlow<List<Command>> }
+data class Command(val id: CommandId, val title: String, val group: CommandGroup,
+                   val keywords: List<String> = emptyList(), val shortcut: Shortcut? = null,
+                   val run: suspend () -> Unit)
+data class Shortcut(val chords: List<KeyChord>)          // 1 akord (⌘K) albo 2 (g p)
+data class KeyChord(val key: ChordKey, val modifiers: Set<KeyModifier> = emptySet())
+object CommandMatcher { fun search(query: String, commands: List<Command>): List<Command> }  // czyste wyszukiwanie w `api`
 ```
 
 ## 5. Przepływ danych: „agent zadał pytanie”
