@@ -5,6 +5,7 @@ import dev.agentmanager.agentruntime.api.RuntimePhase
 import dev.agentmanager.agentruntime.api.RuntimeSession
 import dev.agentmanager.agentruntime.api.WaitingFor
 import dev.agentmanager.sessions.api.RuntimeProblem
+import dev.agentmanager.sessions.api.SessionError
 import dev.agentmanager.sessions.api.SessionState
 
 /**
@@ -53,4 +54,11 @@ internal fun RuntimeError.toProblem(): RuntimeProblem =
         RuntimeError.Timeout -> RuntimeProblem.TIMEOUT
         is RuntimeError.CommandFailed, is RuntimeError.UnknownSession -> RuntimeProblem.COMMAND_FAILED
         is RuntimeError.Unparseable -> RuntimeProblem.UNPARSEABLE
+    }
+
+/** AM-402: an unknown session keeps its id, every other runtime error becomes its fixed problem. */
+internal fun RuntimeError.toSessionError(): SessionError =
+    when (this) {
+        is RuntimeError.UnknownSession -> SessionError.UnknownSession(id)
+        else -> SessionError.Runtime(toProblem())
     }

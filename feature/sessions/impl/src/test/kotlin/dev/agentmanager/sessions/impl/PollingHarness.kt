@@ -33,7 +33,8 @@ internal class PollingHarness(
     world: SessionsWorld,
     private val pollInterval: Duration = 2.seconds,
 ) : SessionsHarness {
-    private val fake = FakeAgentRuntime(RuntimeWorld(sessions = world.sessions.map { it.toRuntime() }))
+    private val fake =
+        FakeAgentRuntime(RuntimeWorld(sessions = world.sessions.map { it.toRuntime() }, outputs = world.outputs))
     private val runtime = SwitchableRuntime(fake, now = { scope.testScheduler.currentTime })
     private val projects = FakeProjectsApi(world.projects.map { Project(it.id, it.dir, it.id.value) })
 
