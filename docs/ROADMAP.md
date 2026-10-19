@@ -60,7 +60,7 @@
 
 ## M5 · Terminal
 
-- [~] AM-501 · Spike: JediTerm w SwingPanel (fokus, skróty, HiDPI) · moduły: terminal:impl · zależy: AM-108 · wymagania: FR-T1 · issue: #31
+- [~] AM-501 · Spike: JediTerm w SwingPanel (fokus, skróty, HiDPI) · moduły: terminal:impl, app · zależy: AM-108 · wymagania: FR-T1 · issue: #31
 - [ ] AM-502 · terminal:api/impl: shell i attach w PTY · moduły: terminal:api, terminal:impl · zależy: AM-501 · wymagania: FR-T1 · issue: #32
 - [ ] AM-503 · terminal:ui: karty per projekt, panele, maksymalizacja · moduły: terminal:ui · zależy: AM-502 · wymagania: FR-T2 · issue: #33
 - [ ] AM-504 · Szukanie (regex) i ustawienia terminala · moduły: terminal:* · zależy: AM-503 · wymagania: FR-T3, FR-T7 · issue: #34

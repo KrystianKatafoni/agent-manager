@@ -17,14 +17,15 @@ Fakty o bibliotekach (stan na 2026-10-19):
 
 ## Decyzja
 
-*Do uzupełnienia po spike'u (TAK / plan B / NIE według kryterium z planu AM-501).*
+Przyjęte przez Krystiana 2026-10-19 (przed spike'iem):
 
-Propozycja przy wyniku TAK:
+1. **Repozytorium.** `https://packages.jetbrains.team/maven/p/ij/intellij-dependencies` dodajemy w `settings.gradle.kts` (`dependencyResolutionManagement`) wyłącznie przez `exclusiveContent` z filtrem `includeGroup("org.jetbrains.jediterm")`. Pozostałe zależności dalej pochodzą tylko z Maven Central i Google.
+2. **Licencje.** JediTerm używamy na licencji Apache 2.0, pty4j na EPL-1.0, JNA na Apache 2.0. Teksty licencji trafiają do pakietu `.dmg` w AM-901.
+
+*Do uzupełnienia po spike'u (TAK / plan B / NIE według kryterium z planu AM-501).* Propozycja przy wyniku TAK:
 
 1. Terminal to `JediTermWidget` z `pty4j` w `feature:terminal:impl`, osadzany w Compose przez `SwingPanel` w `terminal:ui`. Typy JediTerm i pty4j nie wychodzą poza `terminal:impl` (ENG-I8). `terminal:api` udostępnia tylko `javax.swing.JComponent` (docs/11 §3).
-2. Repozytorium JetBrains dodajemy w `settings.gradle.kts` wyłącznie przez `exclusiveContent` dla grupy `org.jetbrains.jediterm`.
-3. Licencje: JediTerm na Apache 2.0, pty4j na EPL-1.0; informacje o licencjach w pakiecie `.dmg` (AM-901).
-4. Skróty aplikacji (⌘K i inne) przy fokusie w terminalu: mechanizm wybrany w spike'u (F3).
+2. Skróty aplikacji (⌘K i inne) przy fokusie w terminalu: mechanizm wybrany w spike'u (F3).
 
 ## Wyniki spike'a
 
