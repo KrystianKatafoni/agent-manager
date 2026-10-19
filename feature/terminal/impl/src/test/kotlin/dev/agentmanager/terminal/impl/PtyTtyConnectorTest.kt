@@ -3,6 +3,7 @@ package dev.agentmanager.terminal.impl
 import com.jediterm.core.util.TermSize
 import com.pty4j.PtyProcess
 import com.pty4j.PtyProcessBuilder
+import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import org.junit.jupiter.api.AfterEach
@@ -124,5 +125,15 @@ class PtyTtyConnectorTest {
         val connector = connect("/bin/sh", "-c", "exit 3")
 
         connector.waitFor() shouldBe 3
+    }
+
+    @Test
+    fun `closing twice is harmless`() {
+        val connector = connect("/bin/sh", "-c", "sleep 100")
+
+        shouldNotThrowAny {
+            connector.close()
+            connector.close()
+        }
     }
 }
