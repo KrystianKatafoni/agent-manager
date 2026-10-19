@@ -22,7 +22,8 @@ class SessionFilterCommandsTest {
     private val intents = mutableListOf<MissionControlIntent>()
     private val noActions = SessionActionsState(canStop = false, canRespawn = false)
 
-    private fun commands(): List<Command> = sessionCommands(listOf(aProject()), idle, noActions, { intents += it }, { })
+    private fun commands(): List<Command> =
+        sessionCommands(listOf(aProject()), idle, noActions, null, { intents += it }, { })
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("filters")
@@ -50,6 +51,7 @@ class SessionFilterCommandsTest {
             listOf(aProject()),
             dialog,
             noActions,
+            null,
             { },
             { },
         ).none { it.id.value.startsWith("sessions.filter.") } shouldBe

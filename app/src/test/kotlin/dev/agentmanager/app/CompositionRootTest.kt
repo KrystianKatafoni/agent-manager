@@ -45,6 +45,9 @@ class CompositionRootTest {
                 "command.filterAll",
                 "command.filterActive",
                 "command.filterFinished",
+                "command.view.waiting",
+                "command.view.working",
+                "command.view.failed",
                 "picker.title",
             )
         Strings.keys.forEach { Strings[it].shouldNotBeBlank() }
