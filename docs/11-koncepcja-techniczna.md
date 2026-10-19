@@ -241,18 +241,17 @@ internal interface SpeechPort { suspend fun speak(text: String, voice: VoiceId, 
 ```
 
 ```kotlin
-// terminal:api
-interface TerminalApi {
-    fun openShell(dir: Path, profile: ShellProfileId? = null): TerminalSession
-    fun openCommand(command: ShellCommand, title: String): TerminalSession   // np. attachCommand z AgentRuntime
-    val settings: StateFlow<TerminalSettings>
+// terminal:api (AM-502; profile, settings i find dochodzą w AM-504)
+interface TerminalApi : AutoCloseable {
+    suspend fun openShell(dir: Path): Outcome<TerminalSession, TerminalError>
+    suspend fun openCommand(command: ShellCommand): Outcome<TerminalSession, TerminalError>  // np. attachCommand z AgentRuntime
 }
 interface TerminalSession : AutoCloseable {
-    val id: TerminalId; val title: StateFlow<String>; val exitCode: StateFlow<Int?>
+    val id: TerminalId; val exitCode: StateFlow<Int?>
     fun component(): javax.swing.JComponent   // osadzany w Compose przez SwingPanel
-    fun send(text: String)
-    fun find(query: String, regex: Boolean, matchCase: Boolean): FindResult
+    suspend fun send(text: String): Outcome<Unit, TerminalError>
 }
+sealed interface TerminalError { WorkDirMissing; StartFailed; Closed }
 ```
 
 ```kotlin

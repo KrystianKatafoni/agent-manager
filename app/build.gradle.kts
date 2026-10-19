@@ -50,6 +50,7 @@ configurations["terminalSpikeImplementation"].extendsFrom(configurations["implem
 configurations["terminalSpikeRuntimeOnly"].extendsFrom(configurations["runtimeOnly"])
 
 dependencies {
+    "terminalSpikeImplementation"(project(":feature:terminal:api"))
     "terminalSpikeImplementation"(project(":feature:terminal:impl"))
 }
 

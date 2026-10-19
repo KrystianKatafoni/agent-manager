@@ -7,7 +7,7 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
 
-/** The settings table of docs/plans/AM-501.md (Option as Meta from docs/06). */
+/** The settings table of docs/plans/AM-501.md (Option as Meta from docs/06) and Cmd-K released (AM-502). */
 class TerminalWidgetSettingsTest {
     private val settings = TerminalWidgetSettings()
 
@@ -32,6 +32,11 @@ class TerminalWidgetSettingsTest {
     @Test
     fun `rozmiar fontu to 13`() {
         settings.terminalFontSize shouldBe 13f
+    }
+
+    @Test
+    fun `clearBufferActionPresentation keyStrokes is empty so Cmd-K stays free`() {
+        settings.clearBufferActionPresentation.keyStrokes shouldBe emptyList()
     }
 
     companion object {
