@@ -29,3 +29,4 @@ Format: [Keep a Changelog](https://keepachangelog.com/pl/1.1.0/), wersjonowanie:
 - `PollingSessionMonitor` w `feature:sessions:impl`: monitor sesji odpytujący `claude agents --json` co 2 s, z wydłużaniem przerwy po błędach (do 15 s) i snapshotem `Stale` przy błędach odczytu.
 - Komendy sesji w `feature:sessions:impl` (start, stop, respawn, usuwanie, `stopAllIn`) na `AgentRuntime` oraz `SessionsApi` w `feature:sessions:api`: fabryka `sessionsModule(...)` zwraca monitor i komendy na wspólnym stanie, a skutek komendy jest w snapshocie, zanim komenda wróci.
 - Moduł `feature:mission-control:ui`: Mission Control pokazuje sesje zaznaczonego projektu z filtrem (wszystkie, aktywne, zakończone), panelem szczegółów, paskiem trybu i banerem nieaktualnego snapshotu.
+- Sidebar projektów (`feature:projects:ui`): zmiana nazwy projektu, liczniki czekających i pracujących sesji przy każdym projekcie oraz usuwanie projektu z zatrzymaniem jego sesji przez `stopAllIn`.
