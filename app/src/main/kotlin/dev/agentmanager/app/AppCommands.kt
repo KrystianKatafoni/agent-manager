@@ -1,0 +1,124 @@
+package dev.agentmanager.app
+
+import dev.agentmanager.commandpalette.api.ChordKey
+import dev.agentmanager.commandpalette.api.Command
+import dev.agentmanager.commandpalette.api.CommandGroup
+import dev.agentmanager.commandpalette.api.CommandId
+import dev.agentmanager.commandpalette.api.CommandProvider
+import dev.agentmanager.commandpalette.api.KeyChord
+import dev.agentmanager.commandpalette.api.KeyModifier
+import dev.agentmanager.commandpalette.api.Shortcut
+import dev.agentmanager.projects.api.Project
+import dev.agentmanager.projects.api.ProjectsApi
+import dev.agentmanager.projects.ui.ProjectsController
+import dev.agentmanager.projects.ui.ProjectsIntent
+import dev.agentmanager.projects.ui.ProjectsMenuState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+
+/** Key bindings shared by the window menu and the palette rows (ADR 0011). */
+internal object AppShortcuts {
+    val ADD_PROJECT: Shortcut = Shortcut.of(chord('o', KeyModifier.META, KeyModifier.SHIFT))
+    val REMOVE_PROJECT: Shortcut = Shortcut.of(KeyChord(ChordKey.Named.BACKSPACE, setOf(KeyModifier.META)))
+    val PALETTE: Shortcut = Shortcut.of(chord('k', KeyModifier.META))
+
+    private fun chord(
+        char: Char,
+        vararg modifiers: KeyModifier,
+    ): KeyChord = KeyChord(ChordKey.Letter(char), modifiers.toSet())
+}
+
+/** Which window-menu items are enabled. */
+internal data class AppMenuState(
+    val add: Boolean,
+    val remove: Boolean,
+    val rename: Boolean,
+    val palette: Boolean,
+) {
+    companion object {
+        /** An open palette takes the keys (⌘⌫ reaches its field), so all items are off; ⌘K also waits for dialogs. */
+        fun of(
+            menu: ProjectsMenuState,
+            paletteOpen: Boolean,
+        ): AppMenuState =
+            AppMenuState(
+                add = menu.canAdd && !paletteOpen,
+                remove = menu.canRemove && !paletteOpen,
+                rename = menu.canRename && !paletteOpen,
+                palette = !paletteOpen && !menu.dialogOpen,
+            )
+    }
+}
+
+/** One fixed project command: its text key, intent, optional shortcut and keywords, and when it is offered. */
+private class Entry(
+    val id: String,
+    val titleKey: String,
+    val intent: ProjectsIntent,
+    val shortcut: Shortcut? = null,
+    val keywords: List<String> = emptyList(),
+    val offered: (ProjectsMenuState) -> Boolean,
+)
+
+private val ENTRIES =
+    listOf(
+        Entry("projects.add", "menu.addProject", ProjectsIntent.AddRequested, AppShortcuts.ADD_PROJECT) { it.canAdd },
+        Entry(
+            "projects.rename",
+            "menu.renameProject",
+            ProjectsIntent.RenameSelectedRequested,
+            keywords = listOf("rename", "nazwa"),
+        ) { it.canRename },
+        Entry(
+            "projects.remove",
+            "menu.removeProject",
+            ProjectsIntent.RemoveSelectedRequested,
+            AppShortcuts.REMOVE_PROJECT,
+            listOf("remove"),
+        ) { it.canRemove },
+    )
+
+/** Project commands of the palette (AM-408, decision 1); none while a dialog is open. */
+internal fun projectCommands(
+    list: List<Project>,
+    menu: ProjectsMenuState,
+    onIntent: (ProjectsIntent) -> Unit,
+): List<Command> {
+    if (menu.dialogOpen) return emptyList()
+    val fixed =
+        ENTRIES.filter { it.offered(menu) }.map {
+            Command(CommandId(it.id), Strings[it.titleKey], CommandGroup.PROJECT, it.keywords, it.shortcut) {
+                onIntent(it.intent)
+            }
+        }
+    return fixed + list.map { goTo(it, onIntent) }
+}
+
+private fun goTo(
+    project: Project,
+    onIntent: (ProjectsIntent) -> Unit,
+): Command =
+    Command(
+        id = CommandId("projects.goto.${project.id.value}"),
+        title = Strings.format("command.goToProject", project.displayName),
+        group = CommandGroup.GO_TO_PROJECT,
+        run = { onIntent(ProjectsIntent.Select(project.id)) },
+    )
+
+/** Offers [projectCommands] for the live project list and menu state. */
+internal class AppCommands(
+    projects: ProjectsApi,
+    controller: ProjectsController,
+    scope: CoroutineScope,
+) : CommandProvider {
+    override val commands: StateFlow<List<Command>> =
+        combine(projects.projects, controller.menu) { list, menu -> projectCommands(list, menu, controller::onIntent) }
+            .stateIn(
+                scope,
+                SharingStarted.Eagerly,
+                projectCommands(projects.projects.value, controller.menu.value, controller::onIntent),
+            )
+}

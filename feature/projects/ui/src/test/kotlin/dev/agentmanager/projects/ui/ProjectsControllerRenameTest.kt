@@ -175,11 +175,13 @@ class ProjectsControllerRenameTest {
         runTest {
             val controller = start(world())
             act { controller.onEvent(SidebarEvent.Select(project.id)) }
-            controller.menu.value shouldBe ProjectsMenuState(canAdd = true, canRemove = true)
+            controller.menu.value shouldBe
+                ProjectsMenuState(canAdd = true, canRemove = true, canRename = true, dialogOpen = false)
 
             act { controller.onEvent(SidebarEvent.RenameRequested(project.id)) }
 
-            controller.menu.value shouldBe ProjectsMenuState(canAdd = false, canRemove = false)
+            controller.menu.value shouldBe
+                ProjectsMenuState(canAdd = false, canRemove = false, canRename = false, dialogOpen = true)
         }
 
     @Test

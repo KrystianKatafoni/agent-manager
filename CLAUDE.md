@@ -67,3 +67,4 @@ Krótkie wnioski z review i błędów agenta, dopisywane przez PR (jedna linia k
 - Gdy detekt (TooManyFunctions, CyclomaticComplexMethod) wymusza pliki spoza planu, dopisz je do sekcji „Moduły” planu w tym samym PR; wpis w CHANGELOG `[Unreleased]` dodawaj razem z kodem funkcji widocznej dla użytkownika.
 - `data class` z polem-lambdą (np. `Command.run`) nigdy nie jest równa kopii, więc `stateIn` emituje przy każdej zmianie źródła; efekty uboczne w łańcuchu (logi) deduplikuj osobno.
 - `runCurrent` i `flatMapLatest` są eksperymentalne — przy `allWarningsAsErrors` potrzebny `@OptIn(ExperimentalCoroutinesApi::class)`.
+- Plany z nowym composable i kontrolerem zaniżają rozmiar o ok. 30% (ktlint rozbija wywołania z nazwanymi argumentami); przy szacunku > 300 linii zaplanuj podział od razu.
