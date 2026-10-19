@@ -29,7 +29,7 @@ class SessionCommandsTest {
         list: List<Project> = listOf(agent),
         menu: ProjectsMenuState = idle,
         actions: SessionActionsState = SessionActionsState(canStop = false, canRespawn = false),
-    ): List<Command> = sessionCommands(list, menu, actions, { intents += it }, { opened += it })
+    ): List<Command> = sessionCommands(list, menu, actions, null, { intents += it }, { opened += it })
 
     private val canStop = SessionActionsState(canStop = true, canRespawn = false)
     private val canRespawn = SessionActionsState(canStop = false, canRespawn = true)

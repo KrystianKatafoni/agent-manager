@@ -17,6 +17,7 @@ internal object WindowTags {
     const val DETAILS_EMPTY = "missionControl.details.empty"
     const val SIDEBAR = "projects.sidebar"
     const val MODE_BAR = "missionControl.modeBar"
+    const val HEADER = "missionControl.header"
     const val RENAME_DIALOG = "projects.dialog.rename"
     const val RENAME_FIELD = "projects.dialog.rename.field"
     const val RENAME_SAVE = "projects.dialog.rename.save"
@@ -24,6 +25,9 @@ internal object WindowTags {
     fun paletteRow(commandId: String): String = "palette.row.$commandId"
 
     fun projectRow(projectId: String): String = "projects.row.$projectId"
+
+    /** The entry of a global view in the left column; [name] is `waiting`, `working` or `failed`. */
+    fun view(name: String): String = "missionControl.view.$name"
 
     fun missionRow(sessionId: String): String = "missionControl.row.$sessionId"
 }

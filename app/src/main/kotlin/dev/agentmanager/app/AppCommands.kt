@@ -9,6 +9,7 @@ import dev.agentmanager.commandpalette.api.KeyChord
 import dev.agentmanager.commandpalette.api.KeyModifier
 import dev.agentmanager.commandpalette.api.Shortcut
 import dev.agentmanager.commandpalette.ui.CommandPaletteController
+import dev.agentmanager.missioncontrol.ui.GlobalView
 import dev.agentmanager.missioncontrol.ui.MissionControlController
 import dev.agentmanager.missioncontrol.ui.SessionActionsState
 import dev.agentmanager.projects.api.Project
@@ -130,16 +131,22 @@ internal class AppCommands(
     palette: CommandPaletteController,
     scope: CoroutineScope,
 ) : CommandProvider {
-    private val offered = { list: List<Project>, menu: ProjectsMenuState, actions: SessionActionsState ->
-        projectCommands(list, menu, controller::onIntent) +
-            sessionCommands(list, menu, actions, missionControl::onIntent) { palette.open(it) }
-    }
+    private val offered =
+        { list: List<Project>, menu: ProjectsMenuState, actions: SessionActionsState, view: GlobalView? ->
+            projectCommands(list, menu, controller::onIntent) +
+                sessionCommands(list, menu, actions, view, missionControl::onIntent) { palette.open(it) }
+        }
 
     override val commands: StateFlow<List<Command>> =
-        combine(projects.projects, controller.menu, missionControl.actions, offered)
+        combine(projects.projects, controller.menu, missionControl.actions, missionControl.view, offered)
             .stateIn(
                 scope,
                 SharingStarted.Eagerly,
-                offered(projects.projects.value, controller.menu.value, missionControl.actions.value),
+                offered(
+                    projects.projects.value,
+                    controller.menu.value,
+                    missionControl.actions.value,
+                    missionControl.view.value,
+                ),
             )
 }

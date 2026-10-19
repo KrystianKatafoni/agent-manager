@@ -4,12 +4,14 @@ import dev.agentmanager.commandpalette.api.Command
 import dev.agentmanager.commandpalette.api.CommandGroup
 import dev.agentmanager.commandpalette.api.CommandId
 import dev.agentmanager.commandpalette.api.Shortcut
+import dev.agentmanager.missioncontrol.ui.GlobalView
 import dev.agentmanager.missioncontrol.ui.MissionControlIntent
 import dev.agentmanager.missioncontrol.ui.MissionControlIntent.NextSession
 import dev.agentmanager.missioncontrol.ui.MissionControlIntent.PreviousSession
 import dev.agentmanager.missioncontrol.ui.MissionControlIntent.RemoveSelected
 import dev.agentmanager.missioncontrol.ui.MissionControlIntent.RespawnSelected
 import dev.agentmanager.missioncontrol.ui.MissionControlIntent.SelectFilter
+import dev.agentmanager.missioncontrol.ui.MissionControlIntent.ShowView
 import dev.agentmanager.missioncontrol.ui.MissionControlIntent.StopSelected
 import dev.agentmanager.missioncontrol.ui.SessionActionsState
 import dev.agentmanager.missioncontrol.ui.SessionFilter
@@ -17,10 +19,12 @@ import dev.agentmanager.projects.api.Project
 import dev.agentmanager.projects.ui.ProjectsMenuState
 
 /** Session and navigation commands of the palette (AM-409, decision 1); none while a dialog is open. */
+@Suppress("LongParameterList") // the streams of the palette and two callbacks (plan, decision 6)
 internal fun sessionCommands(
     projects: List<Project>,
     menu: ProjectsMenuState,
     actions: SessionActionsState,
+    view: GlobalView?,
     onIntent: (MissionControlIntent) -> Unit,
     openPalette: (CommandGroup) -> Unit,
 ): List<Command> {
@@ -35,11 +39,8 @@ internal fun sessionCommands(
                 PreviousSession,
                 onIntent,
             ),
-            filterCommand("all", "command.filterAll", SessionFilter.ALL, onIntent),
-            filterCommand("active", "command.filterActive", SessionFilter.ACTIVE, onIntent),
-            filterCommand("finished", "command.filterFinished", SessionFilter.FINISHED, onIntent),
         )
-    val all = selectedSessionActions(actions, onIntent) + session
+    val all = selectedSessionActions(actions, onIntent) + session + filtersOrViews(view, onIntent)
     return if (projects.isEmpty()) all else all + switchProject(openPalette)
 }
 
@@ -79,6 +80,39 @@ private fun selectedSessionActions(
             onIntent,
         ).copy(keywords = listOf("remove", "rm", "usuń")).takeIf { actions.canRemove },
     )
+
+/** Filter commands on the project page (none in a global view), view commands except the shown view (AM-407). */
+private fun filtersOrViews(
+    view: GlobalView?,
+    onIntent: (MissionControlIntent) -> Unit,
+): List<Command> {
+    val filters =
+        if (view != null) {
+            emptyList()
+        } else {
+            listOf(
+                filterCommand("all", "command.filterAll", SessionFilter.ALL, onIntent),
+                filterCommand("active", "command.filterActive", SessionFilter.ACTIVE, onIntent),
+                filterCommand("finished", "command.filterFinished", SessionFilter.FINISHED, onIntent),
+            )
+        }
+    return filters + GlobalView.entries.filter { it != view }.map { viewCommand(it, onIntent) }
+}
+
+private fun viewCommand(
+    view: GlobalView,
+    onIntent: (MissionControlIntent) -> Unit,
+): Command {
+    val name = view.name.lowercase()
+    val keywords =
+        when (view) {
+            GlobalView.WAITING -> listOf("waiting", "czeka")
+            GlobalView.WORKING -> listOf("working")
+            GlobalView.FAILED -> listOf("failed", "errors", "błąd")
+        }
+    return sessionCommand("sessions.view.$name", "command.view.$name", null, ShowView(view), onIntent)
+        .copy(keywords = keywords)
+}
 
 private fun filterCommand(
     suffix: String,

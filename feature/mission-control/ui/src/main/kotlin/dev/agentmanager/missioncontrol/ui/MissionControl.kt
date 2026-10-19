@@ -47,6 +47,7 @@ public fun MissionControl(
                 Screen.NoProjects -> Empty("empty.noProjects", "empty.noProjects.hint")
                 Screen.NoSelection -> Empty("empty.noSelection", hint = null)
                 is Screen.Project -> ProjectPage(screen, controller::onEvent)
+                is Screen.Global -> GlobalPage(screen, controller::onEvent)
             }
         }
         ModeBarView(state.modeBar)
@@ -74,31 +75,41 @@ private fun ProjectPage(
     page: Screen.Project,
     onEvent: (MissionControlEvent) -> Unit,
 ) {
+    val filters = @Composable { Filters(page.filter, onEvent) }
+    SessionPage(page.banner, page.loading, page.rows, page.details, onEvent, filters) { Header(page.header) }
+}
+
+/** The list and the details panel shared by the project page and the global views. */
+@Composable
+@Suppress("LongParameterList") // all parts of one page; the two callers pass them straight through
+internal fun SessionPage(
+    banner: UiText?,
+    loading: Boolean,
+    rows: List<SessionRow>,
+    details: SessionDetails?,
+    onEvent: (MissionControlEvent) -> Unit,
+    filters: @Composable () -> Unit,
+    header: @Composable () -> Unit,
+) {
     Row(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier.weight(weight = 1f).fillMaxHeight().padding(all = 12.dp),
             verticalArrangement = Arrangement.spacedBy(space = 8.dp),
         ) {
-            Header(page.header)
-            page.banner?.let {
-                Text(
-                    it,
-                    Modifier.fillMaxWidth().background(color = Colors.warning),
-                    MissionControlTags.BANNER,
-                )
+            header()
+            banner?.let {
+                Text(it, Modifier.fillMaxWidth().background(color = Colors.warning), MissionControlTags.BANNER)
             }
-            Filters(page.filter, onEvent)
-            if (page.loading) {
+            filters()
+            if (loading) {
                 Text(UiText("list.loading"), tag = MissionControlTags.LOADING)
             } else {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                    page.rows.forEach { row ->
-                        SessionRowView(row) { onEvent(MissionControlEvent.SelectSession(row.id)) }
-                    }
+                    rows.forEach { row -> SessionRowView(row) { onEvent(MissionControlEvent.SelectSession(row.id)) } }
                 }
             }
         }
-        Details(page.details, onEvent)
+        Details(details, onEvent)
     }
 }
 
@@ -156,6 +167,7 @@ private fun SessionRowView(
         )
         Label(row.glyph.symbol, Colors.of(row.glyph.tone))
         Label(row.name, mono = true)
+        row.project?.let { Label(MissionControlStrings.format(it), Colors.secondary) }
         Box(modifier = Modifier.weight(weight = 1f)) { Label(row.summary.orEmpty(), Colors.secondary) }
         Label(MissionControlStrings.format(row.lastEvent), Colors.secondary)
         Label(MissionControlStrings.format(row.age), Colors.secondary)
@@ -208,7 +220,10 @@ private fun Field(
     }
 }
 
-/** `NORMAL`, the selected project, the counters of every project and the freshness of the snapshot. */
+/**
+ * `NORMAL`, the selected project (none in a global view), the counters of every project and the freshness of the
+ * snapshot.
+ */
 @Composable
 private fun ModeBarView(bar: ModeBar) {
     Row(

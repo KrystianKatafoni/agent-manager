@@ -34,3 +34,4 @@ Format: [Keep a Changelog](https://keepachangelog.com/pl/1.1.0/), wersjonowanie:
 - Paleta komend ⌘K (`feature:command-palette:ui`): wyszukiwanie bez polskich znaków, ↑/↓, Enter, Esc, komendy projektów i „Przejdź do projektu”; w menu okna „Zmień nazwę projektu…” i „Widok → Paleta komend…”.
 - Skróty j/k (następna/poprzednia sesja) i g p (przełącz projekt) w oknie głównym; komendy palety „Filtr: Wszystkie/Aktywne/Zakończone” (FR-K2, FR-S9).
 - Akcje sesji w Mission Control: skrót x (zatrzymaj), przyciski Zatrzymaj/Respawn/Usuń z listy w panelu szczegółów (usuwanie z potwierdzeniem) oraz komendy palety „Zatrzymaj sesję”, „Respawn sesji”, „Usuń sesję z listy” (FR-K2, FR-S4).
+- Widoki globalne „Czeka na mnie”, „Pracuje”, „Błędy” pod sidebarem projektów (liczniki ze wszystkich projektów, kolumna projektu w liście) i komendy palety „Widok: …”; wybranie widoku czyści zaznaczenie projektu, a w widoku znikają komendy „Filtr: …” (FR-S9).
