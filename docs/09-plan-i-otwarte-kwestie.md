@@ -31,7 +31,7 @@ Każdy etap kończy się czymś, czego da się realnie używać.
 ## Otwarte kwestie do decyzji
 
 - [ ] Gdzie instalować hooki: globalnie w `~/.claude/settings.json` czy per projekt w `.claude/settings.local.json`?
-- [ ] Odpowiedź na pytanie agenta: wystarczy przez attach, czy potrzebny własny widok czatu (wtedy Agent SDK jako sidecar)?
+- [ ] Odpowiedź na pytanie agenta: wystarczy przez attach, czy potrzebny własny widok czatu (wtedy Agent SDK jako sidecar)? — odroczone do AM-506 (po AM-502, PTY); AM-411 dostarcza tylko podgląd outputu (`space`)
 - [ ] Streszczenia modelem Haiku: domyślnie włączone czy opcjonalne (koszt i limity)?
 - [ ] Popup systemowy macOS: potrzebny w 1.0, czy wystarczy własny?
 - [ ] Nazwa produktu i ikona (robocza nazwa: Agent Manager).

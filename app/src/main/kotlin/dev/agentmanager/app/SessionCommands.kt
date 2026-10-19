@@ -13,6 +13,7 @@ import dev.agentmanager.missioncontrol.ui.MissionControlIntent.RespawnSelected
 import dev.agentmanager.missioncontrol.ui.MissionControlIntent.SelectFilter
 import dev.agentmanager.missioncontrol.ui.MissionControlIntent.ShowView
 import dev.agentmanager.missioncontrol.ui.MissionControlIntent.StopSelected
+import dev.agentmanager.missioncontrol.ui.MissionControlIntent.TogglePreview
 import dev.agentmanager.missioncontrol.ui.SessionActionsState
 import dev.agentmanager.missioncontrol.ui.SessionFilter
 import dev.agentmanager.projects.api.Project
@@ -52,7 +53,7 @@ private fun sessionCommand(
     onIntent: (MissionControlIntent) -> Unit,
 ): Command = Command(CommandId(id), Strings[titleKey], CommandGroup.SESSION, emptyList(), shortcut) { onIntent(intent) }
 
-/** Stop, Respawn and Remove of the selected session, offered by what the session allows now (AM-410). */
+/** Stop, Respawn, Remove and the preview of the selected session, offered by what the session allows now (AM-410). */
 private fun selectedSessionActions(
     actions: SessionActionsState,
     onIntent: (MissionControlIntent) -> Unit,
@@ -79,7 +80,21 @@ private fun selectedSessionActions(
             RemoveSelected,
             onIntent,
         ).copy(keywords = listOf("remove", "rm", "usuń")).takeIf { actions.canRemove },
+        previewCommand(actions, onIntent).takeIf { actions.canPreview || actions.previewOpen },
     )
+
+/** `space`: opens the output preview of the selected session, or closes the open one (AM-411). */
+private fun previewCommand(
+    actions: SessionActionsState,
+    onIntent: (MissionControlIntent) -> Unit,
+): Command =
+    sessionCommand(
+        "sessions.preview",
+        if (actions.previewOpen) "command.closePreview" else "command.previewSession",
+        AppShortcuts.PREVIEW_SESSION,
+        TogglePreview,
+        onIntent,
+    ).copy(keywords = listOf("preview", "logs", "podgląd"))
 
 /** Filter commands on the project page (none in a global view), view commands except the shown view (AM-407). */
 private fun filtersOrViews(

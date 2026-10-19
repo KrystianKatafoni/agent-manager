@@ -56,7 +56,7 @@
 - [x] AM-408 · Paleta ⌘K i „Zmień nazwę projektu…” w menu okna · moduły: command-palette:ui, projects:ui, app · zależy: AM-406 · wymagania: FR-K1, FR-P6 · issue: #86
 - [x] AM-409 · Skróty j/k i g p · moduły: command-palette:ui, mission-control:ui, app · zależy: AM-408 · wymagania: FR-K2 (część), FR-S9 (komendy filtra) · issue: #87
 - [x] AM-410 · Akcje sesji: x stop, Zatrzymaj/Respawn/Usuń w panelu i palecie · moduły: mission-control:ui, app · zależy: AM-409 · wymagania: FR-K2 (część) · issue: #88
-- [ ] AM-411 · sessions:api: reply i recentOutput, skróty r i space (start po decyzji z docs/09 o strategii odpowiedzi) · moduły: sessions:api, sessions:impl, mission-control:ui, app · zależy: AM-410 · wymagania: FR-K2 (część) · issue: #89
+- [x] AM-411 · sessions:api: recentOutput i podgląd space · moduły: sessions:api, sessions:impl, mission-control:ui, app · zależy: AM-410 · wymagania: FR-K2 (część) · issue: #89
 
 ## M5 · Terminal
 
@@ -65,6 +65,7 @@
 - [ ] AM-503 · terminal:ui: karty per projekt, panele, maksymalizacja · moduły: terminal:ui · zależy: AM-502 · wymagania: FR-T2 · issue: #33
 - [ ] AM-504 · Szukanie (regex) i ustawienia terminala · moduły: terminal:* · zależy: AM-503 · wymagania: FR-T3, FR-T7 · issue: #34
 - [ ] AM-505 · Skrót ⏎: attach wybranej sesji w terminalu (komenda palety i skrót) · moduły: mission-control:ui, app · zależy: AM-503, AM-409 · wymagania: FR-K2 (część) · issue: #90
+- [ ] AM-506 · sessions:api: reply i skrót r (strategia odpowiedzi z docs/09) · moduły: sessions:api, sessions:impl, mission-control:ui, app · zależy: AM-502, AM-411 · wymagania: FR-K2 (część), FR-S5 · issue: #96
 
 ## M6 · Hooki i podsumowania
 

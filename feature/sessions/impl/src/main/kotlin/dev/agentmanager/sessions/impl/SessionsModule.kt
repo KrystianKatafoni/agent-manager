@@ -49,6 +49,7 @@ public fun sessionsModule(
             state = state,
             schedule = PollSchedule(pollInterval, maxRetryInterval),
             logger = logger,
+            reader = RecentOutputReader(runtime, logger),
         ).also { it.start(scope) }
     val commands = RuntimeSessionCommands(runtime, projects, state, clock, logger)
     return SessionsApi(monitor = monitor, commands = commands)

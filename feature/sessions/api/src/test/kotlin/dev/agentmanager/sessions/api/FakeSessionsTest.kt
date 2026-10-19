@@ -85,4 +85,36 @@ class FakeSessionsTest {
     fun `snapshot is fresh from the start`() {
         FakeSessions(world).snapshot.value.status shouldBe SnapshotStatus.Fresh(T0)
     }
+
+    @Test
+    fun `set output changes the next read`() =
+        runTest {
+            val fake = FakeSessions(world.copy(outputs = mapOf(existing to "old")))
+
+            fake.setOutput(existing, "new")
+
+            fake.recentOutput(existing) shouldBe Outcome.Ok(RecentOutput("new"))
+        }
+
+    @Test
+    fun `fail next output fails once`() =
+        runTest {
+            val fake = FakeSessions(world.copy(outputs = mapOf(existing to "text")))
+            fake.failNextOutput(SessionError.Runtime(RuntimeProblem.TIMEOUT))
+
+            fake.recentOutput(existing) shouldBe Outcome.Err(SessionError.Runtime(RuntimeProblem.TIMEOUT))
+            fake.recentOutput(existing) shouldBe Outcome.Ok(RecentOutput("text"))
+        }
+
+    @Test
+    fun `output reads are not recorded as commands`() =
+        runTest {
+            val fake = FakeSessions(world)
+
+            fake.recentOutput(existing)
+            fake.recentOutput(SessionId("ffff0000"))
+
+            fake.calls shouldBe emptyList()
+            fake.outputReads shouldBe listOf(existing, SessionId("ffff0000"))
+        }
 }

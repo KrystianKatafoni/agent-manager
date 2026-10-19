@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
@@ -91,6 +92,11 @@ private fun ColumnScope.ProjectList(
     }
 }
 
+/**
+ * The row never takes focus: a focused `selectable` would consume `space` and Enter before the window shortcuts. A
+ * click requests focus anyway and an unfocusable parent hands it to its first focusable child, so the ⋯ button of the
+ * row is unfocusable too.
+ */
 @Composable
 private fun ProjectRow(
     project: Project,
@@ -104,6 +110,7 @@ private fun ProjectRow(
             Modifier
                 .fillMaxWidth()
                 .testTag(ProjectsTags.row(project.id))
+                .focusProperties { canFocus = false }
                 .selectable(selected = selected, onClick = { onEvent(SidebarEvent.Select(project.id)) })
                 .background(color = if (selected) SidebarColors.selection else Color.Transparent)
                 .padding(horizontal = 8.dp, vertical = 6.dp),
@@ -145,7 +152,7 @@ private fun RowMenu(
 ) {
     var open by remember { mutableStateOf(false) }
     Box {
-        TextButton("⋯", ProjectsTags.rowMenu(project.id)) { open = true }
+        TextButton("⋯", ProjectsTags.rowMenu(project.id), focusable = false) { open = true }
         if (open) {
             Popup(
                 alignment = Alignment.TopEnd,
@@ -182,21 +189,23 @@ private fun Banner(
         verticalArrangement = Arrangement.spacedBy(space = 4.dp),
     ) {
         Label(ProjectsStrings.format(text), SidebarColors.text)
-        TextButton(ProjectsStrings["banner.dismiss"], ProjectsTags.BANNER_DISMISS, onDismiss)
+        TextButton(ProjectsStrings["banner.dismiss"], ProjectsTags.BANNER_DISMISS, onClick = onDismiss)
     }
 }
 
-/** A clickable text: Material is not a dependency (AM-304 plan, decision 4). */
+/** A clickable text: Material is not a dependency (AM-304 plan, decision 4). A click focuses it only if [focusable]. */
 @Composable
 internal fun TextButton(
     text: String,
     tag: String,
+    focusable: Boolean = true,
     onClick: () -> Unit,
 ) {
     Box(
         modifier =
             Modifier
                 .testTag(tag)
+                .focusProperties { canFocus = focusable }
                 .clickable(role = Role.Button, onClick = onClick)
                 .background(color = SidebarColors.button)
                 .padding(horizontal = 10.dp, vertical = 4.dp),

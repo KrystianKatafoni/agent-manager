@@ -218,13 +218,6 @@ private fun SessionPermissionMode.toRuntime(): PermissionMode =
         SessionPermissionMode.BYPASS_PERMISSIONS -> PermissionMode.BYPASS_PERMISSIONS
     }
 
-/** AM-402: an unknown session keeps its id, every other runtime error becomes its fixed problem. */
-private fun RuntimeError.toSessionError(): SessionError =
-    when (this) {
-        is RuntimeError.UnknownSession -> SessionError.UnknownSession(id)
-        else -> SessionError.Runtime(toProblem())
-    }
-
 /** The supervisor phase [Session.state] comes from (inverse of [toSessionState]); the `from` of a move. */
 private fun Session.phase(): RuntimePhase =
     when (state) {

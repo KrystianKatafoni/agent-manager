@@ -26,6 +26,9 @@ public sealed interface MissionControlIntent {
     public data class ShowView(
         val view: GlobalView,
     ) : MissionControlIntent
+
+    /** `space` and the palette: opens the output preview of the selected visible session, or closes it. */
+    public data object TogglePreview : MissionControlIntent
 }
 
 /**
@@ -37,10 +40,14 @@ public sealed interface MissionControlIntent {
  * @property canRespawn the session is not active.
  * @property canRemove the session is not active, so it can be removed from the list (after a confirmation).
  * @property dialogOpen a dialog of Mission Control is open: `app` offers no palette commands and disables the menu.
+ * @property canPreview a visible session is selected and no dialog is open; also while an action runs.
+ * @property previewOpen the preview is open: the palette offers "Zamknij podgląd".
  */
 public data class SessionActionsState(
     val canStop: Boolean,
     val canRespawn: Boolean,
     val canRemove: Boolean = false,
     val dialogOpen: Boolean = false,
+    val canPreview: Boolean = false,
+    val previewOpen: Boolean = false,
 )

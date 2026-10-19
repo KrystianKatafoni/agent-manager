@@ -105,7 +105,7 @@ private fun Message(
     onClose: () -> Unit,
 ) {
     Panel(ProjectsTags.MESSAGE, ProjectsStrings.format(text)) {
-        TextButton(ProjectsStrings["dialog.close"], ProjectsTags.CANCEL, onClose)
+        TextButton(ProjectsStrings["dialog.close"], ProjectsTags.CANCEL, onClick = onClose)
     }
 }
 
@@ -136,11 +136,11 @@ private fun ConfirmRemove(
         when {
             active == null -> {
                 Label(ProjectsStrings["remove.sessionsUnknown"])
-                TextButton(ProjectsStrings["remove.removeFromList"], ProjectsTags.REMOVE, keepSessions)
+                TextButton(ProjectsStrings["remove.removeFromList"], ProjectsTags.REMOVE, onClick = keepSessions)
             }
 
             active.active == 0 -> {
-                TextButton(ProjectsStrings["remove.confirm"], ProjectsTags.REMOVE, keepSessions)
+                TextButton(ProjectsStrings["remove.confirm"], ProjectsTags.REMOVE, onClick = keepSessions)
             }
 
             else -> {
@@ -148,7 +148,11 @@ private fun ConfirmRemove(
                 TextButton(ProjectsStrings["remove.stopAndRemove"], ProjectsTags.STOP_AND_REMOVE) {
                     onEvent(SidebarEvent.StopAndRemove)
                 }
-                TextButton(ProjectsStrings["remove.keepSessions"], ProjectsTags.REMOVE_KEEP_SESSIONS, keepSessions)
+                TextButton(
+                    ProjectsStrings["remove.keepSessions"],
+                    ProjectsTags.REMOVE_KEEP_SESSIONS,
+                    onClick = keepSessions,
+                )
             }
         }
         Cancel { onEvent(SidebarEvent.Dismiss) }
@@ -233,7 +237,7 @@ private fun Panel(
 
 @Composable
 private fun Cancel(onClick: () -> Unit) {
-    TextButton(ProjectsStrings["dialog.cancel"], ProjectsTags.CANCEL, onClick)
+    TextButton(ProjectsStrings["dialog.cancel"], ProjectsTags.CANCEL, onClick = onClick)
 }
 
 /** Places the dialog layer over the whole window, whatever the anchor. */

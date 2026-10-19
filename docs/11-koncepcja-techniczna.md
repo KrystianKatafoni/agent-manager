@@ -196,6 +196,7 @@ interface ProjectInspector {
 interface SessionMonitor {
     val snapshot: StateFlow<SessionsSnapshot>
     val events: Flow<SessionEvent>                 // przejścia stanów, konsumowane m.in. przez powiadomienia
+    suspend fun recentOutput(id: SessionId): Outcome<RecentOutput, SessionError>  // ogon wyjścia (`claude logs`), odczyt na żądanie (AM-411)
 }
 sealed interface SessionState {
     data object Working : SessionState
@@ -219,7 +220,7 @@ interface SessionCommands {
     suspend fun stopAllIn(project: ProjectId): Outcome<Int, SessionError>
     suspend fun respawn(id: SessionId): Outcome<Unit, SessionError>
     suspend fun remove(id: SessionId): Outcome<Unit, SessionError>
-    suspend fun reply(id: SessionId, text: String): Outcome<Unit, SessionError>  // strategia: otwarta kwestia (09)
+    suspend fun reply(id: SessionId, text: String): Outcome<Unit, SessionError>  // AM-506; strategia: otwarta kwestia (09)
 }
 ```
 

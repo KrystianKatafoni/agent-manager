@@ -224,23 +224,25 @@ internal class SessionActionsControllerTest {
             val gated = GatedCommands(fake)
             val controller = start(fake, gated)
             select(controller, "a")
-            controller.actions.value shouldBe SessionActionsState(canStop = true, canRespawn = false)
+            controller.actions.value shouldBe SessionActionsState(canStop = true, canRespawn = false, canPreview = true)
 
             send(controller, MissionControlIntent.StopSelected)
 
-            controller.actions.value shouldBe SessionActionsState(canStop = false, canRespawn = false)
+            controller.actions.value shouldBe
+                SessionActionsState(canStop = false, canRespawn = false, canPreview = true)
             controller.details()?.busy shouldBe SessionAction.STOP
             controller.details()?.actions shouldBe emptySet()
             // The other session is off too while the action runs.
             select(controller, "b")
-            controller.actions.value shouldBe SessionActionsState(canStop = false, canRespawn = false)
+            controller.actions.value shouldBe
+                SessionActionsState(canStop = false, canRespawn = false, canPreview = true)
             controller.details()?.busy.shouldBeNull()
 
             gated.gate.complete(Unit)
             runCurrent()
 
             controller.actions.value shouldBe
-                SessionActionsState(canStop = false, canRespawn = true, canRemove = true)
+                SessionActionsState(canStop = false, canRespawn = true, canRemove = true, canPreview = true)
         }
 
     @Test
@@ -251,11 +253,11 @@ internal class SessionActionsControllerTest {
             controller.actions.value shouldBe SessionActionsState(canStop = false, canRespawn = false)
 
             select(controller, "a")
-            controller.actions.value shouldBe SessionActionsState(canStop = true, canRespawn = false)
+            controller.actions.value shouldBe SessionActionsState(canStop = true, canRespawn = false, canPreview = true)
 
             select(controller, "b")
             controller.actions.value shouldBe
-                SessionActionsState(canStop = false, canRespawn = true, canRemove = true)
+                SessionActionsState(canStop = false, canRespawn = true, canRemove = true, canPreview = true)
 
             controller.onEvent(MissionControlEvent.SelectFilter(SessionFilter.ACTIVE))
             runCurrent()
@@ -264,7 +266,7 @@ internal class SessionActionsControllerTest {
             controller.onEvent(MissionControlEvent.SelectFilter(SessionFilter.ALL))
             fake.setState(SessionId("b"), SessionState.AwaitingPermission("Bash"))
             runCurrent()
-            controller.actions.value shouldBe SessionActionsState(canStop = true, canRespawn = false)
+            controller.actions.value shouldBe SessionActionsState(canStop = true, canRespawn = false, canPreview = true)
         }
 
     @Test

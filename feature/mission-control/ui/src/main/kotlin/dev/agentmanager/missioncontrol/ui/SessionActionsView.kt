@@ -13,25 +13,23 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 
-/** Stop, Respawn and Remove buttons of the details panel, then the "in progress" text or the last failure. */
+/** Stop, Respawn, Remove and "Podgląd" buttons of the details panel, then the "in progress" text or the failure. */
 @Composable
 internal fun SessionActionsView(
     details: SessionDetails,
-    onRun: (SessionAction) -> Unit,
+    onEvent: (MissionControlEvent) -> Unit,
 ) {
     Row(horizontalArrangement = Arrangement.spacedBy(space = 6.dp)) {
         SessionAction.entries.filter { it in details.actions }.forEach { action ->
-            Box(
-                modifier =
-                    Modifier
-                        .testTag(tagOf(action))
-                        .clickable(role = Role.Button) { onRun(action) }
-                        .background(color = Colors.button)
-                        .padding(horizontal = 10.dp, vertical = 4.dp),
-            ) {
-                Label(MissionControlStrings["action.${action.name.lowercase()}"])
-            }
+            ActionButton(
+                tagOf(action),
+                "action.${action.name.lowercase()}",
+            ) { onEvent(MissionControlEvent.Run(action)) }
         }
+        ActionButton(
+            MissionControlTags.DETAILS_PREVIEW,
+            "action.preview",
+        ) { onEvent(MissionControlEvent.TogglePreview) }
     }
     details.busy?.let {
         Box(Modifier.testTag(MissionControlTags.DETAILS_BUSY)) {
@@ -43,6 +41,24 @@ internal fun SessionActionsView(
             Label(MissionControlStrings["action.${it.action.name.lowercase()}.failed"], Colors.of(Tone.ERR))
             Label(MissionControlStrings.format(it.reason), Colors.of(Tone.ERR))
         }
+    }
+}
+
+@Composable
+private fun ActionButton(
+    tag: String,
+    labelKey: String,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier =
+            Modifier
+                .testTag(tag)
+                .clickable(role = Role.Button, onClick = onClick)
+                .background(color = Colors.button)
+                .padding(horizontal = 10.dp, vertical = 4.dp),
+    ) {
+        Label(MissionControlStrings[labelKey])
     }
 }
 

@@ -21,6 +21,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
@@ -46,8 +47,8 @@ public fun MissionControl(
             when (val screen = state.screen) {
                 Screen.NoProjects -> Empty("empty.noProjects", "empty.noProjects.hint")
                 Screen.NoSelection -> Empty("empty.noSelection", hint = null)
-                is Screen.Project -> ProjectPage(screen, controller::onEvent)
-                is Screen.Global -> GlobalPage(screen, controller::onEvent)
+                is Screen.Project -> ProjectPage(screen, state.preview, controller::onEvent)
+                is Screen.Global -> GlobalPage(screen, state.preview, controller::onEvent)
             }
         }
         ModeBarView(state.modeBar)
@@ -73,10 +74,11 @@ private fun Empty(
 @Composable
 private fun ProjectPage(
     page: Screen.Project,
+    preview: PreviewUi?,
     onEvent: (MissionControlEvent) -> Unit,
 ) {
     val filters = @Composable { Filters(page.filter, onEvent) }
-    SessionPage(page.banner, page.loading, page.rows, page.details, onEvent, filters) { Header(page.header) }
+    SessionPage(page.banner, page.loading, page.rows, page.details, preview, onEvent, filters) { Header(page.header) }
 }
 
 /** The list and the details panel shared by the project page and the global views. */
@@ -87,6 +89,7 @@ internal fun SessionPage(
     loading: Boolean,
     rows: List<SessionRow>,
     details: SessionDetails?,
+    preview: PreviewUi?,
     onEvent: (MissionControlEvent) -> Unit,
     filters: @Composable () -> Unit,
     header: @Composable () -> Unit,
@@ -104,10 +107,12 @@ internal fun SessionPage(
             if (loading) {
                 Text(UiText("list.loading"), tag = MissionControlTags.LOADING)
             } else {
-                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                val listWeight = if (preview == null) 1f else LIST_SHARE
+                Column(modifier = Modifier.weight(weight = listWeight).verticalScroll(rememberScrollState())) {
                     rows.forEach { row -> SessionRowView(row) { onEvent(MissionControlEvent.SelectSession(row.id)) } }
                 }
             }
+            preview?.let { SessionPreviewView(it, onEvent, Modifier.weight(weight = 1f - LIST_SHARE)) }
         }
         Details(details, onEvent)
     }
@@ -122,6 +127,7 @@ private fun Header(header: ProjectHeader) {
     }
 }
 
+/** The tabs never take focus either, for the same reason as the session rows. */
 @Composable
 private fun Filters(
     current: SessionFilter,
@@ -133,6 +139,7 @@ private fun Filters(
                 modifier =
                     Modifier
                         .testTag(MissionControlTags.filter(filter))
+                        .focusProperties { canFocus = false }
                         .clickable(role = Role.Tab) { onEvent(MissionControlEvent.SelectFilter(filter)) }
                         .background(color = if (filter == current) Colors.selection else Colors.button)
                         .padding(horizontal = 10.dp, vertical = 4.dp),
@@ -143,6 +150,11 @@ private fun Filters(
     }
 }
 
+/**
+ * A row never takes focus: a focused `clickable` handles `space` and Enter as a click and consumes them before the
+ * window shortcuts (`space` preview, later `⏎` attach) see them. A click requests focus anyway, and an unfocusable
+ * node hands it to its first focusable child, so the children (only texts here) must not be focusable either.
+ */
 @Composable
 private fun SessionRowView(
     row: SessionRow,
@@ -153,6 +165,7 @@ private fun SessionRowView(
             Modifier
                 .fillMaxWidth()
                 .testTag(MissionControlTags.row(row.id))
+                .focusProperties { canFocus = false }
                 .clickable(onClick = onClick)
                 .background(color = if (row.selected) Colors.selection else Color.Transparent),
         verticalAlignment = Alignment.CenterVertically,
@@ -201,7 +214,7 @@ private fun Details(
             Label(MissionControlStrings[details.glyph.key])
         }
         details.summary?.let { Label(it) }
-        SessionActionsView(details) { onEvent(MissionControlEvent.Run(it)) }
+        SessionActionsView(details, onEvent)
         Field("details.worktree", details.worktree.toString())
         Field("details.id", details.id.value)
         Field("details.startedAt", timeFormat.format(details.startedAt))
@@ -253,6 +266,9 @@ private fun Text(
 ) {
     Box(modifier = modifier.testTag(tag).padding(all = 8.dp)) { Label(MissionControlStrings.format(text)) }
 }
+
+/** The list takes this share of the middle column while the preview is open; the preview takes the rest. */
+private const val LIST_SHARE = 0.6f
 
 /** Start and last activity in the details panel, in the zone of the Mac. */
 private val timeFormat: DateTimeFormatter =

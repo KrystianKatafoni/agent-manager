@@ -41,6 +41,8 @@ class CompositionRootTest {
                 "command.stopSession",
                 "command.respawnSession",
                 "command.removeSession",
+                "command.previewSession",
+                "command.closePreview",
                 "command.switchProject",
                 "command.filterAll",
                 "command.filterActive",
