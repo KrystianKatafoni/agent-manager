@@ -30,7 +30,7 @@ internal fun FrameWindowScope.MainWindow(
             ProjectsController(projects, modules.inspector, sessions, picker, scope, core.logger)
         }
     val missionControl =
-        remember { MissionControlController(sessions.monitor, projects, controller.selection, core.clock, scope) }
+        remember { MissionControlController(sessions, projects, controller.selection, core.clock, scope, core.logger) }
     val palette = remember { CommandPaletteController(registry, scope, core.logger) }
     DisposableEffect(Unit) {
         val registration = registry.register(AppCommands(projects, controller, missionControl, palette, scope))
@@ -40,6 +40,6 @@ internal fun FrameWindowScope.MainWindow(
         val handle = keys.attach(palette::onKeyEvent)
         onDispose { handle.close() }
     }
-    AppMenu(controller, palette)
+    AppMenu(controller, palette, missionControl)
     AgentManagerApp(projects = controller, missionControl = missionControl, palette = palette)
 }

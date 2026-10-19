@@ -3,6 +3,7 @@ package dev.agentmanager.app
 import dev.agentmanager.commandpalette.api.Command
 import dev.agentmanager.commandpalette.api.CommandGroup
 import dev.agentmanager.missioncontrol.ui.MissionControlIntent
+import dev.agentmanager.missioncontrol.ui.SessionActionsState
 import dev.agentmanager.projects.api.A_PROJECT_DIR
 import dev.agentmanager.projects.api.Project
 import dev.agentmanager.projects.api.aProject
@@ -27,7 +28,11 @@ class SessionCommandsTest {
     private fun commands(
         list: List<Project> = listOf(agent),
         menu: ProjectsMenuState = idle,
-    ): List<Command> = sessionCommands(list, menu, { intents += it }, { opened += it })
+        actions: SessionActionsState = SessionActionsState(canStop = false, canRespawn = false),
+    ): List<Command> = sessionCommands(list, menu, actions, { intents += it }, { opened += it })
+
+    private val canStop = SessionActionsState(canStop = true, canRespawn = false)
+    private val canRespawn = SessionActionsState(canStop = false, canRespawn = true)
 
     private fun List<Command>.ids(): List<String> = map { it.id.value }
 
@@ -87,6 +92,98 @@ class SessionCommandsTest {
     @Test
     fun `an open dialog gives no session commands`() {
         commands(menu = dialog).shouldBeEmpty()
+    }
+
+    @Test
+    fun `x sends StopSelected`() =
+        runTest {
+            val stop = commands(actions = canStop).byId("sessions.stop")
+
+            stop.title shouldBe "Zatrzymaj sesję"
+            stop.group shouldBe CommandGroup.SESSION
+            stop.keywords shouldBe listOf("stop")
+            stop.shortcut shouldBe AppShortcuts.STOP_SESSION
+
+            stop.run()
+
+            intents shouldBe listOf(MissionControlIntent.StopSelected)
+        }
+
+    @Test
+    fun `stop is offered only when canStop`() {
+        commands(actions = canStop).ids() shouldContain "sessions.stop"
+        commands(actions = canRespawn).ids() shouldNotContain "sessions.stop"
+        commands().ids() shouldNotContain "sessions.stop"
+    }
+
+    @Test
+    fun `respawn is offered only when canRespawn`() =
+        runTest {
+            commands(actions = canStop).ids() shouldNotContain "sessions.respawn"
+            commands().ids() shouldNotContain "sessions.respawn"
+
+            val respawn = commands(actions = canRespawn).byId("sessions.respawn")
+
+            respawn.title shouldBe "Respawn sesji"
+            respawn.group shouldBe CommandGroup.SESSION
+            respawn.keywords shouldBe listOf("respawn", "wznów")
+            respawn.shortcut shouldBe null
+
+            respawn.run()
+
+            intents shouldBe listOf(MissionControlIntent.RespawnSelected)
+        }
+
+    @Test
+    fun `an open dialog gives no stop or respawn`() {
+        val both = SessionActionsState(canStop = true, canRespawn = true)
+
+        commands(menu = dialog, actions = both).shouldBeEmpty()
+    }
+
+    private val canRemove = SessionActionsState(canStop = false, canRespawn = true, canRemove = true)
+    private val dialogOpen =
+        SessionActionsState(canStop = true, canRespawn = true, canRemove = true, dialogOpen = true)
+
+    @Test
+    fun `remove is offered only when canRemove`() =
+        runTest {
+            commands(actions = canStop).ids() shouldNotContain "sessions.remove"
+            commands(actions = canRespawn).ids() shouldNotContain "sessions.remove"
+            commands().ids() shouldNotContain "sessions.remove"
+
+            val remove = commands(actions = canRemove).byId("sessions.remove")
+
+            remove.title shouldBe "Usuń sesję z listy"
+            remove.group shouldBe CommandGroup.SESSION
+            remove.keywords shouldBe listOf("remove", "rm", "usuń")
+            remove.shortcut shouldBe null
+        }
+
+    @Test
+    fun `remove sends RemoveSelected`() =
+        runTest {
+            commands(actions = canRemove).byId("sessions.remove").run()
+
+            intents shouldBe listOf(MissionControlIntent.RemoveSelected)
+        }
+
+    @Test
+    fun `an open mission control dialog gives no session commands`() {
+        commands(actions = dialogOpen).shouldBeEmpty()
+        commands(list = emptyList(), actions = dialogOpen).shouldBeEmpty()
+    }
+
+    @Test
+    fun `stop and respawn are offered without any project`() {
+        commands(list = emptyList(), actions = canStop).ids() shouldContain "sessions.stop"
+        commands(list = emptyList(), actions = canRespawn).ids() shouldContain "sessions.respawn"
+    }
+
+    @Test
+    fun `with stop offered four commands carry a shortcut`() {
+        commands(actions = canStop).filter { it.shortcut != null }.ids().toSet() shouldBe
+            setOf("sessions.next", "sessions.previous", "sessions.stop", "projects.switch")
     }
 
     @Test

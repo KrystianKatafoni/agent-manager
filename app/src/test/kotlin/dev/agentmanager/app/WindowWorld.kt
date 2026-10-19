@@ -52,8 +52,7 @@ internal fun ComposeUiTest.showWindow(
     setContent {
         val scope = rememberCoroutineScope()
         val controller = remember { projectsController(projects, sessions, scope) }
-        val missionControl =
-            remember { MissionControlController(sessions, projects, controller.selection, TestClock(), scope, 1.hours) }
+        val missionControl = remember { missionControlController(projects, sessions, controller, scope) }
         val registry = remember { FakeCommandRegistry(scope) }
         val palette = remember { CommandPaletteController(registry, scope, NoOpLogger).also { built += it } }
         remember { registry.register(AppCommands(projects, controller, missionControl, palette, scope)) }
@@ -68,6 +67,22 @@ internal fun ComposeUiTest.showWindow(
     waitUntil { built.isNotEmpty() }
     return built.single()
 }
+
+private fun missionControlController(
+    projects: FakeProjectsApi,
+    sessions: FakeSessions,
+    controller: ProjectsController,
+    scope: CoroutineScope,
+): MissionControlController =
+    MissionControlController(
+        SessionsApi(monitor = sessions, commands = sessions),
+        projects,
+        controller.selection,
+        TestClock(),
+        scope,
+        NoOpLogger,
+        1.hours,
+    )
 
 @OptIn(ExperimentalTestApi::class)
 internal fun ComposeUiTest.await(tag: String): SemanticsNodeInteraction {

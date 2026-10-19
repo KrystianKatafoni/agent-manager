@@ -35,9 +35,20 @@ class AppShortcutsTest {
     }
 
     @Test
+    fun `window key shortcut stop is x`() {
+        AppShortcuts.STOP_SESSION shouldBe Shortcut.of(letterChord('x'))
+    }
+
+    @Test
     fun `window key shortcuts have no meta`() {
         // Shortcuts with ⌘ belong to MenuBar; the window keys must not run twice (ADR 0011).
-        val windowKeys = listOf(AppShortcuts.NEXT_SESSION, AppShortcuts.PREVIOUS_SESSION, AppShortcuts.SWITCH_PROJECT)
+        val windowKeys =
+            listOf(
+                AppShortcuts.NEXT_SESSION,
+                AppShortcuts.PREVIOUS_SESSION,
+                AppShortcuts.STOP_SESSION,
+                AppShortcuts.SWITCH_PROJECT,
+            )
 
         windowKeys.flatMap { it.chords }.none { KeyModifier.META in it.modifiers } shouldBe true
         windowKeys.forEach { it.toKeyShortcut() shouldBe null }
@@ -52,6 +63,7 @@ class AppShortcutsTest {
                 AppShortcuts.PALETTE,
                 AppShortcuts.NEXT_SESSION,
                 AppShortcuts.PREVIOUS_SESSION,
+                AppShortcuts.STOP_SESSION,
                 AppShortcuts.SWITCH_PROJECT,
             )
 

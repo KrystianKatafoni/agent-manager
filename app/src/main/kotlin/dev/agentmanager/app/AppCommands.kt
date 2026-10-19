@@ -10,6 +10,7 @@ import dev.agentmanager.commandpalette.api.KeyModifier
 import dev.agentmanager.commandpalette.api.Shortcut
 import dev.agentmanager.commandpalette.ui.CommandPaletteController
 import dev.agentmanager.missioncontrol.ui.MissionControlController
+import dev.agentmanager.missioncontrol.ui.SessionActionsState
 import dev.agentmanager.projects.api.Project
 import dev.agentmanager.projects.api.ProjectsApi
 import dev.agentmanager.projects.ui.ProjectsController
@@ -29,6 +30,7 @@ internal object AppShortcuts {
 
     val NEXT_SESSION: Shortcut = Shortcut.of(chord('j'))
     val PREVIOUS_SESSION: Shortcut = Shortcut.of(chord('k'))
+    val STOP_SESSION: Shortcut = Shortcut.of(chord('x'))
     val SWITCH_PROJECT: Shortcut = Shortcut.of(chord('g'), chord('p'))
 
     private fun chord(
@@ -45,17 +47,23 @@ internal data class AppMenuState(
     val palette: Boolean,
 ) {
     companion object {
-        /** An open palette takes the keys (⌘⌫ reaches its field), so all items are off; ⌘K also waits for dialogs. */
+        /**
+         * An open palette or a dialog of Mission Control takes the keys (⌘⌫ reaches the palette field), so all items
+         * are off; ⌘K also waits for project dialogs.
+         */
         fun of(
             menu: ProjectsMenuState,
             paletteOpen: Boolean,
-        ): AppMenuState =
-            AppMenuState(
-                add = menu.canAdd && !paletteOpen,
-                remove = menu.canRemove && !paletteOpen,
-                rename = menu.canRename && !paletteOpen,
-                palette = !paletteOpen && !menu.dialogOpen,
+            sessionDialogOpen: Boolean = false,
+        ): AppMenuState {
+            val blocked = paletteOpen || sessionDialogOpen
+            return AppMenuState(
+                add = menu.canAdd && !blocked,
+                remove = menu.canRemove && !blocked,
+                rename = menu.canRename && !blocked,
+                palette = !blocked && !menu.dialogOpen,
             )
+        }
     }
 }
 
@@ -122,12 +130,16 @@ internal class AppCommands(
     palette: CommandPaletteController,
     scope: CoroutineScope,
 ) : CommandProvider {
-    private val offered = { list: List<Project>, menu: ProjectsMenuState ->
+    private val offered = { list: List<Project>, menu: ProjectsMenuState, actions: SessionActionsState ->
         projectCommands(list, menu, controller::onIntent) +
-            sessionCommands(list, menu, missionControl::onIntent) { palette.open(it) }
+            sessionCommands(list, menu, actions, missionControl::onIntent) { palette.open(it) }
     }
 
     override val commands: StateFlow<List<Command>> =
-        combine(projects.projects, controller.menu, offered)
-            .stateIn(scope, SharingStarted.Eagerly, offered(projects.projects.value, controller.menu.value))
+        combine(projects.projects, controller.menu, missionControl.actions, offered)
+            .stateIn(
+                scope,
+                SharingStarted.Eagerly,
+                offered(projects.projects.value, controller.menu.value, missionControl.actions.value),
+            )
 }

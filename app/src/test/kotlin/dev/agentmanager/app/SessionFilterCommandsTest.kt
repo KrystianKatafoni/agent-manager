@@ -3,6 +3,7 @@ package dev.agentmanager.app
 import dev.agentmanager.commandpalette.api.Command
 import dev.agentmanager.commandpalette.api.CommandGroup
 import dev.agentmanager.missioncontrol.ui.MissionControlIntent
+import dev.agentmanager.missioncontrol.ui.SessionActionsState
 import dev.agentmanager.missioncontrol.ui.SessionFilter
 import dev.agentmanager.projects.api.aProject
 import dev.agentmanager.projects.ui.ProjectsMenuState
@@ -19,8 +20,9 @@ import org.junit.jupiter.params.provider.MethodSource
 class SessionFilterCommandsTest {
     private val idle = ProjectsMenuState(canAdd = true, canRemove = true, canRename = true, dialogOpen = false)
     private val intents = mutableListOf<MissionControlIntent>()
+    private val noActions = SessionActionsState(canStop = false, canRespawn = false)
 
-    private fun commands(): List<Command> = sessionCommands(listOf(aProject()), idle, { intents += it }, { })
+    private fun commands(): List<Command> = sessionCommands(listOf(aProject()), idle, noActions, { intents += it }, { })
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("filters")
@@ -47,6 +49,7 @@ class SessionFilterCommandsTest {
         sessionCommands(
             listOf(aProject()),
             dialog,
+            noActions,
             { },
             { },
         ).none { it.id.value.startsWith("sessions.filter.") } shouldBe

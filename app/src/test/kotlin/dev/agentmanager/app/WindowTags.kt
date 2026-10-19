@@ -8,6 +8,12 @@ internal object WindowTags {
     /** The focused `Box` with `WindowKeys` that stands for `Window.onKeyEvent` in UI tests (see `showWindow`). */
     const val KEYS = "window.keys"
     const val DETAILS = "missionControl.details"
+    const val DETAILS_STOP = "missionControl.details.stop"
+    const val DETAILS_RESPAWN = "missionControl.details.respawn"
+    const val DETAILS_REMOVE = "missionControl.details.remove"
+    const val CONFIRM_REMOVE = "missionControl.confirmRemove"
+    const val CONFIRM_REMOVE_OK = "missionControl.confirmRemove.ok"
+    const val CONFIRM_REMOVE_CANCEL = "missionControl.confirmRemove.cancel"
     const val DETAILS_EMPTY = "missionControl.details.empty"
     const val SIDEBAR = "projects.sidebar"
     const val MODE_BAR = "missionControl.modeBar"
