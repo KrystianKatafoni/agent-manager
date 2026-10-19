@@ -26,7 +26,7 @@ class CompositionRootTest {
 
     @Test
     fun `every UI text exists and is not blank`() {
-        Strings.keys shouldContainAll setOf("app.title", "missionControl.empty.title", "missionControl.empty.hint")
+        Strings.keys shouldContainAll setOf("app.title", "menu.projects", "picker.title")
         Strings.keys.forEach { Strings[it].shouldNotBeBlank() }
     }
 

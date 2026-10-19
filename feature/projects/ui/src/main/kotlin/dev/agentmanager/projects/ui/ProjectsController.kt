@@ -3,6 +3,7 @@ package dev.agentmanager.projects.ui
 import dev.agentmanager.agentruntime.api.AgentRuntime
 import dev.agentmanager.core.domain.Logger
 import dev.agentmanager.core.domain.Outcome
+import dev.agentmanager.core.domain.ProjectId
 import dev.agentmanager.core.domain.SessionId
 import dev.agentmanager.core.domain.info
 import dev.agentmanager.core.domain.warn
@@ -51,6 +52,10 @@ public class ProjectsController(
 
     /** Read by the composables only. */
     internal val state: StateFlow<ProjectsUiState> = ui.asStateFlow()
+
+    /** The project selected in the sidebar, null when none; read by `app` for Mission Control (AM-405). */
+    public val selection: StateFlow<ProjectId?> =
+        ui.map { it.selected }.stateIn(scope, SharingStarted.Eagerly, ui.value.selected)
 
     /** Enabled window-menu commands. */
     public val menu: StateFlow<ProjectsMenuState> =
