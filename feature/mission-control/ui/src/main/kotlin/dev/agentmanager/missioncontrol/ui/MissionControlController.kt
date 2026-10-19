@@ -2,6 +2,7 @@ package dev.agentmanager.missioncontrol.ui
 
 import dev.agentmanager.core.domain.Clock
 import dev.agentmanager.core.domain.ProjectId
+import dev.agentmanager.core.domain.SessionId
 import dev.agentmanager.projects.api.ProjectsApi
 import dev.agentmanager.sessions.api.SessionMonitor
 import kotlinx.coroutines.CoroutineScope
@@ -72,6 +73,21 @@ public class MissionControlController(
                 }
             }
         }
+    }
+
+    /** Handles [intent] from the palette and window keys; ignored without a shown project or rows. */
+    public fun onIntent(intent: MissionControlIntent) {
+        when (intent) {
+            is MissionControlIntent.SelectFilter -> onEvent(MissionControlEvent.SelectFilter(intent.filter))
+            MissionControlIntent.NextSession -> moveCursor(SessionCursor::next)
+            MissionControlIntent.PreviousSession -> moveCursor(SessionCursor::previous)
+        }
+    }
+
+    /** Counts from the current selection, not from [state], so two quick keys move two rows. */
+    private fun moveCursor(move: (List<SessionId>, SessionId?) -> SessionId?) {
+        val rows = (state.value.screen as? Screen.Project)?.rows?.map { it.id } ?: return
+        selection.update { current -> current.copy(session = move(rows, current.session) ?: current.session) }
     }
 
     /** Handles a click in the filter or the session list. */
