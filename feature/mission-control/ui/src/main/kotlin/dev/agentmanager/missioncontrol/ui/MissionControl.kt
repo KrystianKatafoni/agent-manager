@@ -51,6 +51,7 @@ public fun MissionControl(
         }
         ModeBarView(state.modeBar)
     }
+    state.dialog?.let { SessionDialogView(it, controller::onEvent) }
 }
 
 @Composable
@@ -97,7 +98,7 @@ private fun ProjectPage(
                 }
             }
         }
-        Details(page.details)
+        Details(page.details, onEvent)
     }
 }
 
@@ -162,7 +163,10 @@ private fun SessionRowView(
 }
 
 @Composable
-private fun Details(details: SessionDetails?) {
+private fun Details(
+    details: SessionDetails?,
+    onEvent: (MissionControlEvent) -> Unit,
+) {
     val panel =
         Modifier
             .width(width = 300.dp)
@@ -185,6 +189,7 @@ private fun Details(details: SessionDetails?) {
             Label(MissionControlStrings[details.glyph.key])
         }
         details.summary?.let { Label(it) }
+        SessionActionsView(details) { onEvent(MissionControlEvent.Run(it)) }
         Field("details.worktree", details.worktree.toString())
         Field("details.id", details.id.value)
         Field("details.startedAt", timeFormat.format(details.startedAt))
@@ -234,38 +239,6 @@ private fun Text(
     Box(modifier = modifier.testTag(tag).padding(all = 8.dp)) { Label(MissionControlStrings.format(text)) }
 }
 
-@Composable
-private fun Label(
-    text: String,
-    color: Color = Colors.text,
-    size: Int = 13,
-    mono: Boolean = false,
-) {
-    val family = if (mono) FontFamily.Monospace else FontFamily.Default
-    BasicText(text = text, style = TextStyle(color = color, fontSize = size.sp, fontFamily = family), maxLines = 1)
-}
-
 /** Start and last activity in the details panel, in the zone of the Mac. */
 private val timeFormat: DateTimeFormatter =
     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault())
-
-/** Placeholder colors until `core:design-system` exists (AM-802). */
-private object Colors {
-    val background = Color(color = 0xFF1C1C1E)
-    val panel = Color(color = 0xFF2C2C2E)
-    val selection = Color(color = 0xFF3A3A3C)
-    val button = Color(color = 0xFF48484A)
-    val warning = Color(color = 0xFF5C4400)
-    val accent = Color(color = 0xFF0A84FF)
-    val text = Color(color = 0xFFF2F2F7)
-    val secondary = Color(color = 0xFF8E8E93)
-
-    fun of(tone: Tone): Color =
-        when (tone) {
-            Tone.WARN -> Color(color = 0xFFFFD60A)
-            Tone.WORK -> Color(color = 0xFF64D2FF)
-            Tone.OK -> Color(color = 0xFF30D158)
-            Tone.ERR -> Color(color = 0xFFFF453A)
-            Tone.DIM -> secondary
-        }
-}

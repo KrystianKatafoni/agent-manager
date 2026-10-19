@@ -1,7 +1,10 @@
 package dev.agentmanager.missioncontrol.ui
 
+import dev.agentmanager.core.domain.ProjectId
+import dev.agentmanager.core.domain.SessionId
 import dev.agentmanager.core.testing.T0
 import dev.agentmanager.sessions.api.RuntimeProblem
+import dev.agentmanager.sessions.api.SessionError
 import dev.agentmanager.sessions.api.SessionState
 import dev.agentmanager.sessions.api.SnapshotStatus
 import io.kotest.assertions.withClue
@@ -68,7 +71,28 @@ internal class MissionControlStringsTest {
                 "details.lastActivity",
                 "modeBar.waiting",
                 "modeBar.working",
+                "action.stop",
+                "action.respawn",
+                "action.stop.busy",
+                "action.respawn.busy",
+                "action.stop.failed",
+                "action.respawn.failed",
+                "action.remove",
+                "action.remove.busy",
+                "action.remove.failed",
+                "confirmRemove.title",
+                "confirmRemove.hint",
+                "confirmRemove.confirm",
+                "dialog.cancel",
             )
+
+        private val errors: List<SessionError> =
+            listOf(
+                SessionError.UnknownSession(SessionId("a")),
+                SessionError.SessionActive(SessionId("a")),
+                SessionError.UnknownProject(ProjectId("p")),
+                SessionError.StopIncomplete(stopped = 0, failed = listOf(SessionId("a"))),
+            ) + RuntimeProblem.entries.map { SessionError.Runtime(it) }
 
         private val states =
             listOf(
@@ -92,7 +116,8 @@ internal class MissionControlStringsTest {
                 states.map(LastEvent::of) +
                 ages.map { AgeText.of(T0, T0.plusSeconds(it)) } +
                 statuses.map { Freshness.of(it, ZoneOffset.UTC) } +
-                statuses.map { Freshness.of(it, ZoneOffset.UTC, short = true) }
+                statuses.map { Freshness.of(it, ZoneOffset.UTC, short = true) } +
+                errors.map(SessionActionMessages::reason)
 
         private fun argumentTexts(): List<UiText> =
             generated().filter { it.args.isNotEmpty() } +
@@ -112,6 +137,16 @@ internal class MissionControlStringsTest {
                 arguments("filter.all", "Wszystkie"),
                 arguments("filter.active", "Aktywne"),
                 arguments("filter.finished", "Zakończone"),
+                arguments("action.respawn", "Respawn"),
+                arguments("action.stop.busy", "Zatrzymywanie…"),
+                arguments("action.respawn.busy", "Respawn…"),
+                arguments("action.remove", "Usuń z listy"),
+                arguments("action.remove.busy", "Usuwanie…"),
+                arguments("action.remove.failed", "Nie udało się usunąć sesji z listy"),
+                arguments("confirmRemove.title", "Usunąć sesję z listy?"),
+                arguments("confirmRemove.hint", "Sesja zniknie z listy Claude Code. Pliki projektu zostają."),
+                arguments("confirmRemove.confirm", "Usuń z listy"),
+                arguments("dialog.cancel", "Anuluj"),
                 arguments("list.loading", "Wczytywanie sesji…"),
                 arguments("details.none", "Wybierz sesję"),
                 arguments("fresh.live", "na żywo"),

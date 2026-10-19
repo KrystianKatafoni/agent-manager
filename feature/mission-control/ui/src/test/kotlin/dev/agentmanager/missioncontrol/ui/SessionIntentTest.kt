@@ -2,6 +2,7 @@
 
 package dev.agentmanager.missioncontrol.ui
 
+import dev.agentmanager.core.domain.NoOpLogger
 import dev.agentmanager.core.domain.ProjectId
 import dev.agentmanager.core.domain.SessionId
 import dev.agentmanager.core.testing.T0
@@ -44,7 +45,7 @@ internal class SessionIntentTest {
         val selected = MutableStateFlow(selected)
 
         fun TestScope.start(): MissionControlController =
-            MissionControlController(sessions, projects, selected, clock, backgroundScope, 1.hours)
+            MissionControlController(sessions.api(), projects, selected, clock, backgroundScope, NoOpLogger, 1.hours)
                 .also { runCurrent() }
     }
 
