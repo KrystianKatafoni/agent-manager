@@ -42,7 +42,7 @@
 - [x] AM-302 · JsonProjectStore · moduły: projects:impl · zależy: AM-301, AM-107 · wymagania: FR-P1, FR-P3 · issue: #22
 - [x] AM-303 · DirectoryInspector (git, CLAUDE.md, sesje, hooki) · moduły: projects:impl · zależy: AM-302, AM-106 · wymagania: FR-P2 · issue: #23
 - [x] AM-304 · projects:ui: sidebar, dodaj z dysku, usuń z dialogiem · moduły: projects:ui, app · zależy: AM-302, AM-108 · wymagania: FR-P1, FR-P3, FR-P4 · issue: #24
-- [~] AM-305 · projects:ui: zmiana nazwy, liczniki sesji w sidebarze i usuwanie przez `stopAllIn` · moduły: projects:ui, app · zależy: AM-304, AM-404 · wymagania: FR-P6, FR-P4 · issue: #74
+- [x] AM-305 · projects:ui: zmiana nazwy, liczniki sesji w sidebarze i usuwanie przez `stopAllIn` · moduły: projects:ui, app · zależy: AM-304, AM-404 · wymagania: FR-P6, FR-P4 · issue: #74
 
 ## M4 · Sesje i Mission Control
 
@@ -51,7 +51,7 @@
 - [x] AM-403 · Pętla pollingu + snapshot · moduły: sessions:impl · zależy: AM-402, AM-203 · wymagania: FR-S1, NFR-2, NFR-3 · issue: #27
 - [x] AM-404 · Komendy: start, stop, respawn, remove, stopAllIn · moduły: sessions:impl · zależy: AM-403 · wymagania: FR-S3, FR-S4 · issue: #28
 - [x] AM-405 · mission-control:ui: lista sesji, panel szczegółów, pasek trybu · moduły: mission-control:ui, projects:ui, app · zależy: AM-404, AM-304 · wymagania: FR-S1, FR-S8, FR-S9 · issue: #29
-- [ ] AM-406 · Paleta ⌘K i skróty j/k · moduły: command-palette:* · zależy: AM-405 · wymagania: FR-K1, FR-K2 · issue: #30
+- [~] AM-406 · Paleta ⌘K i skróty j/k · moduły: command-palette:* · zależy: AM-405 · wymagania: FR-K1, FR-K2 · issue: #30
 - [ ] AM-407 · mission-control:ui: widoki globalne „czeka na mnie”, „pracuje”, „błędy” · moduły: mission-control:ui, app · zależy: AM-405 · wymagania: FR-S9 · issue: #83
 
 ## M5 · Terminal
