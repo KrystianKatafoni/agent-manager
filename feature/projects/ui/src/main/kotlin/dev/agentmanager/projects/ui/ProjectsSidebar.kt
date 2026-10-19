@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
@@ -91,6 +92,7 @@ private fun ColumnScope.ProjectList(
     }
 }
 
+/** The row never takes focus: a focused `selectable` would consume `space` and Enter before the window shortcuts. */
 @Composable
 private fun ProjectRow(
     project: Project,
@@ -104,6 +106,7 @@ private fun ProjectRow(
             Modifier
                 .fillMaxWidth()
                 .testTag(ProjectsTags.row(project.id))
+                .focusProperties { canFocus = false }
                 .selectable(selected = selected, onClick = { onEvent(SidebarEvent.Select(project.id)) })
                 .background(color = if (selected) SidebarColors.selection else Color.Transparent)
                 .padding(horizontal = 8.dp, vertical = 6.dp),
