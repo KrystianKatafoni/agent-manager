@@ -20,6 +20,10 @@ dependencies {
     implementation(project(":feature:sessions:api"))
     implementation(project(":feature:sessions:impl"))
     implementation(project(":feature:mission-control:ui"))
+    // The ⌘K palette: registry, commands and the overlay (AM-408, ADR 0011).
+    implementation(project(":feature:command-palette:api"))
+    implementation(project(":feature:command-palette:impl"))
+    implementation(project(":feature:command-palette:ui"))
     implementation(compose.desktop.currentOs)
     implementation(libs.kotlinx.coroutines.swing)
     implementation(libs.slf4j.api)
@@ -31,6 +35,8 @@ dependencies {
     testImplementation(testFixtures(project(":feature:projects:api")))
     // FakeSessions behind the sidebar counts and Mission Control in the window test (AM-405, AM-305).
     testImplementation(testFixtures(project(":feature:sessions:api")))
+    // FakeCommandRegistry and letterChord for the project commands and the palette scenarios (AM-408).
+    testImplementation(testFixtures(project(":feature:command-palette:api")))
 }
 
 compose.desktop {
