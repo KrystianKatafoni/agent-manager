@@ -22,7 +22,7 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Project changes seen by `sessionMonitorModule` (AM-403 plan, rules 1–3): a changed project map lists
+ * Project changes seen by `sessionsModule` (AM-403 plan, rules 1–3): a changed project map lists
  * again at once, a rename does not. `pollInterval = 2 s`, `max = 15 s`.
  */
 class PollingProjectsTest {

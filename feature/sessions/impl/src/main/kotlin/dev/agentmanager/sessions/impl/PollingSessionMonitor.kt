@@ -1,8 +1,6 @@
 package dev.agentmanager.sessions.impl
 
-import dev.agentmanager.agentruntime.api.AgentRuntime
 import dev.agentmanager.agentruntime.api.RuntimeError
-import dev.agentmanager.agentruntime.api.RuntimeSession
 import dev.agentmanager.core.domain.Logger
 import dev.agentmanager.core.domain.Outcome
 import dev.agentmanager.core.domain.ProjectId
@@ -29,12 +27,11 @@ import java.nio.file.Path
 /**
  * The polling loop (docs/11 §6, §7); [start] launches it and the project watcher in the given scope.
  *
- * Each listing covers every session (`under = null`) and is published with the current project dirs.
+ * Each listing is one [SessionsState.refresh]: every session (`under = null`), the current project dirs.
  * The wait after it comes from [schedule]; a change of the project dirs ends the wait at once. The loop
  * does not catch exceptions: the runtime returns errors as [Outcome] (ENG-I4), so an exception is a bug.
  */
 internal class PollingSessionMonitor(
-    private val runtime: AgentRuntime,
     private val projects: ProjectsApi,
     private val state: SessionsState,
     private val schedule: PollSchedule,
@@ -65,22 +62,20 @@ internal class PollingSessionMonitor(
     private suspend fun poll() {
         var failures = 0
         while (true) {
-            val listing = runtime.listSessions(under = null)
-            state.publish(listing, projects.projects.value.dirs())
-            failures = logged(listing, failures)
+            failures = logged(state.refresh(), failures)
             withTimeoutOrNull(schedule.delayAfter(failures)) { wakeups.receive() }
         }
     }
 
     /** Logs counts and fixed categories only (ENG-C8) and returns the new count of consecutive failures. */
     private fun logged(
-        listing: Outcome<List<RuntimeSession>, RuntimeError>,
+        listing: Outcome<SessionsSnapshot, RuntimeError>,
         failures: Int,
     ): Int =
         when (listing) {
             is Outcome.Ok -> {
                 if (failures > 0) logger.info("Session listing recovered", "failures" to failures)
-                logger.debug("Sessions listed", "count" to listing.value.size)
+                logger.debug("Sessions listed", "count" to listing.value.sessions.size)
                 0
             }
 

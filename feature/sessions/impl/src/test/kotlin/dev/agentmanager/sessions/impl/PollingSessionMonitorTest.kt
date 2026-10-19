@@ -38,7 +38,7 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * The polling loop of `sessionMonitorModule` (AM-403 plan, "Reguły pętli"; FR-S1, NFR-2, NFR-3): first
+ * The polling loop of `sessionsModule` (AM-403 plan, "Reguły pętli"; FR-S1, NFR-2, NFR-3): first
  * listing, rhythm, restart and cancellation. Every test runs the loop in `backgroundScope` on virtual
  * time; `pollInterval = 2 s`, `max = 15 s` unless the test is about the defaults.
  */
