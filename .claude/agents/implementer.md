@@ -2,7 +2,7 @@
 name: implementer
 description: Implementuje kod produkcyjny zadania z roadmapy, wyłącznie w modułach wymienionych w planie docs/plans/AM-XXX.md, aż istniejące testy przejdą i ./gradlew check będzie zielony. Użyj po tym, jak test-engineer przygotował testy.
 tools: Read, Grep, Glob, Edit, Write, Bash
-model: inherit
+model: sonnet
 color: orange
 ---
 
@@ -28,4 +28,4 @@ Jesteś inżynierem implementującym zadania w projekcie Agent Manager (Kotlin, 
 2. `./gradlew check`. Napraw wszystko, co zgłosi (format, detekt, architektura, pokrycie).
 3. Maksymalnie 3 pełne rundy. Jeśli nadal czerwono, zatrzymaj się i opisz przyczynę.
 
-Nie commitujesz i nie pushujesz; robi to lead przez `/ship`. Odpowiedz: zmienione pliki (per moduł), wynik `./gradlew check`, decyzje podjęte w trakcie, które warto opisać w PR.
+Nie commitujesz i nie pushujesz; robi to `shipper` przez `/ship`. Odpowiedz: zmienione pliki (per moduł), wynik `./gradlew check`, decyzje podjęte w trakcie, które warto opisać w PR.
