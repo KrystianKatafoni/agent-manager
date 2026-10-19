@@ -25,6 +25,11 @@ class ProjectsStringsTest {
     }
 
     @Test
+    fun `the obsolete listing text is gone`() {
+        ProjectsStrings.keys.contains("remove.checking") shouldBe false
+    }
+
+    @Test
     fun `arguments are filled into the text`() {
         argumentTexts().forEach { text ->
             withClue(text) { text.args.forEach { ProjectsStrings.format(text) shouldContain it } }
@@ -48,12 +53,16 @@ class ProjectsStringsTest {
                 "sidebar.empty",
                 "sidebar.add",
                 "row.remove",
+                "row.rename",
+                "row.waiting",
+                "row.working",
                 "banner.dismiss",
                 "add.title",
                 "add.inspecting",
                 "add.confirm",
                 "remove.title",
-                "remove.checking",
+                "rename.title",
+                "rename.save",
                 "remove.activeSessions",
                 "remove.sessionsUnknown",
                 "remove.confirm",
@@ -61,6 +70,7 @@ class ProjectsStringsTest {
                 "remove.keepSessions",
                 "remove.removeFromList",
                 "remove.stopFailed",
+                "remove.runtimeFailed",
                 "dialog.busy",
                 "dialog.cancel",
                 "dialog.close",
@@ -86,7 +96,12 @@ class ProjectsStringsTest {
                 reports().flatMap(ReportSummary::lines)
 
         private fun argumentTexts(): List<UiText> =
-            generated().filter { it.args.isNotEmpty() } + UiText("remove.activeSessions", listOf("3"))
+            generated().filter { it.args.isNotEmpty() } +
+                listOf(
+                    UiText("remove.activeSessions", listOf("3")),
+                    UiText("row.waiting", listOf("2")),
+                    UiText("row.working", listOf("5")),
+                )
 
         fun allKeys(): Set<String> = generated().map { it.key }.toSet() + UI_KEYS
 
@@ -94,12 +109,16 @@ class ProjectsStringsTest {
         fun buttons(): List<Arguments> =
             listOf(
                 arguments("sidebar.add", "Dodaj projekt"),
+                arguments("row.rename", "Zmień nazwę…"),
+                arguments("rename.save", "Zapisz"),
+                arguments("row.waiting", "czeka: {0}"),
+                arguments("row.working", "pracuje: {0}"),
                 arguments("add.inspecting", "Sprawdzanie…"),
                 arguments("add.confirm", "Dodaj"),
                 arguments("remove.stopAndRemove", "Zatrzymaj sesje i usuń"),
                 arguments("remove.keepSessions", "Usuń z listy, sesje działają dalej"),
                 arguments("remove.removeFromList", "Usuń z listy"),
-                arguments("remove.sessionsUnknown", "Nie udało się sprawdzić sesji"),
+                arguments("remove.sessionsUnknown", "Stan sesji nie jest znany"),
                 arguments("dialog.cancel", "Anuluj"),
             )
     }

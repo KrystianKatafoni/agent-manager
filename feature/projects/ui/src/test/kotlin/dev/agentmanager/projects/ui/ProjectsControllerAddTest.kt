@@ -36,7 +36,7 @@ class ProjectsControllerAddTest {
             world.picker.picks shouldBe 1
             world.inspector.inspected.shouldBeEmpty()
             world.projects.calls.shouldBeEmpty()
-            controller.state.value shouldBe ProjectsUiState()
+            controller.state.value shouldBe ProjectsUiState(sessions = NO_ACTIVE_SESSIONS)
             controller.menu.value shouldBe ProjectsMenuState(canAdd = true, canRemove = false)
         }
 
@@ -97,7 +97,8 @@ class ProjectsControllerAddTest {
 
             val added = Project(ProjectId("project0001"), A_PROJECT_DIR, "agent-manager")
             world.projects.calls shouldBe listOf("add $A_PROJECT_DIR")
-            controller.state.value shouldBe ProjectsUiState(projects = listOf(added), selected = added.id)
+            controller.state.value shouldBe
+                ProjectsUiState(projects = listOf(added), selected = added.id, sessions = NO_ACTIVE_SESSIONS)
         }
 
     @Test
@@ -146,7 +147,7 @@ class ProjectsControllerAddTest {
                 Dialog.Message(ProjectMessages.of(ProjectError.NotFound(A_PROJECT_DIR)))
 
             act { controller.onEvent(SidebarEvent.Dismiss) }
-            controller.state.value shouldBe ProjectsUiState()
+            controller.state.value shouldBe ProjectsUiState(sessions = NO_ACTIVE_SESSIONS)
             world.projects.calls.shouldBeEmpty()
         }
 
@@ -183,7 +184,7 @@ class ProjectsControllerAddTest {
 
             world.picker.picks shouldBe 1
             world.inspector.inspected.map(Path::toString) shouldBe listOf(A_PROJECT_DIR.toString())
-            world.runtime.calls.shouldBeEmpty()
+            world.sessions.calls.shouldBeEmpty()
             controller.state.value.dialog shouldBe Dialog.Waiting.INSPECTING
         }
 

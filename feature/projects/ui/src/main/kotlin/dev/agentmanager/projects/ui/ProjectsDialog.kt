@@ -6,19 +6,39 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEvent
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
@@ -63,6 +83,8 @@ private fun DialogContent(
         is Dialog.ConfirmAdd -> ConfirmAdd(dialog, onEvent)
 
         is Dialog.ConfirmRemove -> ConfirmRemove(dialog, onEvent)
+
+        is Dialog.Rename -> Rename(dialog, onEvent)
 
         is Dialog.Message -> Message(dialog.text, cancel)
     }
@@ -110,19 +132,19 @@ private fun ConfirmRemove(
     val keepSessions = { onEvent(SidebarEvent.RemoveKeepSessions) }
     Panel(ProjectsTags.CONFIRM_REMOVE, ProjectsStrings["remove.title"]) {
         Label(dialog.project.displayName)
-        val sessions = dialog.sessions
+        val active = dialog.active
         when {
-            sessions == null -> {
+            active == null -> {
                 Label(ProjectsStrings["remove.sessionsUnknown"])
                 TextButton(ProjectsStrings["remove.removeFromList"], ProjectsTags.REMOVE, keepSessions)
             }
 
-            sessions.isEmpty() -> {
+            active.active == 0 -> {
                 TextButton(ProjectsStrings["remove.confirm"], ProjectsTags.REMOVE, keepSessions)
             }
 
             else -> {
-                Label(ProjectsStrings.format(UiText("remove.activeSessions", listOf(sessions.size.toString()))))
+                Label(ProjectsStrings.format(UiText("remove.activeSessions", listOf(active.active.toString()))))
                 TextButton(ProjectsStrings["remove.stopAndRemove"], ProjectsTags.STOP_AND_REMOVE) {
                     onEvent(SidebarEvent.StopAndRemove)
                 }
@@ -130,6 +152,60 @@ private fun ConfirmRemove(
             }
         }
         Cancel { onEvent(SidebarEvent.Dismiss) }
+    }
+}
+
+@Composable
+private fun Rename(
+    dialog: Dialog.Rename,
+    onEvent: (SidebarEvent) -> Unit,
+) {
+    Panel(ProjectsTags.RENAME_DIALOG, ProjectsStrings["rename.title"]) {
+        RenameField(dialog.draft, onEvent)
+        dialog.error?.let { Label(ProjectsStrings.format(it)) }
+        TextButton(ProjectsStrings["rename.save"], ProjectsTags.RENAME_SAVE) { onEvent(SidebarEvent.ConfirmRename) }
+        Cancel { onEvent(SidebarEvent.Dismiss) }
+    }
+}
+
+/** Text field with the whole name selected; Enter saves, Escape cancels (handled here, there is no Material). */
+@Composable
+private fun RenameField(
+    draft: String,
+    onEvent: (SidebarEvent) -> Unit,
+) {
+    var field by remember { mutableStateOf(TextFieldValue(draft, TextRange(0, draft.length))) }
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focus.requestFocus() }
+    BasicTextField(
+        value = field,
+        onValueChange = {
+            field = it
+            if (it.text != draft) onEvent(SidebarEvent.NameChanged(it.text))
+        },
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .background(color = SidebarColors.button)
+                .padding(all = 6.dp)
+                .focusRequester(focus)
+                .onPreviewKeyEvent { handleRenameKey(it, onEvent) }
+                .testTag(ProjectsTags.RENAME_FIELD),
+        singleLine = true,
+        textStyle = TextStyle(color = SidebarColors.text, fontSize = 13.sp),
+        cursorBrush = SolidColor(SidebarColors.text),
+    )
+}
+
+private fun handleRenameKey(
+    event: KeyEvent,
+    onEvent: (SidebarEvent) -> Unit,
+): Boolean {
+    if (event.type != KeyEventType.KeyDown) return false
+    return when (event.key) {
+        Key.Enter, Key.NumPadEnter -> true.also { onEvent(SidebarEvent.ConfirmRename) }
+        Key.Escape -> true.also { onEvent(SidebarEvent.Dismiss) }
+        else -> false
     }
 }
 

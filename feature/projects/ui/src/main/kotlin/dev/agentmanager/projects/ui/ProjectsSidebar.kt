@@ -79,7 +79,8 @@ private fun ColumnScope.ProjectList(
                 ProjectRow(
                     project = project,
                     selected = project.id == state.selected,
-                    onSelect = { controller.onEvent(SidebarEvent.Select(project.id)) },
+                    badges = CountBadges.of(state.sessions.counts[project.id]),
+                    onEvent = controller::onEvent,
                     onRemove = {
                         controller.onEvent(SidebarEvent.Select(project.id))
                         controller.onIntent(ProjectsIntent.RemoveSelectedRequested)
@@ -94,7 +95,8 @@ private fun ColumnScope.ProjectList(
 private fun ProjectRow(
     project: Project,
     selected: Boolean,
-    onSelect: () -> Unit,
+    badges: List<UiText>,
+    onEvent: (SidebarEvent) -> Unit,
     onRemove: () -> Unit,
 ) {
     Row(
@@ -102,25 +104,43 @@ private fun ProjectRow(
             Modifier
                 .fillMaxWidth()
                 .testTag(ProjectsTags.row(project.id))
-                .selectable(selected = selected, onClick = onSelect)
+                .selectable(selected = selected, onClick = { onEvent(SidebarEvent.Select(project.id)) })
                 .background(color = if (selected) SidebarColors.selection else Color.Transparent)
                 .padding(horizontal = 8.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        BasicText(
-            text = project.displayName,
-            modifier = Modifier.weight(weight = 1f),
-            style = TextStyle(color = SidebarColors.text, fontSize = 14.sp),
-            maxLines = 1,
-        )
-        RowMenu(project, onRemove)
+        Column(modifier = Modifier.weight(weight = 1f)) {
+            BasicText(
+                text = project.displayName,
+                style = TextStyle(color = SidebarColors.text, fontSize = 14.sp),
+                maxLines = 1,
+            )
+            Counters(badges)
+        }
+        RowMenu(project, { onEvent(SidebarEvent.RenameRequested(project.id)) }, onRemove)
     }
 }
 
-/** The ⋯ button of a row with its one-item menu. */
+/** "waiting: n" (highlighted, it needs the user) and "working: n"; nothing for zeros. */
+@Composable
+private fun Counters(badges: List<UiText>) {
+    if (badges.isEmpty()) return
+    Row(horizontalArrangement = Arrangement.spacedBy(space = 8.dp)) {
+        badges.forEach { badge ->
+            val color = badgeColor(badge)
+            Label(ProjectsStrings.format(badge), color)
+        }
+    }
+}
+
+private fun badgeColor(badge: UiText): Color =
+    if (badge.key == CountBadges.WAITING_KEY) SidebarColors.attention else SidebarColors.secondaryText
+
+/** The ⋯ button of a row with its menu: rename and remove. */
 @Composable
 private fun RowMenu(
     project: Project,
+    onRename: () -> Unit,
     onRemove: () -> Unit,
 ) {
     var open by remember { mutableStateOf(false) }
@@ -132,9 +152,15 @@ private fun RowMenu(
                 onDismissRequest = { open = false },
                 properties = PopupProperties(focusable = true),
             ) {
-                TextButton(ProjectsStrings["row.remove"], ProjectsTags.ROW_MENU_REMOVE) {
-                    open = false
-                    onRemove()
+                Column {
+                    TextButton(ProjectsStrings["row.rename"], ProjectsTags.ROW_MENU_RENAME) {
+                        open = false
+                        onRename()
+                    }
+                    TextButton(ProjectsStrings["row.remove"], ProjectsTags.ROW_MENU_REMOVE) {
+                        open = false
+                        onRemove()
+                    }
                 }
             }
         }
@@ -197,4 +223,5 @@ internal object SidebarColors {
     val dialog = Color(color = 0xFF2C2C2E)
     val text = Color(color = 0xFFF2F2F7)
     val secondaryText = Color(color = 0xFF8E8E93)
+    val attention = Color(color = 0xFFFFB340)
 }
