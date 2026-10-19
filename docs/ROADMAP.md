@@ -52,7 +52,7 @@
 - [x] AM-404 · Komendy: start, stop, respawn, remove, stopAllIn · moduły: sessions:impl · zależy: AM-403 · wymagania: FR-S3, FR-S4 · issue: #28
 - [x] AM-405 · mission-control:ui: lista sesji, panel szczegółów, pasek trybu · moduły: mission-control:ui, projects:ui, app · zależy: AM-404, AM-304 · wymagania: FR-S1, FR-S8, FR-S9 · issue: #29
 - [x] AM-406 · command-palette:api/impl: komendy, skróty, CommandRegistry, wyszukiwanie · moduły: command-palette:api, command-palette:impl · zależy: AM-405 · wymagania: FR-K1, FR-K2 (część) · issue: #30
-- [~] AM-407 · mission-control:ui: widoki globalne „czeka na mnie”, „pracuje”, „błędy” · moduły: mission-control:ui, app · zależy: AM-405 · wymagania: FR-S9 · issue: #83
+- [~] AM-407 · mission-control:ui: widoki globalne „czeka na mnie”, „pracuje”, „błędy” · moduły: mission-control:ui, projects:ui, app · zależy: AM-405 · wymagania: FR-S9 · issue: #83
 - [x] AM-408 · Paleta ⌘K i „Zmień nazwę projektu…” w menu okna · moduły: command-palette:ui, projects:ui, app · zależy: AM-406 · wymagania: FR-K1, FR-P6 · issue: #86
 - [x] AM-409 · Skróty j/k i g p · moduły: command-palette:ui, mission-control:ui, app · zależy: AM-408 · wymagania: FR-K2 (część), FR-S9 (komendy filtra) · issue: #87
 - [x] AM-410 · Akcje sesji: x stop, Zatrzymaj/Respawn/Usuń w panelu i palecie · moduły: mission-control:ui, app · zależy: AM-409 · wymagania: FR-K2 (część) · issue: #88
