@@ -71,3 +71,4 @@ Krótkie wnioski z review i błędów agenta, dopisywane przez PR (jedna linia k
 - Stan po `stateIn` bywa o krok w tyle przy szybkich klawiszach — gdy plan mówi, skąd czytać stan (np. bieżące `selection` w `update`), kod musi to odwzorować albo plan trzeba poprawić w tym samym PR.
 - Gdy w trakcie zadania dochodzi nowy wariant (np. Remove obok Stop/Respawn), przejrzyj KDoc publicznego API i komentarze pod kątem starych wyliczeń („both”, „X or Y”) — testy tego nie złapią.
 - Strażnik bez obserwowalnego skutku w UI daje test „zawsze zielony” — sprawdź, czy test padnie po usunięciu tej linii, albo opisz strażnik w KDoc jako ochronę przed opóźnionym `stateIn`.
+- `@Timeout` w JUnit 5 domyślnie (SAME_THREAD) tylko przerywa wątek testu; natywny odczyt (PTY, socket) na to nie reaguje — przy blokujących odczytach używaj `threadMode = SEPARATE_THREAD`.
