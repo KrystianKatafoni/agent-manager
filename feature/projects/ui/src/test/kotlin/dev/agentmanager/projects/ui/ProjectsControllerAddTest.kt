@@ -37,7 +37,8 @@ class ProjectsControllerAddTest {
             world.inspector.inspected.shouldBeEmpty()
             world.projects.calls.shouldBeEmpty()
             controller.state.value shouldBe ProjectsUiState(sessions = NO_ACTIVE_SESSIONS)
-            controller.menu.value shouldBe ProjectsMenuState(canAdd = true, canRemove = false)
+            controller.menu.value shouldBe
+                ProjectsMenuState(canAdd = true, canRemove = false, canRename = false, dialogOpen = false)
         }
 
     @Test
@@ -198,6 +199,7 @@ class ProjectsControllerAddTest {
             act { controller.onIntent(ProjectsIntent.AddRequested) }
 
             world.picker.picks shouldBe 1
-            controller.menu.value shouldBe ProjectsMenuState(canAdd = false, canRemove = false)
+            controller.menu.value shouldBe
+                ProjectsMenuState(canAdd = false, canRemove = false, canRename = false, dialogOpen = true)
         }
 }

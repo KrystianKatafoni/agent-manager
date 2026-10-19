@@ -43,17 +43,21 @@ class ProjectsControllerTest {
         runTest {
             val world = ControllerWorld(projects = FakeProjectsApi(initial = listOf(aProject())))
             val controller = start(world)
-            controller.menu.value shouldBe ProjectsMenuState(canAdd = true, canRemove = false)
+            controller.menu.value shouldBe
+                ProjectsMenuState(canAdd = true, canRemove = false, canRename = false, dialogOpen = false)
 
             act { controller.onEvent(SidebarEvent.Select(aProject().id)) }
             controller.state.value.selected shouldBe aProject().id
-            controller.menu.value shouldBe ProjectsMenuState(canAdd = true, canRemove = true)
+            controller.menu.value shouldBe
+                ProjectsMenuState(canAdd = true, canRemove = true, canRename = true, dialogOpen = false)
 
             act { controller.onIntent(ProjectsIntent.RemoveSelectedRequested) }
-            controller.menu.value shouldBe ProjectsMenuState(canAdd = false, canRemove = false)
+            controller.menu.value shouldBe
+                ProjectsMenuState(canAdd = false, canRemove = false, canRename = false, dialogOpen = true)
 
             act { controller.onEvent(SidebarEvent.Dismiss) }
-            controller.menu.value shouldBe ProjectsMenuState(canAdd = true, canRemove = true)
+            controller.menu.value shouldBe
+                ProjectsMenuState(canAdd = true, canRemove = true, canRename = true, dialogOpen = false)
         }
 
     @Test

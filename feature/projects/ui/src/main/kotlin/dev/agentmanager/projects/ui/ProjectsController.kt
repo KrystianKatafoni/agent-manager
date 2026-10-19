@@ -86,6 +86,14 @@ public class ProjectsController(
             ProjectsIntent.RemoveSelectedRequested -> {
                 current.selectedProject()?.let { ui.update { s -> s.copy(dialog = s.confirmRemove(it)) } }
             }
+
+            ProjectsIntent.RenameSelectedRequested -> {
+                current.selected?.let { id -> ui.update { it.reduce(SidebarEvent.RenameRequested(id)) } }
+            }
+
+            is ProjectsIntent.Select -> {
+                if (current.projects.any { it.id == intent.id }) ui.update { it.reduce(SidebarEvent.Select(intent.id)) }
+            }
         }
     }
 

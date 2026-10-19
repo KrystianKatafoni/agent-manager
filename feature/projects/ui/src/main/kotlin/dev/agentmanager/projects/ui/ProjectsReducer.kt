@@ -5,7 +5,12 @@ import dev.agentmanager.sessions.api.SessionCounts
 
 /** Window-menu commands are enabled only without an open dialog, so ⌘⌫ reaches text fields in dialogs. */
 internal fun ProjectsUiState.menu(): ProjectsMenuState =
-    ProjectsMenuState(canAdd = dialog == null, canRemove = dialog == null && selected != null)
+    ProjectsMenuState(
+        canAdd = dialog == null,
+        canRemove = dialog == null && selected != null,
+        canRename = dialog == null && selected != null,
+        dialogOpen = dialog != null,
+    )
 
 /** The new [list]; a selected project that left it is no longer selected. */
 internal fun ProjectsUiState.withProjects(list: List<Project>): ProjectsUiState =
