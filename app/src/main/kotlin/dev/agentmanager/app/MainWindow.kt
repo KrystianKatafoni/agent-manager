@@ -17,23 +17,28 @@ import dev.agentmanager.sessions.api.SessionsApi
 @Composable
 internal fun FrameWindowScope.MainWindow(
     core: CoreDeps,
-    projects: ProjectsApi,
-    sessions: SessionsApi,
-    inspector: ProjectInspector,
-    registry: CommandRegistry,
+    modules: AppModules,
+    keys: WindowKeys,
 ) {
+    val projects = modules.projects
+    val sessions = modules.sessions
+    val registry = modules.registry
     val scope = rememberCoroutineScope()
     val controller =
         remember {
             val picker = AwtDirectoryPicker(window, core.dispatchers.main)
-            ProjectsController(projects, inspector, sessions, picker, scope, core.logger)
+            ProjectsController(projects, modules.inspector, sessions, picker, scope, core.logger)
         }
     val missionControl =
         remember { MissionControlController(sessions.monitor, projects, controller.selection, core.clock, scope) }
     val palette = remember { CommandPaletteController(registry, scope, core.logger) }
     DisposableEffect(Unit) {
-        val registration = registry.register(AppCommands(projects, controller, scope))
+        val registration = registry.register(AppCommands(projects, controller, missionControl, palette, scope))
         onDispose { registration.close() }
+    }
+    DisposableEffect(Unit) {
+        val handle = keys.attach(palette::onKeyEvent)
+        onDispose { handle.close() }
     }
     AppMenu(controller, palette)
     AgentManagerApp(projects = controller, missionControl = missionControl, palette = palette)

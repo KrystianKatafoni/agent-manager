@@ -4,6 +4,11 @@ package dev.agentmanager.app
 internal object WindowTags {
     const val PALETTE = "palette"
     const val PALETTE_FIELD = "palette.field"
+
+    /** The focused `Box` with `WindowKeys` that stands for `Window.onKeyEvent` in UI tests (see `showWindow`). */
+    const val KEYS = "window.keys"
+    const val DETAILS = "missionControl.details"
+    const val DETAILS_EMPTY = "missionControl.details.empty"
     const val SIDEBAR = "projects.sidebar"
     const val MODE_BAR = "missionControl.modeBar"
     const val RENAME_DIALOG = "projects.dialog.rename"
@@ -13,4 +18,6 @@ internal object WindowTags {
     fun paletteRow(commandId: String): String = "palette.row.$commandId"
 
     fun projectRow(projectId: String): String = "projects.row.$projectId"
+
+    fun missionRow(sessionId: String): String = "missionControl.row.$sessionId"
 }

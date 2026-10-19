@@ -26,4 +26,35 @@ class AppShortcutsTest {
         AppShortcuts.REMOVE_PROJECT.toKeyShortcut() shouldBe KeyShortcut(Key.Backspace, meta = true)
         AppShortcuts.PALETTE.toKeyShortcut() shouldBe KeyShortcut(Key.K, meta = true)
     }
+
+    @Test
+    fun `window key shortcuts are j k and g p`() {
+        AppShortcuts.NEXT_SESSION shouldBe Shortcut.of(letterChord('j'))
+        AppShortcuts.PREVIOUS_SESSION shouldBe Shortcut.of(letterChord('k'))
+        AppShortcuts.SWITCH_PROJECT shouldBe Shortcut.of(letterChord('g'), letterChord('p'))
+    }
+
+    @Test
+    fun `window key shortcuts have no meta`() {
+        // Shortcuts with ⌘ belong to MenuBar; the window keys must not run twice (ADR 0011).
+        val windowKeys = listOf(AppShortcuts.NEXT_SESSION, AppShortcuts.PREVIOUS_SESSION, AppShortcuts.SWITCH_PROJECT)
+
+        windowKeys.flatMap { it.chords }.none { KeyModifier.META in it.modifiers } shouldBe true
+        windowKeys.forEach { it.toKeyShortcut() shouldBe null }
+    }
+
+    @Test
+    fun `all shortcuts are unique`() {
+        val all =
+            listOf(
+                AppShortcuts.ADD_PROJECT,
+                AppShortcuts.REMOVE_PROJECT,
+                AppShortcuts.PALETTE,
+                AppShortcuts.NEXT_SESSION,
+                AppShortcuts.PREVIOUS_SESSION,
+                AppShortcuts.SWITCH_PROJECT,
+            )
+
+        all.toSet().size shouldBe all.size
+    }
 }

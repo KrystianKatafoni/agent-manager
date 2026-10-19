@@ -36,6 +36,12 @@ class CompositionRootTest {
                 "menu.view",
                 "menu.palette",
                 "command.goToProject",
+                "command.nextSession",
+                "command.previousSession",
+                "command.switchProject",
+                "command.filterAll",
+                "command.filterActive",
+                "command.filterFinished",
                 "picker.title",
             )
         Strings.keys.forEach { Strings[it].shouldNotBeBlank() }

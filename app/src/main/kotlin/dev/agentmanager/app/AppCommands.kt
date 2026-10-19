@@ -8,6 +8,8 @@ import dev.agentmanager.commandpalette.api.CommandProvider
 import dev.agentmanager.commandpalette.api.KeyChord
 import dev.agentmanager.commandpalette.api.KeyModifier
 import dev.agentmanager.commandpalette.api.Shortcut
+import dev.agentmanager.commandpalette.ui.CommandPaletteController
+import dev.agentmanager.missioncontrol.ui.MissionControlController
 import dev.agentmanager.projects.api.Project
 import dev.agentmanager.projects.api.ProjectsApi
 import dev.agentmanager.projects.ui.ProjectsController
@@ -24,6 +26,10 @@ internal object AppShortcuts {
     val ADD_PROJECT: Shortcut = Shortcut.of(chord('o', KeyModifier.META, KeyModifier.SHIFT))
     val REMOVE_PROJECT: Shortcut = Shortcut.of(KeyChord(ChordKey.Named.BACKSPACE, setOf(KeyModifier.META)))
     val PALETTE: Shortcut = Shortcut.of(chord('k', KeyModifier.META))
+
+    val NEXT_SESSION: Shortcut = Shortcut.of(chord('j'))
+    val PREVIOUS_SESSION: Shortcut = Shortcut.of(chord('k'))
+    val SWITCH_PROJECT: Shortcut = Shortcut.of(chord('g'), chord('p'))
 
     private fun chord(
         char: Char,
@@ -108,17 +114,20 @@ private fun goTo(
         run = { onIntent(ProjectsIntent.Select(project.id)) },
     )
 
-/** Offers [projectCommands] for the live project list and menu state. */
+/** Offers [projectCommands] and [sessionCommands] for the live project list and menu state. */
 internal class AppCommands(
     projects: ProjectsApi,
     controller: ProjectsController,
+    missionControl: MissionControlController,
+    palette: CommandPaletteController,
     scope: CoroutineScope,
 ) : CommandProvider {
+    private val offered = { list: List<Project>, menu: ProjectsMenuState ->
+        projectCommands(list, menu, controller::onIntent) +
+            sessionCommands(list, menu, missionControl::onIntent) { palette.open(it) }
+    }
+
     override val commands: StateFlow<List<Command>> =
-        combine(projects.projects, controller.menu) { list, menu -> projectCommands(list, menu, controller::onIntent) }
-            .stateIn(
-                scope,
-                SharingStarted.Eagerly,
-                projectCommands(projects.projects.value, controller.menu.value, controller::onIntent),
-            )
+        combine(projects.projects, controller.menu, offered)
+            .stateIn(scope, SharingStarted.Eagerly, offered(projects.projects.value, controller.menu.value))
 }

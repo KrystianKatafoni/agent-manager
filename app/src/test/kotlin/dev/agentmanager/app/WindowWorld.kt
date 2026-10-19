@@ -1,7 +1,18 @@
 package dev.agentmanager.app
 
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsNodeInteraction
@@ -19,39 +30,40 @@ import dev.agentmanager.projects.ui.DirectoryPicker
 import dev.agentmanager.projects.ui.ProjectsController
 import dev.agentmanager.sessions.api.FakeSessions
 import dev.agentmanager.sessions.api.SessionsApi
+import kotlinx.coroutines.CoroutineScope
 import kotlin.time.Duration.Companion.hours
 
 /**
  * The window of the app on fakes: sidebar, Mission Control and the palette over [AppCommands], registered in a
  * [FakeCommandRegistry] the way `Main.kt` registers it in the real one. `MenuBar` is not part of it
  * (it does not work in `runComposeUiTest`), so tests open the palette with [palette].
+ *
+ * Window keys: [WindowKeys] sits on a focused `Box` ([WindowTags.KEYS]) that wraps the content, the way
+ * `Window(onKeyEvent = keys::onKeyEvent)` does in `Main.kt`; `runComposeUiTest` has no `Window`. Press keys
+ * with `onNodeWithTag(WindowTags.KEYS).performKeyInput { … }`.
  */
 @OptIn(ExperimentalTestApi::class)
-internal fun ComposeUiTest.showWindow(projects: FakeProjectsApi): CommandPaletteController {
+internal fun ComposeUiTest.showWindow(
+    projects: FakeProjectsApi,
+    sessions: FakeSessions = FakeSessions(),
+): CommandPaletteController {
     val built = mutableListOf<CommandPaletteController>()
+    val keys = WindowKeys()
     setContent {
         val scope = rememberCoroutineScope()
-        val sessions = remember { FakeSessions() }
-        val controller =
-            remember {
-                ProjectsController(
-                    projects = projects,
-                    inspector = FakeProjectInspector(projects = projects),
-                    sessions = SessionsApi(monitor = sessions, commands = sessions),
-                    picker = DirectoryPicker { null },
-                    scope = scope,
-                    logger = NoOpLogger,
-                )
-            }
+        val controller = remember { projectsController(projects, sessions, scope) }
         val missionControl =
             remember { MissionControlController(sessions, projects, controller.selection, TestClock(), scope, 1.hours) }
-        val palette =
-            remember {
-                val registry = FakeCommandRegistry(scope)
-                registry.register(AppCommands(projects, controller, scope))
-                CommandPaletteController(registry, scope, NoOpLogger).also { built += it }
-            }
-        AgentManagerApp(projects = controller, missionControl = missionControl, palette = palette)
+        val registry = remember { FakeCommandRegistry(scope) }
+        val palette = remember { CommandPaletteController(registry, scope, NoOpLogger).also { built += it } }
+        remember { registry.register(AppCommands(projects, controller, missionControl, palette, scope)) }
+        DisposableEffect(Unit) {
+            val handle = keys.attach(palette::onKeyEvent)
+            onDispose { handle.close() }
+        }
+        KeysBox(keys) {
+            AgentManagerApp(projects = controller, missionControl = missionControl, palette = palette)
+        }
     }
     waitUntil { built.isNotEmpty() }
     return built.single()
@@ -62,3 +74,35 @@ internal fun ComposeUiTest.await(tag: String): SemanticsNodeInteraction {
     waitUntilExactlyOneExists(hasTestTag(tag))
     return onNodeWithTag(tag)
 }
+
+/** The focused `Box` that stands for `Window(onKeyEvent = keys::onKeyEvent)`; tagged [WindowTags.KEYS]. */
+@Composable
+private fun KeysBox(
+    keys: WindowKeys,
+    content: @Composable () -> Unit,
+) {
+    val focus = remember { FocusRequester() }
+    Box(
+        Modifier
+            .fillMaxSize()
+            .testTag(WindowTags.KEYS)
+            .focusRequester(focus)
+            .onKeyEvent(keys::onKeyEvent)
+            .focusable(),
+    ) { content() }
+    LaunchedEffect(Unit) { focus.requestFocus() }
+}
+
+private fun projectsController(
+    projects: FakeProjectsApi,
+    sessions: FakeSessions,
+    scope: CoroutineScope,
+): ProjectsController =
+    ProjectsController(
+        projects = projects,
+        inspector = FakeProjectInspector(projects = projects),
+        sessions = SessionsApi(monitor = sessions, commands = sessions),
+        picker = DirectoryPicker { null },
+        scope = scope,
+        logger = NoOpLogger,
+    )
