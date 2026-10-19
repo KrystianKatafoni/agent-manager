@@ -2,6 +2,7 @@
 
 package dev.agentmanager.missioncontrol.ui
 
+import dev.agentmanager.core.domain.NoOpLogger
 import dev.agentmanager.core.domain.SessionId
 import dev.agentmanager.core.testing.T0
 import dev.agentmanager.core.testing.TestClock
@@ -44,11 +45,12 @@ internal class FilterCommandsTest {
                 clock,
             )
         return MissionControlController(
-            sessions,
+            sessions.api(),
             FakeProjectsApi(initial = listOf(project)),
             MutableStateFlow(project.id),
             clock,
             backgroundScope,
+            NoOpLogger,
             1.hours,
         ).also { runCurrent() }
     }

@@ -69,3 +69,4 @@ Krótkie wnioski z review i błędów agenta, dopisywane przez PR (jedna linia k
 - `runCurrent` i `flatMapLatest` są eksperymentalne — przy `allWarningsAsErrors` potrzebny `@OptIn(ExperimentalCoroutinesApi::class)`.
 - Plany z nowym composable i kontrolerem zaniżają rozmiar o ok. 30% (ktlint rozbija wywołania z nazwanymi argumentami); przy szacunku > 300 linii zaplanuj podział od razu.
 - Stan po `stateIn` bywa o krok w tyle przy szybkich klawiszach — gdy plan mówi, skąd czytać stan (np. bieżące `selection` w `update`), kod musi to odwzorować albo plan trzeba poprawić w tym samym PR.
+- Gdy w trakcie zadania dochodzi nowy wariant (np. Remove obok Stop/Respawn), przejrzyj KDoc publicznego API i komentarze pod kątem starych wyliczeń („both”, „X or Y”) — testy tego nie złapią.

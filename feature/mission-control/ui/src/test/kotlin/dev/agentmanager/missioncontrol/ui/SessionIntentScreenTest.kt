@@ -14,11 +14,14 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.test.waitUntilDoesNotExist
 import androidx.compose.ui.test.waitUntilExactlyOneExists
+import dev.agentmanager.core.domain.NoOpLogger
 import dev.agentmanager.core.testing.T0
 import dev.agentmanager.core.testing.TestClock
 import dev.agentmanager.projects.api.A_PROJECT_DIR
 import dev.agentmanager.projects.api.FakeProjectsApi
 import dev.agentmanager.projects.api.aProject
+import dev.agentmanager.sessions.api.FakeSessions
+import dev.agentmanager.sessions.api.SessionsApi
 import dev.agentmanager.sessions.api.SessionsSnapshot
 import dev.agentmanager.sessions.api.SnapshotStatus
 import dev.agentmanager.sessions.api.aSession
@@ -41,11 +44,12 @@ internal class SessionIntentScreenTest {
             val controller =
                 remember {
                     MissionControlController(
-                        monitor,
+                        SessionsApi(monitor, FakeSessions()),
                         FakeProjectsApi(initial = listOf(project)),
                         MutableStateFlow(project.id),
                         TestClock(T0.plusSeconds(600)),
                         scope,
+                        NoOpLogger,
                         tick = 1.hours,
                     ).also { built += it }
                 }

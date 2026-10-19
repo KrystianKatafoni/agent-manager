@@ -8,6 +8,7 @@ import androidx.compose.ui.window.MenuBar
 import androidx.compose.ui.window.MenuScope
 import dev.agentmanager.commandpalette.ui.CommandPaletteController
 import dev.agentmanager.commandpalette.ui.toKeyShortcut
+import dev.agentmanager.missioncontrol.ui.MissionControlController
 import dev.agentmanager.projects.ui.ProjectsController
 import dev.agentmanager.projects.ui.ProjectsIntent
 
@@ -19,10 +20,12 @@ import dev.agentmanager.projects.ui.ProjectsIntent
 internal fun FrameWindowScope.AppMenu(
     projects: ProjectsController,
     palette: CommandPaletteController,
+    missionControl: MissionControlController,
 ) {
     val menu by projects.menu.collectAsState()
     val paletteOpen by palette.isOpen.collectAsState()
-    val enabled = AppMenuState.of(menu, paletteOpen)
+    val sessionActions by missionControl.actions.collectAsState()
+    val enabled = AppMenuState.of(menu, paletteOpen, sessionActions.dialogOpen)
     MenuBar {
         Menu(Strings["menu.projects"]) { ProjectItems(projects, enabled) }
         Menu(Strings["menu.view"]) {

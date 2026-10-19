@@ -31,6 +31,17 @@ internal sealed interface MissionControlEvent {
     data class SelectSession(
         val id: SessionId,
     ) : MissionControlEvent
+
+    /** "Usuń z listy" in the confirmation dialog. */
+    data object ConfirmRemove : MissionControlEvent
+
+    /** "Anuluj", Escape or a click outside the confirmation dialog. */
+    data object Dismiss : MissionControlEvent
+
+    /** A click on Stop, Respawn or Remove in the details panel; Remove opens the confirmation. */
+    data class Run(
+        val action: SessionAction,
+    ) : MissionControlEvent
 }
 
 /** What the user picked: the project (from the sidebar), the filter and the session. */
@@ -43,6 +54,7 @@ internal data class Selection(
 internal data class MissionControlUiState(
     val screen: Screen,
     val modeBar: ModeBar,
+    val dialog: SessionDialog? = null,
 )
 
 internal sealed interface Screen {
@@ -103,6 +115,9 @@ internal data class SessionDetails(
     val worktree: Path,
     val startedAt: Instant,
     val lastActivityAt: Instant,
+    val actions: Set<SessionAction> = emptySet(),
+    val busy: SessionAction? = null,
+    val failure: Failure? = null,
 )
 
 /** @property waiting @property working counted over the sessions of every project. */

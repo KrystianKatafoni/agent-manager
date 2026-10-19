@@ -15,6 +15,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.test.waitUntilDoesNotExist
 import androidx.compose.ui.test.waitUntilExactlyOneExists
+import dev.agentmanager.core.domain.NoOpLogger
 import dev.agentmanager.core.domain.ProjectId
 import dev.agentmanager.core.domain.SessionId
 import dev.agentmanager.core.testing.T0
@@ -23,9 +24,11 @@ import dev.agentmanager.projects.api.A_PROJECT_DIR
 import dev.agentmanager.projects.api.FakeProjectsApi
 import dev.agentmanager.projects.api.Project
 import dev.agentmanager.projects.api.aProject
+import dev.agentmanager.sessions.api.FakeSessions
 import dev.agentmanager.sessions.api.RuntimeProblem
 import dev.agentmanager.sessions.api.Session
 import dev.agentmanager.sessions.api.SessionState
+import dev.agentmanager.sessions.api.SessionsApi
 import dev.agentmanager.sessions.api.SessionsSnapshot
 import dev.agentmanager.sessions.api.SnapshotStatus
 import dev.agentmanager.sessions.api.aSession
@@ -59,7 +62,17 @@ internal class MissionControlTest {
         setContent {
             val scope = rememberCoroutineScope()
             val controller =
-                remember { MissionControlController(monitor, api, selection, clock, scope, tick = 1.hours) }
+                remember {
+                    MissionControlController(
+                        SessionsApi(monitor, FakeSessions()),
+                        api,
+                        selection,
+                        clock,
+                        scope,
+                        NoOpLogger,
+                        tick = 1.hours,
+                    )
+                }
             MissionControl(controller)
         }
         return monitor

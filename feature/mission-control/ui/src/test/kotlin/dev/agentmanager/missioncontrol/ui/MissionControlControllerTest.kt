@@ -3,6 +3,7 @@
 package dev.agentmanager.missioncontrol.ui
 
 import dev.agentmanager.core.domain.Clock
+import dev.agentmanager.core.domain.NoOpLogger
 import dev.agentmanager.core.domain.ProjectId
 import dev.agentmanager.core.domain.SessionId
 import dev.agentmanager.core.testing.T0
@@ -56,7 +57,17 @@ internal class MissionControlControllerTest {
         val selected = MutableStateFlow(selected)
 
         fun TestScope.start(tick: Duration = 1.seconds): MissionControlController =
-            MissionControlController(sessions, projects, selected, clock, backgroundScope, tick).also { runCurrent() }
+            MissionControlController(
+                sessions.api(),
+                projects,
+                selected,
+                clock,
+                backgroundScope,
+                NoOpLogger,
+                tick,
+            ).also {
+                runCurrent()
+            }
     }
 
     private fun session(
@@ -134,7 +145,14 @@ internal class MissionControlControllerTest {
             val world = World(sessions = listOf(session("aging")), selected = null)
             var reads = 0
             val counting = Clock { world.clock.now().also { reads++ } }
-            MissionControlController(world.sessions, world.projects, world.selected, counting, backgroundScope)
+            MissionControlController(
+                world.sessions.api(),
+                world.projects,
+                world.selected,
+                counting,
+                backgroundScope,
+                NoOpLogger,
+            )
             runCurrent()
             val atStart = reads
 

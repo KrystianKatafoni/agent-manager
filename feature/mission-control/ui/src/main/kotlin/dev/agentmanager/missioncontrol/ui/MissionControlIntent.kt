@@ -12,4 +12,30 @@ public sealed interface MissionControlIntent {
     public data class SelectFilter(
         val filter: SessionFilter,
     ) : MissionControlIntent
+
+    /** `x` and the palette: stops the selected visible session when it is active; otherwise ignored (FR-S4). */
+    public data object StopSelected : MissionControlIntent
+
+    /** Palette and panel: respawns the selected visible session when it is not active; otherwise ignored. */
+    public data object RespawnSelected : MissionControlIntent
+
+    /** Palette and panel: asks to confirm removing the selected inactive session from the list; otherwise ignored. */
+    public data object RemoveSelected : MissionControlIntent
 }
+
+/**
+ * Which session actions apply to the selected visible session now; all false without one, while an action
+ * runs and while a dialog of Mission Control is open. `app` offers palette commands by it; the controller
+ * checks again when it runs one.
+ *
+ * @property canStop the session is active.
+ * @property canRespawn the session is not active.
+ * @property canRemove the session is not active, so it can be removed from the list (after a confirmation).
+ * @property dialogOpen a dialog of Mission Control is open: `app` offers no palette commands and disables the menu.
+ */
+public data class SessionActionsState(
+    val canStop: Boolean,
+    val canRespawn: Boolean,
+    val canRemove: Boolean = false,
+    val dialogOpen: Boolean = false,
+)
