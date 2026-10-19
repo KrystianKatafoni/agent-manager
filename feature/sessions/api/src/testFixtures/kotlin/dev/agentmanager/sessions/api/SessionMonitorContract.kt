@@ -1,5 +1,6 @@
 package dev.agentmanager.sessions.api
 
+import dev.agentmanager.core.domain.Outcome
 import dev.agentmanager.core.domain.SessionId
 import dev.agentmanager.core.testing.T0
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -260,6 +261,57 @@ public abstract class SessionMonitorContract {
             harness.listedIds() shouldContainExactlyInAnyOrder
                 listOf(first, SessionId("aaaa0002"), SessionId("aaaa0009"))
             harness.session(SessionId("aaaa0009")).project shouldBe P2
+        }
+
+    @Test
+    public fun `recentOutput returns the output of the session`(): Unit =
+        runTest {
+            val harness = settled(world.copy(outputs = mapOf(first to "line 1\nline 2")))
+
+            harness.monitor.recentOutput(first) shouldBe Outcome.Ok(RecentOutput("line 1\nline 2"))
+        }
+
+    @Test
+    public fun `recentOutput of a session without output is empty`(): Unit =
+        runTest {
+            val harness = settled()
+
+            val output = harness.monitor.recentOutput(first)
+
+            output.shouldBeInstanceOf<Outcome.Ok<RecentOutput>>().value.isEmpty shouldBe true
+        }
+
+    @Test
+    public fun `recentOutput of an unknown session fails with UnknownSession`(): Unit =
+        runTest {
+            val harness = settled()
+
+            harness.monitor.recentOutput(SessionId("ffff0000")) shouldBe
+                Outcome.Err(SessionError.UnknownSession(SessionId("ffff0000")))
+        }
+
+    @Test
+    public fun `recentOutput fails with the runtime problem when the runtime is unavailable`(): Unit =
+        runTest {
+            val harness = settled(world.copy(outputs = mapOf(first to "text")))
+            harness.runtimeAvailable(false)
+
+            harness.monitor.recentOutput(first) shouldBe
+                Outcome.Err(SessionError.Runtime(RuntimeProblem.NOT_INSTALLED))
+        }
+
+    @Test
+    public fun `recentOutput changes neither the snapshot nor the events`(): Unit =
+        runTest {
+            val harness = settled(world.copy(outputs = mapOf(first to "text")))
+            val events = recordEvents(harness.monitor)
+            val before = harness.monitor.snapshot.value
+
+            harness.monitor.recentOutput(first)
+            harness.monitor.recentOutput(SessionId("ffff0000"))
+
+            harness.monitor.snapshot.value shouldBe before
+            events.shouldBeEmpty()
         }
 
     /** Moves the first session from Working to [state] and returns the single event it caused. */

@@ -3,7 +3,7 @@ package dev.agentmanager.sessions.api
 import dev.agentmanager.core.domain.ProjectId
 import dev.agentmanager.core.domain.SessionId
 
-/** Why a [SessionCommands] operation failed. Never carries input text (ENG-C8). */
+/** Why a [SessionCommands] operation or [SessionMonitor.recentOutput] failed. Never carries input text (ENG-C8). */
 public sealed interface SessionError {
     /** No registered project has [id]. */
     public data class UnknownProject(

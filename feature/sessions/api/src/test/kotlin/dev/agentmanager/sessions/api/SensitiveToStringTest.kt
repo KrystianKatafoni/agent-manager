@@ -35,4 +35,12 @@ class SensitiveToStringTest {
         text shouldContain "***"
         text shouldContain "fix-login"
     }
+
+    @Test
+    fun `recent output hides its text`() {
+        val text = RecentOutput("secret output").toString()
+
+        text shouldNotContain "secret"
+        text shouldContain "***"
+    }
 }
