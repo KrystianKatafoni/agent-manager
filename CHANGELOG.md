@@ -32,3 +32,4 @@ Format: [Keep a Changelog](https://keepachangelog.com/pl/1.1.0/), wersjonowanie:
 - Sidebar projektów (`feature:projects:ui`): zmiana nazwy projektu, liczniki czekających i pracujących sesji przy każdym projekcie oraz usuwanie projektu z zatrzymaniem jego sesji przez `stopAllIn`.
 - Moduły `feature:command-palette:api` i `feature:command-palette:impl`: komendy i skróty niezależne od Compose, `CommandRegistry` z fabryką `commandPaletteModule(...)`, wyszukiwanie `CommandMatcher` (bez wielkości liter i polskich znaków), `FakeCommandRegistry` i testy kontraktowe w `testFixtures`.
 - Paleta komend ⌘K (`feature:command-palette:ui`): wyszukiwanie bez polskich znaków, ↑/↓, Enter, Esc, komendy projektów i „Przejdź do projektu”; w menu okna „Zmień nazwę projektu…” i „Widok → Paleta komend…”.
+- Skróty j/k (następna/poprzednia sesja) i g p (przełącz projekt) w oknie głównym; komendy palety „Filtr: Wszystkie/Aktywne/Zakończone” (FR-K2, FR-S9).
