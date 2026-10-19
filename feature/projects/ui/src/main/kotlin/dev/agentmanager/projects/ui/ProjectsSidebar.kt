@@ -92,7 +92,11 @@ private fun ColumnScope.ProjectList(
     }
 }
 
-/** The row never takes focus: a focused `selectable` would consume `space` and Enter before the window shortcuts. */
+/**
+ * The row never takes focus: a focused `selectable` would consume `space` and Enter before the window shortcuts. A
+ * click requests focus anyway and an unfocusable parent hands it to its first focusable child, so the ⋯ button of the
+ * row is unfocusable too.
+ */
 @Composable
 private fun ProjectRow(
     project: Project,
@@ -148,7 +152,7 @@ private fun RowMenu(
 ) {
     var open by remember { mutableStateOf(false) }
     Box {
-        TextButton("⋯", ProjectsTags.rowMenu(project.id)) { open = true }
+        TextButton("⋯", ProjectsTags.rowMenu(project.id), onClick = { open = true }, focusable = false)
         if (open) {
             Popup(
                 alignment = Alignment.TopEnd,
@@ -189,17 +193,19 @@ private fun Banner(
     }
 }
 
-/** A clickable text: Material is not a dependency (AM-304 plan, decision 4). */
+/** A clickable text: Material is not a dependency (AM-304 plan, decision 4). A click focuses it only if [focusable]. */
 @Composable
 internal fun TextButton(
     text: String,
     tag: String,
     onClick: () -> Unit,
+    focusable: Boolean = true,
 ) {
     Box(
         modifier =
             Modifier
                 .testTag(tag)
+                .focusProperties { canFocus = focusable }
                 .clickable(role = Role.Button, onClick = onClick)
                 .background(color = SidebarColors.button)
                 .padding(horizontal = 10.dp, vertical = 4.dp),
