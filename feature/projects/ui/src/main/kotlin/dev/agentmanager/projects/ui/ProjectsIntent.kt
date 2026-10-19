@@ -28,4 +28,7 @@ public sealed interface ProjectsIntent {
     public data class Select(
         val id: ProjectId,
     ) : ProjectsIntent
+
+    /** A global view of Mission Control is shown: no project is selected; ignored while a dialog is open. */
+    public data object ClearSelection : ProjectsIntent
 }

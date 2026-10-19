@@ -94,6 +94,10 @@ public class ProjectsController(
             is ProjectsIntent.Select -> {
                 if (current.projects.any { it.id == intent.id }) ui.update { it.reduce(SidebarEvent.Select(intent.id)) }
             }
+
+            ProjectsIntent.ClearSelection -> {
+                ui.update { it.copy(selected = null) }
+            }
         }
     }
 
