@@ -4,11 +4,14 @@ import dev.agentmanager.agentruntime.api.RuntimeError
 import dev.agentmanager.core.domain.Logger
 import dev.agentmanager.core.domain.Outcome
 import dev.agentmanager.core.domain.ProjectId
+import dev.agentmanager.core.domain.SessionId
 import dev.agentmanager.core.domain.debug
 import dev.agentmanager.core.domain.info
 import dev.agentmanager.core.domain.warn
 import dev.agentmanager.projects.api.Project
 import dev.agentmanager.projects.api.ProjectsApi
+import dev.agentmanager.sessions.api.RecentOutput
+import dev.agentmanager.sessions.api.SessionError
 import dev.agentmanager.sessions.api.SessionEvent
 import dev.agentmanager.sessions.api.SessionMonitor
 import dev.agentmanager.sessions.api.SessionsSnapshot
@@ -36,12 +39,15 @@ internal class PollingSessionMonitor(
     private val state: SessionsState,
     private val schedule: PollSchedule,
     private val logger: Logger,
+    private val reader: RecentOutputReader,
 ) : SessionMonitor {
     private val wakeups = Channel<Unit>(Channel.CONFLATED)
 
     override val snapshot: StateFlow<SessionsSnapshot> get() = state.snapshot
 
     override val events: Flow<SessionEvent> get() = state.events
+
+    override suspend fun recentOutput(id: SessionId): Outcome<RecentOutput, SessionError> = reader.read(id)
 
     /**
      * Starts the project watcher and the loop; both stop when [scope] is cancelled. The watcher starts

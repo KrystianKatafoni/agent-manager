@@ -39,6 +39,9 @@ public class FakeSessions(
     private val runtimeDown = MutableStateFlow(false)
     private val failingStops = MutableStateFlow(emptySet<SessionId>())
     private val lastId = AtomicInteger()
+    private val outputs = MutableStateFlow(world.outputs)
+    private val pendingOutputFailure = MutableStateFlow<SessionError?>(null)
+    private val reads = MutableStateFlow(emptyList<SessionId>())
 
     override val snapshot: StateFlow<SessionsSnapshot> = state.asStateFlow()
 
@@ -46,6 +49,22 @@ public class FakeSessions(
 
     /** Commands called so far, in order, e.g. `start agent-manager`, `stop 7c5dcf5d`, `stopAllIn agent-manager`. */
     public val calls: List<String> get() = recorded.value
+
+    /** Sessions whose output was read so far, in order. Reads are not [calls]. */
+    public val outputReads: List<SessionId> get() = reads.value
+
+    /** The next [recentOutput] returns `Err(error)`; later reads work again. */
+    public fun failNextOutput(error: SessionError) {
+        pendingOutputFailure.value = error
+    }
+
+    /** Later reads of the output of [id] return [text]. */
+    public fun setOutput(
+        id: SessionId,
+        text: String,
+    ) {
+        outputs.update { it + (id to text) }
+    }
 
     /** The next command returns `Err(error)` and changes nothing; later commands work again. */
     public fun failNext(error: SessionError) {
@@ -86,6 +105,14 @@ public class FakeSessions(
     /** Every later stop of [id] fails with [RuntimeProblem.COMMAND_FAILED] and leaves it running. */
     public fun failStop(id: SessionId) {
         failingStops.update { it + id }
+    }
+
+    override suspend fun recentOutput(id: SessionId): Outcome<RecentOutput, SessionError> {
+        reads.update { it + id }
+        pendingOutputFailure.getAndUpdate { null }?.let { return Outcome.Err(it) }
+        if (runtimeDown.value) return Outcome.Err(SessionError.Runtime(RuntimeProblem.NOT_INSTALLED))
+        if (find(id) == null) return Outcome.Err(SessionError.UnknownSession(id))
+        return Outcome.Ok(RecentOutput(outputs.value[id].orEmpty()))
     }
 
     override suspend fun start(

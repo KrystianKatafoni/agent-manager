@@ -1,5 +1,9 @@
 package dev.agentmanager.missioncontrol.ui
 
+import dev.agentmanager.core.domain.Outcome
+import dev.agentmanager.core.domain.SessionId
+import dev.agentmanager.sessions.api.RecentOutput
+import dev.agentmanager.sessions.api.SessionError
 import dev.agentmanager.sessions.api.SessionEvent
 import dev.agentmanager.sessions.api.SessionMonitor
 import dev.agentmanager.sessions.api.SessionsSnapshot
@@ -11,7 +15,7 @@ import kotlinx.coroutines.flow.emptyFlow
 
 /**
  * A [SessionMonitor] whose snapshot the test sets directly: summaries and stale snapshots that `FakeSessions`
- * cannot produce. Mission Control reads only [snapshot], so [events] stays empty.
+ * cannot produce. Mission Control reads [snapshot] and [recentOutput] (always empty here); [events] stays empty.
  */
 internal class ScriptedSessionMonitor(
     initial: SessionsSnapshot,
@@ -21,6 +25,8 @@ internal class ScriptedSessionMonitor(
     override val snapshot: StateFlow<SessionsSnapshot> = current.asStateFlow()
 
     override val events: Flow<SessionEvent> = emptyFlow()
+
+    override suspend fun recentOutput(id: SessionId): Outcome<RecentOutput, SessionError> = Outcome.Ok(RecentOutput(""))
 
     fun show(snapshot: SessionsSnapshot) {
         current.value = snapshot

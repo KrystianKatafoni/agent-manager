@@ -199,4 +199,47 @@ class SessionCommandsTest {
         commands().filter { it.shortcut != null }.ids().toSet() shouldBe
             setOf("sessions.next", "sessions.previous", "projects.switch")
     }
+
+    private val canPreview = SessionActionsState(canStop = true, canRespawn = false, canPreview = true)
+    private val previewOpen = SessionActionsState(canStop = false, canRespawn = false, previewOpen = true)
+
+    @Test
+    fun `preview is offered only when canPreview or previewOpen`() {
+        commands().ids() shouldNotContain "sessions.preview"
+        commands(actions = canStop).ids() shouldNotContain "sessions.preview"
+        commands(actions = canPreview).ids() shouldContain "sessions.preview"
+        commands(actions = previewOpen).ids() shouldContain "sessions.preview"
+        commands(list = emptyList(), actions = canPreview).ids() shouldContain "sessions.preview"
+    }
+
+    @Test
+    fun `preview title follows previewOpen`() {
+        val closed = commands(actions = canPreview).byId("sessions.preview")
+        val open = commands(actions = previewOpen).byId("sessions.preview")
+
+        closed.title shouldBe "Podgląd outputu"
+        open.title shouldBe "Zamknij podgląd"
+        listOf(closed, open).forEach {
+            it.group shouldBe CommandGroup.SESSION
+            it.keywords shouldBe listOf("preview", "logs", "podgląd")
+            it.shortcut shouldBe AppShortcuts.PREVIEW_SESSION
+        }
+    }
+
+    @Test
+    fun `preview sends TogglePreview`() =
+        runTest {
+            commands(actions = canPreview).byId("sessions.preview").run()
+            commands(actions = previewOpen).byId("sessions.preview").run()
+
+            intents shouldBe listOf(MissionControlIntent.TogglePreview, MissionControlIntent.TogglePreview)
+        }
+
+    @Test
+    fun `an open dialog gives no preview command`() {
+        val withDialog = SessionActionsState(canStop = false, canRespawn = false, previewOpen = true, dialogOpen = true)
+
+        commands(actions = withDialog).ids() shouldNotContain "sessions.preview"
+        commands(menu = dialog, actions = canPreview).ids() shouldNotContain "sessions.preview"
+    }
 }

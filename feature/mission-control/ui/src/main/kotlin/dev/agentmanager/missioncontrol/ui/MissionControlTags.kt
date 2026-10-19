@@ -19,6 +19,10 @@ internal object MissionControlTags {
     const val CONFIRM_REMOVE_CANCEL = "missionControl.confirmRemove.cancel"
     const val DETAILS_BUSY = "missionControl.details.busy"
     const val DETAILS_FAILURE = "missionControl.details.failure"
+    const val PREVIEW = "missionControl.preview"
+    const val PREVIEW_TEXT = "missionControl.preview.text"
+    const val PREVIEW_CLOSE = "missionControl.preview.close"
+    const val DETAILS_PREVIEW = "missionControl.details.preview"
     const val MODE_BAR = "missionControl.modeBar"
 
     /** The filter button of [filter]. */

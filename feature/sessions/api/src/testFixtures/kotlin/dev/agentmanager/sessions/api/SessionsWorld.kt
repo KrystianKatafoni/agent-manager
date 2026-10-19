@@ -30,8 +30,10 @@ public data class WorldSession(
  *
  * @property projects registered projects.
  * @property sessions sessions the supervisor already runs.
+ * @property outputs output tail of sessions by id; a session without an entry has printed nothing yet.
  */
 public data class SessionsWorld(
     val projects: List<WorldProject> = emptyList(),
     val sessions: List<WorldSession> = emptyList(),
+    val outputs: Map<SessionId, String> = emptyMap(),
 )

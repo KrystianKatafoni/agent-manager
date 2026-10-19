@@ -38,6 +38,9 @@ internal sealed interface MissionControlEvent {
     /** "Anuluj", Escape or a click outside the confirmation dialog. */
     data object Dismiss : MissionControlEvent
 
+    /** "Podgląd" in the details panel and "Zamknij" in the preview panel. */
+    data object TogglePreview : MissionControlEvent
+
     /** A click on Stop, Respawn or Remove in the details panel; Remove opens the confirmation. */
     data class Run(
         val action: SessionAction,
@@ -57,6 +60,7 @@ internal data class MissionControlUiState(
     val modeBar: ModeBar,
     val dialog: SessionDialog? = null,
     val views: List<ViewEntry> = emptyList(),
+    val preview: PreviewUi? = null,
 )
 
 /** An entry of the global views: its [count] of sessions of every project and whether it is shown. */

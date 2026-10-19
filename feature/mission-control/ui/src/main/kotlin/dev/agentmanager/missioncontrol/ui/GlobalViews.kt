@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
@@ -34,6 +35,7 @@ public fun GlobalViews(
                     Modifier
                         .fillMaxWidth()
                         .testTag(MissionControlTags.view(entry.view))
+                        .focusProperties { canFocus = false } // else it would consume space and Enter
                         .selectable(selected = entry.selected, role = Role.Tab) {
                             controller.onIntent(ShowView(entry.view))
                         }.background(color = if (entry.selected) Colors.selection else Colors.panel)
@@ -60,9 +62,18 @@ private fun toneOf(view: GlobalView): Tone =
 @Composable
 internal fun GlobalPage(
     page: Screen.Global,
+    preview: PreviewUi?,
     onEvent: (MissionControlEvent) -> Unit,
 ) {
-    SessionPage(page.banner, page.loading, page.rows, page.details, onEvent, filters = {}) { GlobalHeader(page) }
+    SessionPage(
+        page.banner,
+        page.loading,
+        page.rows,
+        page.details,
+        preview,
+        onEvent,
+        filters = {},
+    ) { GlobalHeader(page) }
 }
 
 @Composable
