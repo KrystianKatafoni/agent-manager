@@ -19,9 +19,10 @@ internal object MissionControlReducer {
         now: Instant,
         zone: ZoneId,
     ): MissionControlUiState {
-        val project = projects.find { it.id == selection.project }
+        val project = projects.find { it.id == selection.project }.takeIf { selection.view == null }
         val screen =
             when {
+                selection.view != null -> selection.view.screen(snapshot, projects, selection, now, zone)
                 projects.isEmpty() -> Screen.NoProjects
                 project == null -> Screen.NoSelection
                 else -> page(snapshot, project, selection, now, zone)
@@ -33,7 +34,31 @@ internal object MissionControlReducer {
                 working = snapshot.sessions.count { it.state == SessionState.Working },
                 freshness = Freshness.of(snapshot.status, zone, short = true),
             )
-        return MissionControlUiState(screen, modeBar)
+        val views =
+            GlobalView.entries.map { view ->
+                ViewEntry(view, snapshot.sessions.count { view.matches(it.state) }, selected = view == selection.view)
+            }
+        return MissionControlUiState(screen, modeBar, views = views)
+    }
+
+    private fun GlobalView.screen(
+        snapshot: SessionsSnapshot,
+        projects: List<Project>,
+        selection: Selection,
+        now: Instant,
+        zone: ZoneId,
+    ): Screen.Global {
+        val visible = SessionScope.visible(snapshot.sessions, selection)
+        val picked = visible.find { it.id == selection.session }
+        val names = projects.associate { it.id to UiText("row.project", listOf(it.displayName)) }
+        return Screen.Global(
+            view = this,
+            sessions = visible.size,
+            rows = visible.map { row(it, now, it == picked, names[it.project] ?: UiText("row.noProject")) },
+            details = picked?.let(::details),
+            banner = (snapshot.status as? SnapshotStatus.Stale)?.let { Freshness.of(it, zone) },
+            loading = snapshot.status == SnapshotStatus.Loading,
+        )
     }
 
     private fun page(
@@ -43,8 +68,8 @@ internal object MissionControlReducer {
         now: Instant,
         zone: ZoneId,
     ): Screen.Project {
-        val mine = snapshot.sessions.filter { it.project == project.id }.sortedByDescending { it.startedAt }
-        val visible = mine.filter { selection.filter.matches(it.state) }
+        val mine = snapshot.sessions.filter { it.project == project.id }
+        val visible = SessionScope.visible(snapshot.sessions, selection)
         val picked = visible.find { it.id == selection.session }
         return Screen.Project(
             header = ProjectHeader(project.displayName, project.dir, mine.size),
@@ -60,6 +85,7 @@ internal object MissionControlReducer {
         session: Session,
         now: Instant,
         selected: Boolean,
+        project: UiText? = null,
     ): SessionRow =
         SessionRow(
             id = session.id,
@@ -69,6 +95,7 @@ internal object MissionControlReducer {
             lastEvent = LastEvent.of(session.state),
             age = AgeText.of(session.lastActivityAt, now),
             selected = selected,
+            project = project,
         )
 
     private fun details(session: Session): SessionDetails =

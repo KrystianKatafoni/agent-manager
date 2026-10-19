@@ -47,6 +47,7 @@ internal sealed interface MissionControlEvent {
 /** What the user picked: the project (from the sidebar), the filter and the session. */
 internal data class Selection(
     val project: ProjectId? = null,
+    val view: GlobalView? = null,
     val filter: SessionFilter = SessionFilter.ALL,
     val session: SessionId? = null,
 )
@@ -55,6 +56,14 @@ internal data class MissionControlUiState(
     val screen: Screen,
     val modeBar: ModeBar,
     val dialog: SessionDialog? = null,
+    val views: List<ViewEntry> = emptyList(),
+)
+
+/** An entry of the global views: its [count] of sessions of every project and whether it is shown. */
+internal data class ViewEntry(
+    val view: GlobalView,
+    val count: Int,
+    val selected: Boolean,
 )
 
 internal sealed interface Screen {
@@ -72,6 +81,16 @@ internal sealed interface Screen {
     data class Project(
         val header: ProjectHeader,
         val filter: SessionFilter,
+        val rows: List<SessionRow>,
+        val details: SessionDetails?,
+        val banner: UiText?,
+        val loading: Boolean,
+    ) : Screen
+
+    /** A global view: sessions of every project, [sessions] of them, without filter tabs. */
+    data class Global(
+        val view: GlobalView,
+        val sessions: Int,
         val rows: List<SessionRow>,
         val details: SessionDetails?,
         val banner: UiText?,
@@ -104,6 +123,7 @@ internal data class SessionRow(
     val lastEvent: UiText,
     val age: UiText,
     val selected: Boolean,
+    val project: UiText? = null,
 )
 
 /** FR-S8, only the fields `sessions:api` has. [worktree] is the session cwd. */

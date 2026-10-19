@@ -134,7 +134,7 @@ internal class MissionControlReducerTest {
 
     @Test
     fun `active filter hides done failed and stopped`() {
-        val page = reduce(everyState(), selection = Selection(project.id, SessionFilter.ACTIVE)).page()
+        val page = reduce(everyState(), selection = Selection(project.id, filter = SessionFilter.ACTIVE)).page()
 
         page.ids().toSet() shouldBe setOf("working", "input", "permission")
         page.filter shouldBe SessionFilter.ACTIVE
@@ -143,7 +143,7 @@ internal class MissionControlReducerTest {
 
     @Test
     fun `finished filter shows only inactive sessions`() {
-        val page = reduce(everyState(), selection = Selection(project.id, SessionFilter.FINISHED)).page()
+        val page = reduce(everyState(), selection = Selection(project.id, filter = SessionFilter.FINISHED)).page()
 
         page.ids().toSet() shouldBe setOf("done", "failed", "stopped")
     }
@@ -205,7 +205,7 @@ internal class MissionControlReducerTest {
 
     @Test
     fun `selected session hidden by the filter clears the details`() {
-        val selection = Selection(project.id, SessionFilter.ACTIVE, session = SessionId("done"))
+        val selection = Selection(project.id, filter = SessionFilter.ACTIVE, session = SessionId("done"))
 
         val page = reduce(everyState(), selection = selection).page()
 
@@ -260,7 +260,7 @@ internal class MissionControlReducerTest {
             )
 
         // The counters do not depend on the filter or on which project is selected.
-        val state = reduce(snapshot, selection = Selection(project.id, SessionFilter.FINISHED))
+        val state = reduce(snapshot, selection = Selection(project.id, filter = SessionFilter.FINISHED))
 
         state.modeBar shouldBe
             ModeBar(

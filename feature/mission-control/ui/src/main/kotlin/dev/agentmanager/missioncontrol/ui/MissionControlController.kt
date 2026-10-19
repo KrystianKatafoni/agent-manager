@@ -25,10 +25,10 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * State holder of Mission Control (MVI, docs/11 §1) for the project selected in the sidebar. Collects in
- * [scope] (the window scope, Main dispatcher; not thread-safe) and re-reads [clock] every [tick] for session
- * ages. Never throws; runs only the stop, respawn and remove commands of [sessions], one at a time, and logs them with
- * session ids and fixed categories (ENG-C8). Shows only [SessionMonitor.snapshot].
+ * State holder of Mission Control (MVI, docs/11 §1) for the project selected in the sidebar or a global view.
+ * Collects in [scope] (the window scope, Main dispatcher; not thread-safe) and re-reads [clock] every [tick]
+ * for session ages. Never throws; runs only the stop, respawn and remove commands of [sessions], one at a
+ * time, and logs them with session ids and fixed categories (ENG-C8). Shows only [SessionMonitor.snapshot].
  * @throws IllegalArgumentException if [tick] is not positive.
  */
 @Suppress("LongParameterList") // tick is a test seam (AM-410 plan, question 3)
@@ -68,25 +68,29 @@ public class MissionControlController(
     init {
         // Another project starts with the whole list and no selected session (plan, decision 1).
         scope.launch {
-            selectedProject.collect { id -> selection.update { if (it.project == id) it else Selection(project = id) } }
+            selectedProject.collect { id -> selection.update { it.onProject(id) } }
         }
         // A failure is shown until the next action or until another session is selected (plan, decision 4).
         scope.launch {
-            selection.map { it.project to it.session }.distinctUntilChanged().collect {
+            selection.map { Triple(it.project, it.view, it.session) }.distinctUntilChanged().collect {
                 ui.update { shown -> shown.copy(failure = null) }
             }
         }
-        // Ages tick only while a project is shown (plan, decision 2).
+        // Ages tick only while a project or a global view is shown (plan, decision 5).
         scope.launch {
-            selectedProject.collectLatest { id ->
-                if (id != null) now.value = clock.now()
-                while (id != null) {
+            selection.map { it.project != null || it.view != null }.distinctUntilChanged().collectLatest { shown ->
+                if (shown) now.value = clock.now()
+                while (shown) {
                     delay(tick)
                     now.value = clock.now()
                 }
             }
         }
     }
+
+    /** The shown global view, null on the project page. `app` hides filter commands and clears the sidebar by it. */
+    public val view: StateFlow<GlobalView?> =
+        selection.map { it.view }.distinctUntilChanged().stateIn(scope, SharingStarted.Eagerly, selection.value.view)
 
     /**
      * Actions of the selected visible session, for the palette (AM-410).
@@ -97,7 +101,7 @@ public class MissionControlController(
         combine(monitor.snapshot, selection, ui, ::actionsOf)
             .stateIn(scope, SharingStarted.Eagerly, actionsOf(monitor.snapshot.value, selection.value, ui.value))
 
-    /** Handles [intent] from the palette and window keys; ignored without a shown project or rows. */
+    /** Handles [intent] from the palette and window keys; ignored without a shown project, view or rows. */
     public fun onIntent(intent: MissionControlIntent) {
         when (intent) {
             is MissionControlIntent.SelectFilter -> onEvent(MissionControlEvent.SelectFilter(intent.filter))
@@ -113,6 +117,7 @@ public class MissionControlController(
             MissionControlIntent.RespawnSelected -> run(SessionAction.RESPAWN)
             MissionControlIntent.RemoveSelected -> askToRemove()
             is MissionControlIntent.SelectFilter -> Unit
+            is MissionControlIntent.ShowView -> selection.update { it.copy(view = intent.view, session = null) }
         }
     }
 
@@ -157,14 +162,14 @@ public class MissionControlController(
 
     /** Counts from the current selection, not from [state], so two quick keys move two rows. */
     private fun moveCursor(move: (List<SessionId>, SessionId?) -> SessionId?) {
-        val rows = (state.value.screen as? Screen.Project)?.rows?.map { it.id } ?: return
+        val rows = SessionScope.visible(monitor.snapshot.value.sessions, selection.value).map { it.id }
         selection.update { current -> current.copy(session = move(rows, current.session) ?: current.session) }
     }
 
     /** Handles a click in the filter or the session list. */
     internal fun onEvent(event: MissionControlEvent) {
         when (event) {
-            is MissionControlEvent.SelectFilter -> selection.update { it.copy(filter = event.filter) }
+            is MissionControlEvent.SelectFilter -> selection.update { it.withFilter(event.filter) }
             is MissionControlEvent.SelectSession -> selection.update { it.copy(session = event.id) }
             is MissionControlEvent.Run -> if (event.action == SessionAction.REMOVE) askToRemove() else run(event.action)
             MissionControlEvent.ConfirmRemove -> confirmRemove()
@@ -188,3 +193,9 @@ private fun actionsOf(
         dialogOpen = acting.dialog != null,
     )
 }
+
+/**
+ * A global view has no filter (plan, decision 2). Guards against a late palette command (`view` is a step behind
+ * through `stateIn`); it has no visible effect in the UI.
+ */
+private fun Selection.withFilter(filter: SessionFilter): Selection = if (view == null) copy(filter = filter) else this

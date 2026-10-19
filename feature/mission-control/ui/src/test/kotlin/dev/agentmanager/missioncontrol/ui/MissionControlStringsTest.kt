@@ -84,6 +84,12 @@ internal class MissionControlStringsTest {
                 "confirmRemove.hint",
                 "confirmRemove.confirm",
                 "dialog.cancel",
+                "view.waiting",
+                "view.working",
+                "view.failed",
+                "row.noProject",
+                "row.project",
+                "header.global",
             )
 
         private val errors: List<SessionError> =
@@ -125,6 +131,8 @@ internal class MissionControlStringsTest {
                     UiText("header.sessions", listOf("3")),
                     UiText("modeBar.waiting", listOf("2")),
                     UiText("modeBar.working", listOf("4")),
+                    UiText("header.global", listOf("3")),
+                    UiText("row.project", listOf("Agent Manager")),
                 )
 
         fun allKeys(): Set<String> = generated().map { it.key }.toSet() + UI_KEYS
@@ -134,6 +142,10 @@ internal class MissionControlStringsTest {
             listOf(
                 arguments("empty.noProjects", "Brak projektów"),
                 arguments("empty.noSelection", "Wybierz projekt"),
+                arguments("view.waiting", "Czeka na mnie"),
+                arguments("view.working", "Pracuje"),
+                arguments("view.failed", "Błędy"),
+                arguments("row.noProject", "bez projektu"),
                 arguments("filter.all", "Wszystkie"),
                 arguments("filter.active", "Aktywne"),
                 arguments("filter.finished", "Zakończone"),

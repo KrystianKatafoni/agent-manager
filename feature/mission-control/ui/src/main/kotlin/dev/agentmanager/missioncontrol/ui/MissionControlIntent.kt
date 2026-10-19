@@ -8,7 +8,7 @@ public sealed interface MissionControlIntent {
     /** `k`: selects the previous visible session; without a selection the last; stays on the first. */
     public data object PreviousSession : MissionControlIntent
 
-    /** Palette "Filter: …": shows only sessions that [filter] matches (FR-S9). */
+    /** Palette "Filter: …": shows only sessions that [filter] matches (FR-S9); ignored while a global view is shown. */
     public data class SelectFilter(
         val filter: SessionFilter,
     ) : MissionControlIntent
@@ -21,6 +21,11 @@ public sealed interface MissionControlIntent {
 
     /** Palette and panel: asks to confirm removing the selected inactive session from the list; otherwise ignored. */
     public data object RemoveSelected : MissionControlIntent
+
+    /** Sidebar entry and palette: shows [view] and clears the selected session; ignored while a dialog is open. */
+    public data class ShowView(
+        val view: GlobalView,
+    ) : MissionControlIntent
 }
 
 /**

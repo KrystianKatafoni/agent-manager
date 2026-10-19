@@ -33,14 +33,11 @@ internal sealed interface SessionDialog {
 
 /** Which actions apply to which session (plan, table 1). */
 internal object SessionActions {
-    /** The selected session when it is in the selected project and visible under the filter, else null. */
+    /** The selected session when it is in the shown global view or project page ([SessionScope]), else null. */
     fun target(
         sessions: List<Session>,
         selection: Selection,
-    ): Session? =
-        sessions.find {
-            it.id == selection.session && it.project == selection.project && selection.filter.matches(it.state)
-        }
+    ): Session? = SessionScope.visible(sessions, selection).find { it.id == selection.session }
 
     /** Active sessions can be stopped, the others respawned or removed; nothing while an action or a dialog is open. */
     fun available(
@@ -61,15 +58,28 @@ internal fun MissionControlUiState.withActions(
     acting: ActionUi,
 ): MissionControlUiState {
     val withDialog = copy(dialog = acting.dialog)
-    val page = screen as? Screen.Project
-    val details = page?.details
+    val details = screen.details()
     val target = SessionActions.target(snapshot.sessions, selection)
-    if (page == null || details == null || target == null) return withDialog
+    if (details == null || target == null) return withDialog
     val shown =
         details.copy(
             actions = SessionActions.available(target.state, busy = acting.busy != null || acting.dialog != null),
             busy = acting.busy?.takeIf { it.first == details.id }?.second,
             failure = acting.failure?.takeIf { it.id == details.id },
         )
-    return withDialog.copy(screen = page.copy(details = shown))
+    return withDialog.copy(screen = screen.withDetails(shown))
 }
+
+private fun Screen.details(): SessionDetails? =
+    when (this) {
+        is Screen.Project -> details
+        is Screen.Global -> details
+        else -> null
+    }
+
+private fun Screen.withDetails(shown: SessionDetails): Screen =
+    when (this) {
+        is Screen.Project -> copy(details = shown)
+        is Screen.Global -> copy(details = shown)
+        else -> this
+    }

@@ -24,6 +24,9 @@ internal object MissionControlTags {
     /** The filter button of [filter]. */
     fun filter(filter: SessionFilter): String = "missionControl.filter.${filter.name.lowercase()}"
 
+    /** The entry of the global view [view] in `GlobalViews`; clicking it shows the view. */
+    fun view(view: GlobalView): String = "missionControl.view.${view.name.lowercase()}"
+
     /** The row of session [id]; clicking it selects the session. */
     fun row(id: SessionId): String = "missionControl.row.${id.value}"
 }
