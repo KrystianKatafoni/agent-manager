@@ -152,7 +152,7 @@ private fun RowMenu(
 ) {
     var open by remember { mutableStateOf(false) }
     Box {
-        TextButton("⋯", ProjectsTags.rowMenu(project.id), onClick = { open = true }, focusable = false)
+        TextButton("⋯", ProjectsTags.rowMenu(project.id), focusable = false) { open = true }
         if (open) {
             Popup(
                 alignment = Alignment.TopEnd,
@@ -189,7 +189,7 @@ private fun Banner(
         verticalArrangement = Arrangement.spacedBy(space = 4.dp),
     ) {
         Label(ProjectsStrings.format(text), SidebarColors.text)
-        TextButton(ProjectsStrings["banner.dismiss"], ProjectsTags.BANNER_DISMISS, onDismiss)
+        TextButton(ProjectsStrings["banner.dismiss"], ProjectsTags.BANNER_DISMISS, onClick = onDismiss)
     }
 }
 
@@ -198,8 +198,8 @@ private fun Banner(
 internal fun TextButton(
     text: String,
     tag: String,
-    onClick: () -> Unit,
     focusable: Boolean = true,
+    onClick: () -> Unit,
 ) {
     Box(
         modifier =
