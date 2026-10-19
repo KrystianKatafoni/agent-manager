@@ -32,6 +32,7 @@ internal object AppShortcuts {
     val NEXT_SESSION: Shortcut = Shortcut.of(chord('j'))
     val PREVIOUS_SESSION: Shortcut = Shortcut.of(chord('k'))
     val STOP_SESSION: Shortcut = Shortcut.of(chord('x'))
+    val PREVIEW_SESSION: Shortcut = Shortcut.of(KeyChord(ChordKey.Named.SPACE))
     val SWITCH_PROJECT: Shortcut = Shortcut.of(chord('g'), chord('p'))
 
     private fun chord(

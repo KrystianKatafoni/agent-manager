@@ -40,6 +40,11 @@ class AppShortcutsTest {
     }
 
     @Test
+    fun `window key shortcut preview is space`() {
+        AppShortcuts.PREVIEW_SESSION shouldBe Shortcut.of(KeyChord(ChordKey.Named.SPACE))
+    }
+
+    @Test
     fun `window key shortcuts have no meta`() {
         // Shortcuts with ⌘ belong to MenuBar; the window keys must not run twice (ADR 0011).
         val windowKeys =
@@ -47,6 +52,7 @@ class AppShortcutsTest {
                 AppShortcuts.NEXT_SESSION,
                 AppShortcuts.PREVIOUS_SESSION,
                 AppShortcuts.STOP_SESSION,
+                AppShortcuts.PREVIEW_SESSION,
                 AppShortcuts.SWITCH_PROJECT,
             )
 
@@ -64,6 +70,7 @@ class AppShortcutsTest {
                 AppShortcuts.NEXT_SESSION,
                 AppShortcuts.PREVIOUS_SESSION,
                 AppShortcuts.STOP_SESSION,
+                AppShortcuts.PREVIEW_SESSION,
                 AppShortcuts.SWITCH_PROJECT,
             )
 
