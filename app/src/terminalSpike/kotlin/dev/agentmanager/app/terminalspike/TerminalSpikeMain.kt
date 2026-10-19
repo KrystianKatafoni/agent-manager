@@ -7,6 +7,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -22,11 +23,17 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import dev.agentmanager.app.Slf4jLogger
+import dev.agentmanager.core.domain.AppDispatchers
 import dev.agentmanager.core.domain.Logger
 import dev.agentmanager.core.domain.Outcome
-import dev.agentmanager.core.domain.ShellCommand
 import dev.agentmanager.core.domain.error
-import dev.agentmanager.terminal.impl.openSpikeTerminal
+import dev.agentmanager.terminal.api.TerminalError
+import dev.agentmanager.terminal.api.TerminalSession
+import dev.agentmanager.terminal.impl.terminalModule
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.swing.Swing
 import org.slf4j.LoggerFactory
 import java.awt.KeyboardFocusManager
 import java.nio.file.Path
@@ -35,39 +42,41 @@ import javax.swing.JComponent
 private val logger: Logger = Slf4jLogger(LoggerFactory.getLogger("terminal-spike"))
 
 /**
- * AM-501 spike window: JediTerm in a `SwingPanel` next to Compose controls (docs/plans/AM-501.md, manual
- * observations F1-B1). The optional argument is the shell's working directory (default: the home directory).
+ * AM-501 spike window on `terminalModule` (AM-502): JediTerm in a `SwingPanel` next to Compose controls
+ * (docs/plans/AM-501.md, manual observations F1-B1). The optional argument is the shell's working directory
+ * (default: the home directory). AM-503 removes this window.
  */
 fun main(args: Array<String>) {
     val workDir = Path.of(args.firstOrNull() ?: System.getProperty("user.home"))
+    val dispatchers = AppDispatchers(main = Dispatchers.Swing, io = Dispatchers.IO, default = Dispatchers.Default)
+    val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    val terminals = terminalModule(dispatchers, scope, logger, Path.of(System.getenv("SHELL") ?: "/bin/zsh"))
+    // Cmd-Q bypasses onCloseRequest; the hook still kills every shell tree.
+    Runtime.getRuntime().addShutdownHook(Thread { terminals.close() })
     application {
-        val shell = System.getenv("SHELL") ?: "/bin/zsh"
-        val opened = remember { openSpikeTerminal(ShellCommand(listOf(shell, "-l"), workDir), logger) }
-        when (opened) {
+        val opened by produceState<Outcome<TerminalSession, TerminalError>?>(null) {
+            value =
+                terminals.openShell(workDir)
+        }
+        val result = opened ?: return@application
+        when (result) {
             is Outcome.Err -> {
                 LaunchedEffect(Unit) {
-                    logger.error("Terminal spike: cannot open", "reason" to opened.error)
+                    logger.error("Terminal spike: cannot open", "reason" to result.error.toString())
                     exitApplication()
                 }
             }
 
             is Outcome.Ok -> {
-                val (component, handle) = opened.value
-                // Cmd-Q bypasses onCloseRequest; the hook still kills the shell tree.
-                DisposableEffect(Unit) {
-                    val hook = Thread { handle.close() }
-                    Runtime.getRuntime().addShutdownHook(hook)
-                    onDispose {}
-                }
                 Window(
                     onCloseRequest = {
-                        handle.close()
+                        terminals.close()
                         exitApplication()
                     },
                     title = "AM-501 terminal spike",
                     state = rememberWindowState(size = DpSize(1100.dp, 700.dp)),
                 ) {
-                    SpikeContent(component)
+                    SpikeContent(result.value.component())
                 }
             }
         }
