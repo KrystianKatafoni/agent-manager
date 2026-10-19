@@ -51,8 +51,12 @@
 - [x] AM-403 · Pętla pollingu + snapshot · moduły: sessions:impl · zależy: AM-402, AM-203 · wymagania: FR-S1, NFR-2, NFR-3 · issue: #27
 - [x] AM-404 · Komendy: start, stop, respawn, remove, stopAllIn · moduły: sessions:impl · zależy: AM-403 · wymagania: FR-S3, FR-S4 · issue: #28
 - [x] AM-405 · mission-control:ui: lista sesji, panel szczegółów, pasek trybu · moduły: mission-control:ui, projects:ui, app · zależy: AM-404, AM-304 · wymagania: FR-S1, FR-S8, FR-S9 · issue: #29
-- [~] AM-406 · Paleta ⌘K i skróty j/k · moduły: command-palette:* · zależy: AM-405 · wymagania: FR-K1, FR-K2 · issue: #30
+- [~] AM-406 · command-palette:api/impl: komendy, skróty, CommandRegistry, wyszukiwanie · moduły: command-palette:api, command-palette:impl · zależy: AM-405 · wymagania: FR-K1, FR-K2 (część) · issue: #30
 - [ ] AM-407 · mission-control:ui: widoki globalne „czeka na mnie”, „pracuje”, „błędy” · moduły: mission-control:ui, app · zależy: AM-405 · wymagania: FR-S9 · issue: #83
+- [ ] AM-408 · Paleta ⌘K i „Zmień nazwę projektu…” w menu okna · moduły: command-palette:ui, projects:ui, app · zależy: AM-406 · wymagania: FR-K1, FR-P6 · issue: #86
+- [ ] AM-409 · Skróty j/k i g p · moduły: command-palette:ui, mission-control:ui, app · zależy: AM-408 · wymagania: FR-K2 (część) · issue: #87
+- [ ] AM-410 · Akcje sesji: x stop, Zatrzymaj/Respawn/Usuń w panelu i palecie · moduły: mission-control:ui, app · zależy: AM-409 · wymagania: FR-K2 (część) · issue: #88
+- [ ] AM-411 · sessions:api: reply i recentOutput, skróty r i space (start po decyzji z docs/09 o strategii odpowiedzi) · moduły: sessions:api, sessions:impl, mission-control:ui, app · zależy: AM-410 · wymagania: FR-K2 (część) · issue: #89
 
 ## M5 · Terminal
 
@@ -60,6 +64,7 @@
 - [ ] AM-502 · terminal:api/impl: shell i attach w PTY · moduły: terminal:api, terminal:impl · zależy: AM-501 · wymagania: FR-T1 · issue: #32
 - [ ] AM-503 · terminal:ui: karty per projekt, panele, maksymalizacja · moduły: terminal:ui · zależy: AM-502 · wymagania: FR-T2 · issue: #33
 - [ ] AM-504 · Szukanie (regex) i ustawienia terminala · moduły: terminal:* · zależy: AM-503 · wymagania: FR-T3, FR-T7 · issue: #34
+- [ ] AM-505 · Skrót ⏎: attach wybranej sesji w terminalu (komenda palety i skrót) · moduły: mission-control:ui, app · zależy: AM-503, AM-409 · wymagania: FR-K2 (część) · issue: #90
 
 ## M6 · Hooki i podsumowania
 
