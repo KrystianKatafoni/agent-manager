@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test
 
 /** Rules from docs/11-koncepcja-techniczna.md §3 that Gradle alone cannot enforce. */
 class ModuleBoundariesTest {
+    private val terminalLibraries = listOf("com.jediterm.", "com.pty4j.")
     private val forbiddenInContracts = listOf("java.io.", "java.net.", "java.lang.ProcessBuilder", "androidx.compose.")
 
     @Test
@@ -55,6 +56,15 @@ class ModuleBoundariesTest {
     fun `objects hold no mutable state`() {
         Scopes.main().flatMap { it.objects() }.requireModules("objects").assertFalse { obj ->
             obj.properties().any { it.isVar }
+        }
+    }
+
+    @Test
+    fun `jediterm and pty4j are imported only in terminal impl`() {
+        Scopes.main().requireModules("modules").assertTrue { file ->
+            val usesTerminalLibs =
+                file.imports.any { import -> terminalLibraries.any { import.name.startsWith(it) } }
+            !usesTerminalLibs || file.path.contains("/feature/terminal/impl/src/main/")
         }
     }
 
