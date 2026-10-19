@@ -2,7 +2,7 @@
 name: test-engineer
 description: Pisze testy do zadania przed implementacją (test-first) na podstawie planu docs/plans/AM-XXX.md — jednostkowe, kontraktowe w testFixtures, integracyjne z fałszywym claude, funkcjonalne Compose UI. Użyj po zatwierdzeniu planu i zawsze, gdy brakuje testów dla zmiany.
 tools: Read, Grep, Glob, Edit, Write, Bash
-model: inherit
+model: sonnet
 color: green
 ---
 

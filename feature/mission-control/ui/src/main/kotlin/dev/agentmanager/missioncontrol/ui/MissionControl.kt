@@ -1,0 +1,271 @@
+package dev.agentmanager.missioncontrol.ui
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+
+/**
+ * The centre of the window: header, filter, session list, details panel and mode bar; stateless apart from
+ * [controller].
+ */
+@Composable
+public fun MissionControl(
+    controller: MissionControlController,
+    modifier: Modifier = Modifier,
+) {
+    val state by controller.state.collectAsState()
+    Column(modifier = modifier.fillMaxSize().background(color = Colors.background).testTag(MissionControlTags.ROOT)) {
+        Box(modifier = Modifier.weight(weight = 1f).fillMaxWidth()) {
+            when (val screen = state.screen) {
+                Screen.NoProjects -> Empty("empty.noProjects", "empty.noProjects.hint")
+                Screen.NoSelection -> Empty("empty.noSelection", hint = null)
+                is Screen.Project -> ProjectPage(screen, controller::onEvent)
+            }
+        }
+        ModeBarView(state.modeBar)
+    }
+}
+
+@Composable
+private fun Empty(
+    title: String,
+    hint: String?,
+) {
+    Column(
+        modifier = Modifier.fillMaxSize().testTag(MissionControlTags.EMPTY),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Label(MissionControlStrings[title], size = 20)
+        hint?.let { Label(MissionControlStrings[it], Colors.secondary) }
+    }
+}
+
+@Composable
+private fun ProjectPage(
+    page: Screen.Project,
+    onEvent: (MissionControlEvent) -> Unit,
+) {
+    Row(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier.weight(weight = 1f).fillMaxHeight().padding(all = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(space = 8.dp),
+        ) {
+            Header(page.header)
+            page.banner?.let {
+                Text(
+                    it,
+                    Modifier.fillMaxWidth().background(color = Colors.warning),
+                    MissionControlTags.BANNER,
+                )
+            }
+            Filters(page.filter, onEvent)
+            if (page.loading) {
+                Text(UiText("list.loading"), tag = MissionControlTags.LOADING)
+            } else {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    page.rows.forEach { row ->
+                        SessionRowView(row) { onEvent(MissionControlEvent.SelectSession(row.id)) }
+                    }
+                }
+            }
+        }
+        Details(page.details)
+    }
+}
+
+@Composable
+private fun Header(header: ProjectHeader) {
+    Column(modifier = Modifier.testTag(MissionControlTags.HEADER)) {
+        Label(header.name, size = 18)
+        Label(header.path.toString(), Colors.secondary, mono = true)
+        Label(MissionControlStrings.formatted("header.sessions", header.sessions))
+    }
+}
+
+@Composable
+private fun Filters(
+    current: SessionFilter,
+    onEvent: (MissionControlEvent) -> Unit,
+) {
+    Row(horizontalArrangement = Arrangement.spacedBy(space = 4.dp)) {
+        SessionFilter.entries.forEach { filter ->
+            Box(
+                modifier =
+                    Modifier
+                        .testTag(MissionControlTags.filter(filter))
+                        .clickable(role = Role.Tab) { onEvent(MissionControlEvent.SelectFilter(filter)) }
+                        .background(color = if (filter == current) Colors.selection else Colors.button)
+                        .padding(horizontal = 10.dp, vertical = 4.dp),
+            ) {
+                Label(MissionControlStrings["filter.${filter.name.lowercase()}"])
+            }
+        }
+    }
+}
+
+@Composable
+private fun SessionRowView(
+    row: SessionRow,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .testTag(MissionControlTags.row(row.id))
+                .clickable(onClick = onClick)
+                .background(color = if (row.selected) Colors.selection else Color.Transparent),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(space = 8.dp),
+    ) {
+        Box(
+            Modifier
+                .size(
+                    width = 3.dp,
+                    height = 28.dp,
+                ).background(if (row.selected) Colors.accent else Color.Transparent),
+        )
+        Label(row.glyph.symbol, Colors.of(row.glyph.tone))
+        Label(row.name, mono = true)
+        Box(modifier = Modifier.weight(weight = 1f)) { Label(row.summary.orEmpty(), Colors.secondary) }
+        Label(MissionControlStrings.format(row.lastEvent), Colors.secondary)
+        Label(MissionControlStrings.format(row.age), Colors.secondary)
+    }
+}
+
+@Composable
+private fun Details(details: SessionDetails?) {
+    val panel =
+        Modifier
+            .width(width = 300.dp)
+            .fillMaxHeight()
+            .background(color = Colors.panel)
+            .padding(all = 12.dp)
+    if (details == null) {
+        Box(modifier = panel.testTag(MissionControlTags.DETAILS_EMPTY), contentAlignment = Alignment.Center) {
+            Label(MissionControlStrings["details.none"], Colors.secondary)
+        }
+        return
+    }
+    Column(
+        modifier = panel.testTag(MissionControlTags.DETAILS),
+        verticalArrangement = Arrangement.spacedBy(space = 6.dp),
+    ) {
+        Label(details.name, size = 18, mono = true)
+        Row(horizontalArrangement = Arrangement.spacedBy(space = 6.dp)) {
+            Label(details.glyph.symbol, Colors.of(details.glyph.tone))
+            Label(MissionControlStrings[details.glyph.key])
+        }
+        details.summary?.let { Label(it) }
+        Field("details.worktree", details.worktree.toString())
+        Field("details.id", details.id.value)
+        Field("details.startedAt", timeFormat.format(details.startedAt))
+        Field("details.lastActivity", timeFormat.format(details.lastActivityAt))
+    }
+}
+
+@Composable
+private fun Field(
+    key: String,
+    value: String,
+) {
+    Column {
+        Label(MissionControlStrings[key], Colors.secondary)
+        Label(value, mono = true)
+    }
+}
+
+/** `NORMAL`, the selected project, the counters of every project and the freshness of the snapshot. */
+@Composable
+private fun ModeBarView(bar: ModeBar) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(height = 28.dp)
+                .background(color = Colors.panel)
+                .padding(horizontal = 12.dp)
+                .testTag(MissionControlTags.MODE_BAR),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(space = 16.dp),
+    ) {
+        Label(bar.mode, Colors.accent, mono = true)
+        bar.project?.let { Label(it) }
+        Label(MissionControlStrings.formatted("modeBar.waiting", bar.waiting), Colors.of(Tone.WARN))
+        Label(MissionControlStrings.formatted("modeBar.working", bar.working), Colors.of(Tone.WORK))
+        Label(MissionControlStrings.format(bar.freshness), Colors.secondary)
+    }
+}
+
+@Composable
+private fun Text(
+    text: UiText,
+    modifier: Modifier = Modifier,
+    tag: String,
+) {
+    Box(modifier = modifier.testTag(tag).padding(all = 8.dp)) { Label(MissionControlStrings.format(text)) }
+}
+
+@Composable
+private fun Label(
+    text: String,
+    color: Color = Colors.text,
+    size: Int = 13,
+    mono: Boolean = false,
+) {
+    val family = if (mono) FontFamily.Monospace else FontFamily.Default
+    BasicText(text = text, style = TextStyle(color = color, fontSize = size.sp, fontFamily = family), maxLines = 1)
+}
+
+/** Start and last activity in the details panel, in the zone of the Mac. */
+private val timeFormat: DateTimeFormatter =
+    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault())
+
+/** Placeholder colors until `core:design-system` exists (AM-802). */
+private object Colors {
+    val background = Color(color = 0xFF1C1C1E)
+    val panel = Color(color = 0xFF2C2C2E)
+    val selection = Color(color = 0xFF3A3A3C)
+    val button = Color(color = 0xFF48484A)
+    val warning = Color(color = 0xFF5C4400)
+    val accent = Color(color = 0xFF0A84FF)
+    val text = Color(color = 0xFFF2F2F7)
+    val secondary = Color(color = 0xFF8E8E93)
+
+    fun of(tone: Tone): Color =
+        when (tone) {
+            Tone.WARN -> Color(color = 0xFFFFD60A)
+            Tone.WORK -> Color(color = 0xFF64D2FF)
+            Tone.OK -> Color(color = 0xFF30D158)
+            Tone.ERR -> Color(color = 0xFFFF453A)
+            Tone.DIM -> secondary
+        }
+}

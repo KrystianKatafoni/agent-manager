@@ -16,6 +16,10 @@ dependencies {
     // The Claude Code runtime behind the inspector and the remove dialog (AM-304).
     implementation(project(":feature:agent-runtime:api"))
     implementation(project(":feature:agent-runtime:impl"))
+    // Sessions and Mission Control for the selected project (AM-405).
+    implementation(project(":feature:sessions:api"))
+    implementation(project(":feature:sessions:impl"))
+    implementation(project(":feature:mission-control:ui"))
     implementation(compose.desktop.currentOs)
     implementation(libs.kotlinx.coroutines.swing)
     implementation(libs.slf4j.api)
@@ -26,6 +30,8 @@ dependencies {
     // FakeProjectsApi, FakeProjectInspector and FakeAgentRuntime for the window test.
     testImplementation(testFixtures(project(":feature:projects:api")))
     testImplementation(testFixtures(project(":feature:agent-runtime:api")))
+    // FakeSessions behind Mission Control in the window test (AM-405).
+    testImplementation(testFixtures(project(":feature:sessions:api")))
 }
 
 compose.desktop {

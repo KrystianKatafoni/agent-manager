@@ -16,10 +16,14 @@ import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import dev.agentmanager.agentruntime.impl.agentRuntimeModule
 import dev.agentmanager.core.domain.info
+import dev.agentmanager.missioncontrol.ui.MissionControlController
 import dev.agentmanager.projects.impl.projectInspectorModule
 import dev.agentmanager.projects.impl.projectsModule
 import dev.agentmanager.projects.ui.ProjectsController
 import dev.agentmanager.projects.ui.ProjectsIntent
+import dev.agentmanager.sessions.impl.sessionsModule
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -35,6 +39,9 @@ fun main() {
     val runtime = agentRuntimeModule(core.process, core.clock, core.logger, core.homeDir)
     val projects = runBlocking { projectsModule(core.storage, core.dispatchers.io, core.logger) }
     val inspector = projectInspectorModule(projects, runtime, core.process, core.dispatchers.io, core.logger)
+    // Lives as long as the app, not the window (AM-405 risks).
+    val sessionsScope = CoroutineScope(SupervisorJob() + core.dispatchers.io)
+    val sessions = sessionsModule(runtime, projects, sessionsScope, core.clock, core.logger)
     application {
         Window(
             onCloseRequest = ::exitApplication,
@@ -47,8 +54,12 @@ fun main() {
                     val picker = AwtDirectoryPicker(window, core.dispatchers.main)
                     ProjectsController(projects, inspector, runtime, picker, scope, core.logger)
                 }
+            val missionControl =
+                remember {
+                    MissionControlController(sessions.monitor, projects, controller.selection, core.clock, scope)
+                }
             ProjectsMenu(controller)
-            AgentManagerApp(projects = controller)
+            AgentManagerApp(projects = controller, missionControl = missionControl)
         }
     }
 }

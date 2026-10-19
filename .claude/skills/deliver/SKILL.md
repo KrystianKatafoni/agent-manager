@@ -1,6 +1,6 @@
 ---
 name: deliver
-description: Dowozi jedno zadanie z docs/ROADMAP.md od wyboru do otwartego PR — issue, gałąź, plan (architect), testy (test-engineer), implementacja (implementer), bramka ./gradlew check, review (reviewer), commity, push i PR. Użyj, gdy człowiek prosi o realizację kolejnego lub wskazanego zadania z roadmapy.
+description: Dowozi jedno zadanie z docs/ROADMAP.md od wyboru do otwartego PR — issue, gałąź, plan (architect), testy (test-engineer), implementacja (implementer), review (reviewer), bramka, commity, push i PR (shipper). Użyj, gdy człowiek prosi o realizację kolejnego lub wskazanego zadania z roadmapy.
 argument-hint: "[AM-XXX]"
 allowed-tools: Bash(git *), Bash(gh *), Bash(./gradlew *), Bash(python3 scripts/*), Read, Grep, Glob, Edit, Write
 ---
@@ -8,6 +8,8 @@ allowed-tools: Bash(git *), Bash(gh *), Bash(./gradlew *), Bash(python3 scripts/
 # /deliver — dowiezienie zadania z roadmapy
 
 Zadanie: `$ARGUMENTS` (puste = następne dostępne).
+
+**Podział modeli.** Główna sesja (Opus) wybiera zadanie, zleca plan `architect` (Opus), sprawdza plan i zakres, rozmawia z człowiekiem. Testy, implementację, bramkę, push i PR wykonują subagenci na Sonnecie: `test-engineer`, `implementer`, `shipper`. Główna sesja nie pisze kodu, nie uruchamia `./gradlew check` i nie robi commitów; błędy odsyła do właściwego subagenta.
 
 ## Stan wejściowy
 
@@ -47,23 +49,22 @@ Przekaż ścieżkę planu. Oczekiwany wynik: testy kompilują się i nie przecho
 
 Przekaż ścieżkę planu i listę czerwonych testów. Oczekiwany wynik: zielone `./gradlew check`.
 
-## Krok 6 · Weryfikacja (sam)
+## Krok 6 · Zakres (sam)
 
-1. `git diff --stat main...` — tylko moduły z planu (+ `docs/plans`, roadmapa, CHANGELOG).
-2. `./gradlew check` — zielone. Jeśli nie: przekaż błędy `implementer`; maks. 3 rundy, potem eskalacja do człowieka z opisem.
+`git diff --stat main...` — tylko moduły z planu (+ `docs/plans`). Zmiany poza planem → wróć do `implementer` z prośbą o ich cofnięcie albo uzasadnienie. Nie uruchamiaj tu `./gradlew check`; zielony wynik raportuje `implementer`, a przed wysyłką sprawdza go `shipper`.
 
 ## Krok 7 · Review → subagent `reviewer`
 
-Przekaż ID i ścieżkę planu. Uwagi **blokujące** wróć do `implementer` / `test-engineer` i powtórz kroki 6–7. Sugestie wpisz do opisu PR jako „do rozważenia”.
+Przekaż ID i ścieżkę planu. Uwagi **blokujące** wróć do `implementer` / `test-engineer` i powtórz kroki 6–7. Sugestie zachowaj dla `shipper` jako „do rozważenia”.
 
-## Krok 8 · Dokumentacja
+## Krok 8 · Bramka, dokumentacja i wysyłka → subagent `shipper`
 
-- Roadmapa: zmień `[ ]` na `[~]` dla AM-XXX.
-- `CHANGELOG.md` → `[Unreleased]`: jedna linia po polsku, jeśli zmiana jest widoczna dla użytkownika.
-- Wniosek z review, który powinien zapobiec powtórce błędu → jedna linia w sekcji „Lekcje” w `CLAUDE.md`.
+Przekaż: ID, ścieżkę planu, numer issue, werdykt review z sugestiami, decyzje z raportu `implementer` warte opisania w PR oraz wniosek do sekcji „Lekcje”, jeśli review go przyniosło. `shipper` uruchamia `./gradlew check`, aktualizuje roadmapę (`[~]`) i `CHANGELOG.md`, a potem `/ship`.
 
-## Krok 9 · Wysyłka
+- Bramka czerwona → `shipper` zwraca błędy bez poprawiania. Przekaż je `implementer` (lub `test-engineer`, jeśli błąd jest w teście) i ponów krok 8. Maks. 3 rundy, potem eskalacja do człowieka z opisem.
 
-Wywołaj skill `/ship`. Zwróć człowiekowi: link do PR, wynik bramki, werdykt review, otwarte kwestie, następne zadanie z roadmapy.
+## Krok 9 · Wynik
+
+Zwróć człowiekowi: link do PR, wynik bramki, werdykt review, otwarte kwestie, następne zadanie z roadmapy.
 
 Nigdy nie scalaj PR i nie pushuj do `main`.

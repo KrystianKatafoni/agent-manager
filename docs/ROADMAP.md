@@ -50,8 +50,9 @@
 - [x] AM-402 · SessionStateReducer (czysty, tablicowe testy) · moduły: sessions:impl · zależy: AM-401 · wymagania: FR-S2 · issue: #26
 - [x] AM-403 · Pętla pollingu + snapshot · moduły: sessions:impl · zależy: AM-402, AM-203 · wymagania: FR-S1, NFR-2, NFR-3 · issue: #27
 - [x] AM-404 · Komendy: start, stop, respawn, remove, stopAllIn · moduły: sessions:impl · zależy: AM-403 · wymagania: FR-S3, FR-S4 · issue: #28
-- [ ] AM-405 · mission-control:ui: lista sesji, panel szczegółów, pasek trybu · moduły: mission-control:ui · zależy: AM-404, AM-304 · wymagania: FR-S1, FR-S8, FR-S9 · issue: #29
+- [x] AM-405 · mission-control:ui: lista sesji, panel szczegółów, pasek trybu · moduły: mission-control:ui, projects:ui, app · zależy: AM-404, AM-304 · wymagania: FR-S1, FR-S8, FR-S9 · issue: #29
 - [ ] AM-406 · Paleta ⌘K i skróty j/k · moduły: command-palette:* · zależy: AM-405 · wymagania: FR-K1, FR-K2 · issue: #30
+- [ ] AM-407 · mission-control:ui: widoki globalne „czeka na mnie”, „pracuje”, „błędy” · moduły: mission-control:ui, app · zależy: AM-405 · wymagania: FR-S9 · issue: #83
 
 ## M5 · Terminal
 

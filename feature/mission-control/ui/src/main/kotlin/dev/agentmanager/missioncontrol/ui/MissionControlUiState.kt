@@ -1,0 +1,115 @@
+package dev.agentmanager.missioncontrol.ui
+
+import dev.agentmanager.core.domain.ProjectId
+import dev.agentmanager.core.domain.SessionId
+import dev.agentmanager.sessions.api.SessionState
+import java.nio.file.Path
+import java.time.Instant
+
+/** Which sessions of the project the list shows (FR-S9, first half). */
+internal enum class SessionFilter {
+    ALL,
+    ACTIVE,
+    FINISHED,
+    ;
+
+    /** [ALL] always; [ACTIVE] = [SessionState.isActive]; [FINISHED] = not active. */
+    fun matches(state: SessionState): Boolean =
+        when (this) {
+            ALL -> true
+            ACTIVE -> state.isActive
+            FINISHED -> !state.isActive
+        }
+}
+
+/** Clicks inside Mission Control. */
+internal sealed interface MissionControlEvent {
+    data class SelectFilter(
+        val filter: SessionFilter,
+    ) : MissionControlEvent
+
+    data class SelectSession(
+        val id: SessionId,
+    ) : MissionControlEvent
+}
+
+/** What the user picked: the project (from the sidebar), the filter and the session. */
+internal data class Selection(
+    val project: ProjectId? = null,
+    val filter: SessionFilter = SessionFilter.ALL,
+    val session: SessionId? = null,
+)
+
+internal data class MissionControlUiState(
+    val screen: Screen,
+    val modeBar: ModeBar,
+)
+
+internal sealed interface Screen {
+    /** No project on the list: "Brak projektów". */
+    data object NoProjects : Screen
+
+    /** Projects exist, none is selected: "Wybierz projekt". */
+    data object NoSelection : Screen
+
+    /**
+     * @property loading the snapshot is [dev.agentmanager.sessions.api.SnapshotStatus.Loading]: "Wczytywanie sesji…".
+     * @property details null without a (visible) selected session: "Wybierz sesję".
+     * @property banner the stale text of [Freshness] when the snapshot is stale, else null.
+     */
+    data class Project(
+        val header: ProjectHeader,
+        val filter: SessionFilter,
+        val rows: List<SessionRow>,
+        val details: SessionDetails?,
+        val banner: UiText?,
+        val loading: Boolean,
+    ) : Screen
+}
+
+/** @property sessions every session of the project, whatever the filter. */
+internal data class ProjectHeader(
+    val name: String,
+    val path: Path,
+    val sessions: Int,
+)
+
+/** Visual tone of a state glyph (docs/05 table); colors are internal constants until AM-802. */
+internal enum class Tone { WARN, WORK, OK, ERR, DIM }
+
+/** @property key text key of the state, e.g. `state.working`. */
+internal data class Glyph(
+    val symbol: String,
+    val tone: Tone,
+    val key: String,
+)
+
+internal data class SessionRow(
+    val id: SessionId,
+    val glyph: Glyph,
+    val name: String,
+    val summary: String?,
+    val lastEvent: UiText,
+    val age: UiText,
+    val selected: Boolean,
+)
+
+/** FR-S8, only the fields `sessions:api` has. [worktree] is the session cwd. */
+internal data class SessionDetails(
+    val id: SessionId,
+    val name: String,
+    val glyph: Glyph,
+    val summary: String?,
+    val worktree: Path,
+    val startedAt: Instant,
+    val lastActivityAt: Instant,
+)
+
+/** @property waiting @property working counted over the sessions of every project. */
+internal data class ModeBar(
+    val mode: String = "NORMAL",
+    val project: String?,
+    val waiting: Int,
+    val working: Int,
+    val freshness: UiText,
+)
