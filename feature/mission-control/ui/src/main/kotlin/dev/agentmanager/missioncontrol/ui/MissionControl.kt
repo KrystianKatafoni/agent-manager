@@ -21,6 +21,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
@@ -126,6 +127,7 @@ private fun Header(header: ProjectHeader) {
     }
 }
 
+/** The tabs never take focus either, for the same reason as the session rows. */
 @Composable
 private fun Filters(
     current: SessionFilter,
@@ -137,6 +139,7 @@ private fun Filters(
                 modifier =
                     Modifier
                         .testTag(MissionControlTags.filter(filter))
+                        .focusProperties { canFocus = false }
                         .clickable(role = Role.Tab) { onEvent(MissionControlEvent.SelectFilter(filter)) }
                         .background(color = if (filter == current) Colors.selection else Colors.button)
                         .padding(horizontal = 10.dp, vertical = 4.dp),
@@ -147,6 +150,10 @@ private fun Filters(
     }
 }
 
+/**
+ * A row never takes focus: a focused `clickable` handles `space` and Enter as a click and consumes them before the
+ * window shortcuts (`space` preview, later `⏎` attach) see them.
+ */
 @Composable
 private fun SessionRowView(
     row: SessionRow,
@@ -157,6 +164,7 @@ private fun SessionRowView(
             Modifier
                 .fillMaxWidth()
                 .testTag(MissionControlTags.row(row.id))
+                .focusProperties { canFocus = false }
                 .clickable(onClick = onClick)
                 .background(color = if (row.selected) Colors.selection else Color.Transparent),
         verticalAlignment = Alignment.CenterVertically,

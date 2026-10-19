@@ -40,7 +40,7 @@ internal class PreviewState(
             combine(openFlow, selection, monitor.snapshot) { isOpen, picked, snapshot ->
                 SessionPreview.key(isOpen, snapshot.sessions, picked)
             }.distinctUntilChanged().collectLatest { id ->
-                if (id == null) shownFlow.value = null else follow(id)
+                if (id == null) close() else follow(id)
             }
         }
     }
@@ -54,9 +54,13 @@ internal class PreviewState(
         }
     }
 
-    /** Closes without touching [shown]: the collector clears it when the key becomes null. */
+    /**
+     * Closes after the target is lost (the key became null) and clears [shown]. [toggle] only flips [open], so a quick
+     * close and open in one step keeps the key and the panel.
+     */
     private fun close() {
         openFlow.value = false
+        shownFlow.value = null
     }
 
     /** Loading, then a read every [PREVIEW_REFRESH]; the old text stays while a read runs, a failure replaces it. */
