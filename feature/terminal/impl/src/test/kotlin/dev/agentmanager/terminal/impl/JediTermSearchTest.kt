@@ -52,9 +52,14 @@ class JediTermSearchTest {
             .shouldBeInstanceOf<Outcome.Ok<TerminalSession>>()
             .value
 
-    /** A session that printed `line 1` .. `line 60`, more than the 24 screen rows, so most lines are history. */
+    /**
+     * A session that printed `line 1` .. `line 60`, more than the 24 screen rows, so most lines are history.
+     * The last output is `end` without a newline: a pending newline after the awaited row would scroll the widget
+     * back to the bottom after the test scrolled it (flaky `current hit is scrolled into view` on macOS CI).
+     */
     private suspend fun numbered(): TerminalSession =
-        sh("i=1; while [ \$i -le 60 ]; do echo line \$i; i=\$((i+1)); done").also { it.widget().awaitRow("line 60") }
+        sh("i=1; while [ \$i -le 60 ]; do echo line \$i; i=\$((i+1)); done; printf end")
+            .also { it.widget().awaitRow("end") }
 
     /** Swing thread only (call it inside [onSwing]): `invokeAndWait` from the event thread throws. */
     private fun JediTermWidget.highlights(): SearchHighlights =
