@@ -26,7 +26,11 @@ import kotlinx.coroutines.flow.stateIn
 internal fun selectedTerminalProject(
     list: List<Project>,
     selected: ProjectId?,
-): TerminalProject? = list.firstOrNull { it.id == selected }?.let { TerminalProject(it.id, it.displayName, it.dir) }
+): TerminalProject? = list.firstOrNull { it.id == selected }?.let(::terminalProjectOf)
+
+/** [project] as a terminal project: the tab group id, its title and the working dir. */
+internal fun terminalProjectOf(project: Project): TerminalProject =
+    TerminalProject(project.id, project.displayName, project.dir)
 
 /** Id and title key of the one command that toggles the maximize, by the state it leads to. */
 private val MAXIMIZE = "terminal.maximize" to "command.maximizePane"

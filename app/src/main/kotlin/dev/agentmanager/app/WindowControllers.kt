@@ -22,14 +22,17 @@ internal class WindowControllers(
     val missionControl =
         MissionControlController(modules.sessions, modules.projects, projects.selection, core.clock, scope, core.logger)
     val palette = CommandPaletteController(modules.registry, scope, core.logger)
-    val terminal = TerminalController(modules.terminal, scope, core.logger, modules.shellLabel)
+    val terminal = TerminalController(modules.terminal.api, scope, core.logger, modules.terminal.shellLabel)
 
     /** ⌘ keys of a focused terminal, bridged to the palette and the shortcuts. */
     val terminalKeys = TerminalKeys(modules.registry, palette, scope)
+
+    private val attacher = SessionAttacher(missionControl, terminal, modules.terminal.attachCommand, core.logger)
 
     val providers: List<CommandProvider> =
         listOf(
             AppCommands(modules.projects, projects, missionControl, palette, scope),
             TerminalCommands(modules.projects, projects, missionControl, terminal, scope),
+            AttachCommands(projects, missionControl, attacher, scope),
         )
 }

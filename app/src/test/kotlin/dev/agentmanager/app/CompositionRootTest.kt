@@ -24,6 +24,7 @@ class CompositionRootTest {
         core.logger.shouldBeInstanceOf<Slf4jLogger>()
     }
 
+    @Suppress("LongMethod") // a table of keys
     @Test
     fun `every UI text exists and is not blank`() {
         Strings.keys shouldContainAll
@@ -43,6 +44,8 @@ class CompositionRootTest {
                 "command.removeSession",
                 "command.previewSession",
                 "command.closePreview",
+                "command.attachSession",
+                "terminal.attachTab",
                 "command.switchProject",
                 "command.filterAll",
                 "command.filterActive",
