@@ -1,6 +1,6 @@
 # 06 · Terminal
 
-Terminal jest pełnoprawną częścią aplikacji, nie dodatkiem. Działa w dwóch miejscach: jako panel pod listą sesji w Mission Control i jako pełnoekranowy **tryb terminala** (⌘⇧↵ albo przycisk pełnego ekranu).
+Terminal jest pełnoprawną częścią aplikacji, nie dodatkiem. Działa w dwóch miejscach: jako panel pod listą sesji w Mission Control i jako pełnoekranowy **tryb terminala** (przycisk pełnego ekranu, bez skrótu klawiszowego). Skrót ⌘⇧↵ maksymalizuje aktywny panel w obrębie panelu terminala, a ten sam skrót przywraca układ.
 
 ![Tryb terminala](screenshots/20-tryb-terminala.png)
 
@@ -10,7 +10,7 @@ Terminal jest pełnoprawną częścią aplikacji, nie dodatkiem. Działa w dwóc
 | --- | --- |
 | Karty per projekt | Karty pogrupowane nazwą projektu; kropka stanu przy karcie `attach` |
 | Rodzaje kart | `attach · <sesja>` (`claude attach <id>`), `zsh` (login shell w katalogu projektu lub worktree), `logs · <sesja>` (`claude logs <id> --follow`, tylko odczyt) |
-| Panele | Podział w pionie ⌘D i w poziomie ⌘⇧D, przełączanie ⌘⌥←→, maksymalizacja ⌘⇧↵; aktywny panel ma ramkę w kolorze akcentu |
+| Panele | Podział na dwa panele obok siebie ⌘D i jeden pod drugim ⌘⇧D (najwyżej 4, bez przeciągania granic), przełączanie ⌘⌥←→, maksymalizacja aktywnego panelu ⌘⇧↵ (ten sam skrót przywraca układ); aktywny panel ma ramkę w kolorze akcentu |
 | Szukanie | ⌘F w scrollbacku, licznik trafień, przełączniki *Aa* (wielkość liter) i `.*` (regex) |
 | Bloki komend | Każda komenda w shellu jako blok z kodem wyjścia i czasem; akcje *Uruchom ponownie*, *Kopiuj jako Markdown*, **Wyślij do agenta** (przekazuje output błędu do wybranej sesji) |
 | Linki | `plik.kt:88` i URL-e klikalne; pliki otwierają się w IntelliJ IDEA |
