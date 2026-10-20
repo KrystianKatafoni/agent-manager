@@ -53,6 +53,11 @@ class AppShortcutsTest {
     }
 
     @Test
+    fun `window key shortcut reply is r`() {
+        AppShortcuts.REPLY_SESSION shouldBe Shortcut.of(letterChord('r'))
+    }
+
+    @Test
     fun `window key shortcuts have no meta`() {
         // Shortcuts with ⌘ belong to MenuBar; the window keys must not run twice (ADR 0011).
         val windowKeys =
@@ -62,6 +67,7 @@ class AppShortcutsTest {
                 AppShortcuts.STOP_SESSION,
                 AppShortcuts.PREVIEW_SESSION,
                 AppShortcuts.ATTACH_SESSION,
+                AppShortcuts.REPLY_SESSION,
                 AppShortcuts.SWITCH_PROJECT,
             )
 
@@ -81,6 +87,7 @@ class AppShortcutsTest {
                 AppShortcuts.STOP_SESSION,
                 AppShortcuts.PREVIEW_SESSION,
                 AppShortcuts.ATTACH_SESSION,
+                AppShortcuts.REPLY_SESSION,
                 AppShortcuts.SWITCH_PROJECT,
             )
 

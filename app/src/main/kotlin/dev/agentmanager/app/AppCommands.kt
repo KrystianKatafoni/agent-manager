@@ -34,6 +34,7 @@ internal object AppShortcuts {
     val STOP_SESSION: Shortcut = Shortcut.of(chord('x'))
     val PREVIEW_SESSION: Shortcut = Shortcut.of(KeyChord(ChordKey.Named.SPACE))
     val ATTACH_SESSION: Shortcut = Shortcut.of(KeyChord(ChordKey.Named.ENTER))
+    val REPLY_SESSION: Shortcut = Shortcut.of(chord('r'))
     val SWITCH_PROJECT: Shortcut = Shortcut.of(chord('g'), chord('p'))
 
     // Terminal (AM-503). The menu and the palette rows use these; ⌘⌥←/→ have no chord key, so no palette label.

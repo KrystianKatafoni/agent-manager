@@ -4,10 +4,12 @@ import dev.agentmanager.commandpalette.api.Command
 import dev.agentmanager.commandpalette.api.CommandGroup
 import dev.agentmanager.commandpalette.api.CommandId
 import dev.agentmanager.commandpalette.api.CommandProvider
+import dev.agentmanager.commandpalette.api.Shortcut
 import dev.agentmanager.core.domain.Logger
 import dev.agentmanager.core.domain.SessionId
 import dev.agentmanager.core.domain.ShellCommand
 import dev.agentmanager.core.domain.info
+import dev.agentmanager.missioncontrol.ui.AttachTarget
 import dev.agentmanager.missioncontrol.ui.MissionControlController
 import dev.agentmanager.missioncontrol.ui.SessionActionsState
 import dev.agentmanager.projects.ui.ProjectsController
@@ -19,25 +21,45 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
-/** The attach command of the palette (`⏎`); empty unless [SessionActionsState.canAttach] and no dialog is open. */
+/** Attach (`⏎`) and reply (`r`) commands of the palette; each by its flag, none while a dialog is open. */
 internal fun attachCommands(
     dialogOpen: Boolean,
     actions: SessionActionsState,
     attach: () -> Unit,
+    reply: () -> Unit,
 ): List<Command> {
-    if (dialogOpen || actions.dialogOpen || !actions.canAttach) return emptyList()
-    val command =
-        Command(
-            id = CommandId("sessions.attach"),
-            title = Strings["command.attachSession"],
-            group = CommandGroup.SESSION,
-            keywords = listOf("attach", "terminal", "podłącz"),
-            shortcut = AppShortcuts.ATTACH_SESSION,
-        ) { attach() }
-    return listOf(command)
+    if (dialogOpen || actions.dialogOpen) return emptyList()
+    val attachCommand =
+        sessionCommand(
+            "sessions.attach",
+            "command.attachSession",
+            listOf("attach", "terminal", "podłącz"),
+            AppShortcuts.ATTACH_SESSION,
+            attach,
+        )
+    val replyCommand =
+        sessionCommand(
+            "sessions.reply",
+            "command.replySession",
+            listOf("reply", "odpowiedz", "answer", "zgoda"),
+            AppShortcuts.REPLY_SESSION,
+            reply,
+        )
+    return listOfNotNull(
+        attachCommand.takeIf { actions.canAttach },
+        replyCommand.takeIf { actions.canReply },
+    )
 }
 
-/** Opens `claude attach` of the selected session in a new terminal tab of its project (AM-505). */
+private fun sessionCommand(
+    id: String,
+    title: String,
+    keywords: List<String>,
+    shortcut: Shortcut,
+    run: () -> Unit,
+): Command = Command(CommandId(id), Strings[title], CommandGroup.SESSION, keywords, shortcut) { run() }
+
+/** Opens `claude attach` of the selected session in a new terminal tab of its project (`⏎` AM-505, `r` AM-506). */
 internal class SessionAttacher(
     private val missionControl: MissionControlController,
     private val terminal: TerminalController,
@@ -47,7 +69,20 @@ internal class SessionAttacher(
     /** Opens `claude attach` of [MissionControlController.attachTarget] in a new tab of its project; no-op without. */
     fun attachSelected() {
         val target = missionControl.attachTarget() ?: return
-        logger.info("session attach", "sessionId" to target.session.value)
+        open(target, "session attach")
+    }
+
+    /** Like [attachSelected], but only for a target that is [AttachTarget.waiting]; no-op otherwise. */
+    fun replySelected() {
+        val target = missionControl.attachTarget()?.takeIf { it.waiting } ?: return
+        open(target, "session reply")
+    }
+
+    private fun open(
+        target: AttachTarget,
+        event: String,
+    ) {
+        logger.info(event, "sessionId" to target.session.value)
         terminal.openCommand(
             terminalProjectOf(target.project),
             Strings.format("terminal.attachTab", target.name),
@@ -57,10 +92,10 @@ internal class SessionAttacher(
 }
 
 /**
- * Offers [attachCommands] for the project and Mission Control dialogs and the selected session.
- * Availability follows `actions.canAttach`, which comes after `stateIn` and may lag one frame behind on the first
- * selection. The attach itself reads its target afresh through `attachTarget()`, so the opposite case
- * (a dialog and `⏎` in the same frame) is a safe no-op.
+ * Offers [attachCommands] (`⏎` and `r`) for the project and Mission Control dialogs and the selected session.
+ * Availability follows `actions.canAttach` and `canReply`, which come after `stateIn` and may lag one frame behind on
+ * the first selection. The attach itself reads its target afresh through `attachTarget()`, so the opposite case
+ * (a dialog and `⏎` or `r` in the same frame) is a safe no-op.
  */
 internal class AttachCommands(
     controller: ProjectsController,
@@ -70,7 +105,7 @@ internal class AttachCommands(
 ) : CommandProvider {
     private val offered =
         { menu: ProjectsMenuState, actions: SessionActionsState ->
-            attachCommands(menu.dialogOpen, actions, attacher::attachSelected)
+            attachCommands(menu.dialogOpen, actions, attacher::attachSelected, attacher::replySelected)
         }
 
     override val commands: StateFlow<List<Command>> =

@@ -43,8 +43,9 @@ import java.nio.file.Path
 import kotlin.time.Duration.Companion.hours
 
 /**
- * Composes the selected session, `attachCommand` and the terminal (FR-K2, AM-505). One session `s1` named `fix-login`
- * works in the project `Agent Manager`; `j` selects it. `claude attach <id>` runs in the temp dir, which exists.
+ * Composes the selected session, `attachCommand` and the terminal (FR-K2, AM-505, AM-506). One session `s1` named
+ * `fix-login` works (or waits, for reply tests) in the project `Agent Manager`; `j` selects it.
+ * `claude attach <id>` runs in the temp dir, which exists.
  */
 class SessionAttacherTest {
     @TempDir
@@ -57,7 +58,7 @@ class SessionAttacherTest {
 
     private fun attachCommand(id: SessionId) = ShellCommand(listOf("claude", "attach", id.value), root)
 
-    private fun sessions(): FakeSessions =
+    private fun sessions(state: SessionState): FakeSessions =
         FakeSessions(
             SessionsWorld(
                 projects = listOf(WorldProject(project.id, project.dir)),
@@ -66,7 +67,7 @@ class SessionAttacherTest {
                         WorldSession(
                             id = SessionId("s1"),
                             cwd = A_PROJECT_DIR,
-                            state = SessionState.Working,
+                            state = state,
                             name = secretName,
                             startedAt = T0,
                         ),
@@ -75,8 +76,11 @@ class SessionAttacherTest {
             TestClock(T0),
         )
 
-    private fun missionControl(scope: CoroutineScope): MissionControlController {
-        val fake = sessions()
+    private fun missionControl(
+        scope: CoroutineScope,
+        state: SessionState = SessionState.Working,
+    ): MissionControlController {
+        val fake = sessions(state)
         return MissionControlController(
             SessionsApi(monitor = fake, commands = fake),
             FakeProjectsApi(initial = listOf(project)),
@@ -94,8 +98,8 @@ class SessionAttacherTest {
         val attacher: SessionAttacher,
     )
 
-    private fun TestScope.parts(): Parts {
-        val missionControl = missionControl(backgroundScope)
+    private fun TestScope.parts(state: SessionState = SessionState.Working): Parts {
+        val missionControl = missionControl(backgroundScope, state)
         val terminal = TerminalController(terminals, backgroundScope, NoOpLogger, "zsh")
         return Parts(missionControl, terminal, SessionAttacher(missionControl, terminal, ::attachCommand, log))
             .also { runCurrent() }
@@ -165,5 +169,88 @@ class SessionAttacherTest {
             logged shouldNotContain secretName
             logged shouldNotContain A_PROJECT_DIR.toString()
             logged shouldNotContain "Agent Manager"
+        }
+
+    @Test
+    fun `reply opens claude attach of a waiting session in its project group`() =
+        runTest {
+            val parts = parts(SessionState.AwaitingInput("Continue?"))
+            parts.missionControl.onIntent(MissionControlIntent.NextSession)
+
+            parts.attacher.replySelected()
+            runCurrent()
+
+            terminals.fake.commands shouldBe listOf(attachCommand(SessionId("s1")))
+            parts.terminal.menu.value.hasTabs shouldBe true
+        }
+
+    @Test
+    fun `reply labels the tab like attach`() =
+        runComposeUiTest {
+            lateinit var attacher: SessionAttacher
+            lateinit var missionControl: MissionControlController
+            setContent {
+                val scope = rememberCoroutineScope()
+                missionControl = remember { missionControl(scope, SessionState.AwaitingPermission("Bash")) }
+                val terminal = remember { TerminalController(terminals, scope, NoOpLogger, "zsh") }
+                attacher = remember { SessionAttacher(missionControl, terminal, ::attachCommand, log) }
+                TerminalArea(terminal, { false }, Modifier, terminals.paneContent)
+            }
+            waitForIdle()
+
+            runOnIdle {
+                missionControl.onIntent(MissionControlIntent.NextSession)
+                attacher.replySelected()
+            }
+
+            await(WindowTags.terminalTab(1)).assertTextContains("attach · $secretName", substring = true)
+            await(WindowTags.terminalGroup("project0001")).assertTextContains("Agent Manager", substring = true)
+        }
+
+    @Test
+    fun `reply of a session that is not waiting opens nothing`() =
+        runTest {
+            // The guard of decision 3: the target exists (Working), but only attach may open it.
+            val parts = parts(SessionState.Working)
+            parts.missionControl.onIntent(MissionControlIntent.NextSession)
+            parts.missionControl.attachTarget()?.waiting shouldBe false
+
+            parts.attacher.replySelected()
+            runCurrent()
+
+            terminals.fake.commands.shouldBeEmpty()
+            parts.terminal.menu.value.hasTabs shouldBe false
+            log.entries.shouldBeEmpty()
+        }
+
+    @Test
+    fun `reply without a target opens nothing`() =
+        runTest {
+            val parts = parts(SessionState.AwaitingInput(null))
+
+            parts.attacher.replySelected()
+            runCurrent()
+
+            terminals.fake.commands.shouldBeEmpty()
+            parts.terminal.menu.value.hasTabs shouldBe false
+            log.entries.shouldBeEmpty()
+        }
+
+    @Test
+    fun `reply logs the session id only`() =
+        runTest {
+            val parts = parts(SessionState.AwaitingInput("Continue?"))
+            parts.missionControl.onIntent(MissionControlIntent.NextSession)
+
+            parts.attacher.replySelected()
+            runCurrent()
+
+            log.entries.map { it.level to it.message } shouldBe listOf(LogLevel.INFO to "session reply")
+            log.entries.map { it.fields } shouldBe listOf(mapOf("sessionId" to "s1"))
+            val logged = log.entries.joinToString { "${it.message} ${it.fields} ${it.cause}" }
+            logged shouldNotContain secretName
+            logged shouldNotContain A_PROJECT_DIR.toString()
+            logged shouldNotContain "Agent Manager"
+            logged shouldNotContain "Continue?"
         }
 }
