@@ -109,7 +109,8 @@ public class MissionControlController(
      * Actions of the selected visible session, for the palette (AM-410).
      * [SessionActionsState.canStop], `canRespawn` and `canRemove` are false while an action runs or a dialog is open;
      * `canPreview` stays true while an action runs and is false only with a dialog open.
-     * `canAttach` behaves like `canPreview` and also needs the project of the session in the project list.
+     * `canAttach` behaves like `canPreview` and also needs the project of the session in the project list;
+     * `canReply` is `canAttach` for a session that waits for the user.
      * The target of a run is read again from the snapshot, so this may lag one step behind.
      */
     public val actions: StateFlow<SessionActionsState> =
@@ -120,9 +121,10 @@ public class MissionControlController(
         )
 
     /**
-     * The session `⏎` attaches to, read now from the snapshot, the selection and the project list (not from [actions],
-     * which may lag one step); null without a selected visible session, for a session outside the registered projects
-     * and while a dialog of Mission Control is open. Pure query: no state change, no log.
+     * The session `⏎` and `r` (when [AttachTarget.waiting]) attach to, read now from the snapshot, the selection
+     * and the project list (not from [actions], which may lag one step); null without a selected visible session,
+     * for a session outside the registered projects and while a dialog of Mission Control is open.
+     * Pure query: no state change, no log.
      */
     public fun attachTarget(): AttachTarget? =
         SessionAttach.targetOf(
@@ -226,6 +228,7 @@ private fun actionsOf(
     projects: List<Project>,
 ): SessionActionsState {
     val target = SessionActions.target(snapshot.sessions, picked)
+    val attach = SessionAttach.targetOf(target, projects, acting.dialog != null)
     val blocked = acting.busy != null || acting.dialog != null
     val available = target?.let { SessionActions.available(it.state, blocked) }.orEmpty()
     return SessionActionsState(
@@ -235,7 +238,8 @@ private fun actionsOf(
         dialogOpen = acting.dialog != null,
         canPreview = target != null && acting.dialog == null,
         previewOpen = previewOpen,
-        canAttach = SessionAttach.targetOf(target, projects, acting.dialog != null) != null,
+        canAttach = attach != null,
+        canReply = attach?.waiting == true,
     )
 }
 

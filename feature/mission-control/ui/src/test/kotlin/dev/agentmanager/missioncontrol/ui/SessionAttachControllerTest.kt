@@ -29,8 +29,8 @@ import java.nio.file.Path
 import kotlin.time.Duration.Companion.hours
 
 /**
- * `attachTarget()` and `SessionActionsState.canAttach` of the controller (FR-K2, AM-505). Sessions start at
- * T0 + their index, so rows are newest first. Time never moves: the tick is one hour.
+ * `attachTarget()`, `SessionActionsState.canAttach` and `canReply` of the controller (FR-K2, AM-505, AM-506).
+ * Sessions start at T0 + their index, so rows are newest first. Time never moves: the tick is one hour.
  */
 internal class SessionAttachControllerTest {
     private val project = aProject(id = "project0001", displayName = "Agent Manager")
@@ -173,5 +173,89 @@ internal class SessionAttachControllerTest {
 
             controller.actions.value.dialogOpen shouldBe true
             controller.actions.value.canAttach shouldBe false
+        }
+
+    @Test
+    fun `attach target is waiting for a session awaiting input`() =
+        runTest {
+            val controller = start(world(session("a", 1, SessionState.AwaitingInput("Continue?"))))
+            select(controller, "a")
+
+            controller.attachTarget() shouldBe AttachTarget(SessionId("a"), "name-a", project, waiting = true)
+        }
+
+    @Test
+    fun `attach target is waiting for a session awaiting permission`() =
+        runTest {
+            val controller = start(world(session("a", 1, SessionState.AwaitingPermission("Bash"))))
+            select(controller, "a")
+
+            controller.attachTarget()?.waiting shouldBe true
+        }
+
+    @Test
+    fun `attach target is not waiting right after the session starts working`() =
+        runTest {
+            val fake = world(session("a", 1, SessionState.AwaitingInput(null)))
+            val controller = start(fake)
+            select(controller, "a")
+            controller.attachTarget()?.waiting shouldBe true
+
+            // No runCurrent after the change: the target is read fresh, not from the lagging state.
+            fake.setState(SessionId("a"), SessionState.Working)
+
+            controller.attachTarget()?.waiting shouldBe false
+        }
+
+    @Test
+    fun `actions offer reply for a waiting session of a project`() =
+        runTest {
+            val controller = start(world(session("a", 1, SessionState.AwaitingInput("Q?"))))
+            controller.actions.value.canReply shouldBe false
+
+            select(controller, "a")
+
+            controller.actions.value.canReply shouldBe true
+            controller.actions.value.canAttach shouldBe true
+        }
+
+    @Test
+    fun `actions offer no reply for a working session`() =
+        runTest {
+            val controller = start(world(session("a", 1), session("b", 2, SessionState.Stopped)))
+
+            select(controller, "a")
+            controller.actions.value.canReply shouldBe false
+            controller.actions.value.canAttach shouldBe true
+
+            select(controller, "b")
+            controller.actions.value.canReply shouldBe false
+        }
+
+    @Test
+    fun `actions offer no reply with a dialog open`() =
+        runTest {
+            // Only a finished session can be removed; it starts waiting again while the dialog is open.
+            val fake = world(session("a", 1, SessionState.Done))
+            val controller = start(fake)
+            select(controller, "a")
+            send(controller, MissionControlIntent.RemoveSelected)
+            fake.setState(SessionId("a"), SessionState.AwaitingInput("Q?"))
+            runCurrent()
+
+            controller.actions.value.dialogOpen shouldBe true
+            controller.actions.value.canReply shouldBe false
+        }
+
+    @Test
+    fun `actions keep reply while a stop runs`() =
+        runTest {
+            val fake = world(session("a", 1, SessionState.AwaitingInput(null)))
+            val controller = start(fake, GatedCommands(fake))
+            select(controller, "a")
+
+            send(controller, MissionControlIntent.StopSelected)
+
+            controller.actions.value.canReply shouldBe true
         }
 }

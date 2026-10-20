@@ -45,6 +45,7 @@ class CompositionRootTest {
                 "command.previewSession",
                 "command.closePreview",
                 "command.attachSession",
+                "command.replySession",
                 "terminal.attachTab",
                 "command.switchProject",
                 "command.filterAll",

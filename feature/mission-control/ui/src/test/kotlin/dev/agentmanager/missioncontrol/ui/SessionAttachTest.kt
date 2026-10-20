@@ -13,18 +13,19 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.Arguments.arguments
 import org.junit.jupiter.params.provider.MethodSource
 
-/** When `⏎` can attach: the pure rule of the plan, table 1 (AM-505). */
+/** When `⏎` and `r` can attach: the pure rule of the plan, table 1 (AM-505, AM-506). */
 internal class SessionAttachTest {
     @ParameterizedTest(name = "{0}")
     @MethodSource("states")
-    fun `a session of a listed project is the target in every state`(
+    fun `a session of a listed project is the target in every state and knows if it waits`(
         @Suppress("UNUSED_PARAMETER") name: String,
         state: SessionState,
+        waiting: Boolean,
     ) {
         val session = aSession(id = "s1", project = project.id, state = state, name = "fix-login")
 
         SessionAttach.targetOf(session, listOf(project), dialogOpen = false) shouldBe
-            AttachTarget(SessionId("s1"), "fix-login", project)
+            AttachTarget(SessionId("s1"), "fix-login", project, waiting)
     }
 
     @Test
@@ -65,12 +66,13 @@ internal class SessionAttachTest {
         @JvmStatic
         fun states(): List<Arguments> =
             listOf(
-                arguments("working", SessionState.Working),
-                arguments("awaiting input", SessionState.AwaitingInput("Continue?")),
-                arguments("awaiting permission", SessionState.AwaitingPermission("Bash")),
-                arguments("done", SessionState.Done),
-                arguments("failed", SessionState.Failed),
-                arguments("stopped", SessionState.Stopped),
+                arguments("working", SessionState.Working, false),
+                arguments("awaiting input", SessionState.AwaitingInput("Continue?"), true),
+                arguments("awaiting input without a question", SessionState.AwaitingInput(null), true),
+                arguments("awaiting permission", SessionState.AwaitingPermission("Bash"), true),
+                arguments("done", SessionState.Done, false),
+                arguments("failed", SessionState.Failed, false),
+                arguments("stopped", SessionState.Stopped, false),
             )
     }
 }
