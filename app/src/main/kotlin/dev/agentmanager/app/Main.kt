@@ -5,6 +5,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
+import dev.agentmanager.agentruntime.api.AgentRuntime
 import dev.agentmanager.agentruntime.impl.agentRuntimeModule
 import dev.agentmanager.commandpalette.impl.commandPaletteModule
 import dev.agentmanager.core.domain.info
@@ -40,7 +41,7 @@ fun main() {
     val registry = commandPaletteModule(commandsScope, core.logger)
     val shell = LoginShellProcessRunner.defaultShell()
     val terminal = startTerminals(core, shell)
-    val modules = AppModules(projects, sessions, inspector, registry, terminal, shell.fileName.toString())
+    val modules = AppModules(projects, sessions, inspector, registry, terminalDeps(terminal, shell, runtime))
     val keys = WindowKeys()
     // Before the first application {}: Compose content (the palette) must draw over the Swing terminals (ADR 0012).
     System.setProperty("compose.interop.blending", "true")
@@ -58,6 +59,12 @@ fun main() {
         }
     }
 }
+
+private fun terminalDeps(
+    terminal: TerminalApi,
+    shell: Path,
+    runtime: AgentRuntime,
+): TerminalDeps = TerminalDeps(terminal, shell.fileName.toString(), runtime::attachCommand)
 
 /**
  * The terminal module on [shell]. Its scope lives as long as the app (it disposes widgets on Main). Cmd-Q bypasses

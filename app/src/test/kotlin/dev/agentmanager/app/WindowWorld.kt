@@ -22,6 +22,8 @@ import androidx.compose.ui.test.waitUntilExactlyOneExists
 import dev.agentmanager.commandpalette.api.FakeCommandRegistry
 import dev.agentmanager.commandpalette.ui.CommandPaletteController
 import dev.agentmanager.core.domain.NoOpLogger
+import dev.agentmanager.core.domain.SessionId
+import dev.agentmanager.core.domain.ShellCommand
 import dev.agentmanager.core.testing.TestClock
 import dev.agentmanager.missioncontrol.ui.MissionControlController
 import dev.agentmanager.projects.api.FakeProjectInspector
@@ -33,6 +35,7 @@ import dev.agentmanager.sessions.api.SessionsApi
 import dev.agentmanager.terminal.ui.TerminalArea
 import dev.agentmanager.terminal.ui.TerminalController
 import kotlinx.coroutines.CoroutineScope
+import java.nio.file.Path
 import kotlin.time.Duration.Companion.hours
 
 /**
@@ -43,6 +46,9 @@ import kotlin.time.Duration.Companion.hours
  * With [terminal] the window also gets the terminal panel and its palette commands; the widgets of the fake sessions
  * are replaced by markers tagged `terminal.content.<session id>` (see [RecordingTerminals]).
  *
+ * With [terminal] the window also registers [AttachCommands] (AM-505); [attachCommand] stands for
+ * `AgentRuntime.attachCommand`.
+ *
  * Window keys: [WindowKeys] sits on a focused `Box` ([WindowTags.KEYS]) that wraps the content, the way
  * `Window(onKeyEvent = keys::onKeyEvent)` does in `Main.kt`; `runComposeUiTest` has no `Window`. Press keys
  * with `onNodeWithTag(WindowTags.KEYS).performKeyInput { … }`.
@@ -52,6 +58,7 @@ internal fun ComposeUiTest.showWindow(
     projects: FakeProjectsApi,
     sessions: FakeSessions = FakeSessions(),
     terminal: RecordingTerminals? = null,
+    attachCommand: (SessionId) -> ShellCommand = ::defaultAttachCommand,
 ): CommandPaletteController {
     val built = mutableListOf<CommandPaletteController>()
     val keys = WindowKeys()
@@ -64,7 +71,7 @@ internal fun ComposeUiTest.showWindow(
         remember { registry.register(AppCommands(projects, controller, missionControl, palette, scope)) }
         val terminalController =
             rememberTerminal(terminal, scope) {
-                registry.register(TerminalCommands(projects, controller, missionControl, it, scope))
+                TerminalWiring(projects, controller, missionControl, scope).register(registry, it, attachCommand)
             }
         DisposableEffect(Unit) {
             val handle = keys.attach(palette::onKeyEvent)
@@ -82,6 +89,28 @@ internal fun ComposeUiTest.showWindow(
     waitUntil { built.isNotEmpty() }
     return built.single()
 }
+
+/** Registers the Terminal and Attach commands of the window (the way `Main.kt` does). */
+private class TerminalWiring(
+    private val projects: FakeProjectsApi,
+    private val controller: ProjectsController,
+    private val missionControl: MissionControlController,
+    private val scope: CoroutineScope,
+) {
+    fun register(
+        registry: FakeCommandRegistry,
+        terminal: TerminalController,
+        attachCommand: (SessionId) -> ShellCommand,
+    ) {
+        registry.register(TerminalCommands(projects, controller, missionControl, terminal, scope))
+        val attacher = SessionAttacher(missionControl, terminal, attachCommand, NoOpLogger)
+        registry.register(AttachCommands(controller, missionControl, attacher, scope))
+    }
+}
+
+/** `claude attach <id>` in the temp dir, which exists, so [RecordingTerminals] can "start" it. */
+private fun defaultAttachCommand(id: SessionId): ShellCommand =
+    ShellCommand(listOf("claude", "attach", id.value), Path.of(System.getProperty("java.io.tmpdir")))
 
 private fun missionControlController(
     projects: FakeProjectsApi,

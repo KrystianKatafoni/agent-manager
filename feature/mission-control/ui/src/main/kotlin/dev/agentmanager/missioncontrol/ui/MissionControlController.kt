@@ -4,6 +4,7 @@ import dev.agentmanager.core.domain.Clock
 import dev.agentmanager.core.domain.Logger
 import dev.agentmanager.core.domain.ProjectId
 import dev.agentmanager.core.domain.SessionId
+import dev.agentmanager.projects.api.Project
 import dev.agentmanager.projects.api.ProjectsApi
 import dev.agentmanager.sessions.api.SessionMonitor
 import dev.agentmanager.sessions.api.SessionsApi
@@ -27,14 +28,15 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * State holder of Mission Control (MVI, docs/11 §1) for the project selected in the sidebar or a global view.
  * Collects in [scope] (the window scope, Main dispatcher; not thread-safe) and re-reads [clock] every [tick]
- * for session ages. Never throws; runs only the stop, respawn and remove commands of [sessions], one at a
- * time, and logs them with session ids and fixed categories (ENG-C8). Shows only [SessionMonitor.snapshot].
+ * for session ages. Never throws; runs only the stop, respawn and remove commands of [sessions] (attach is
+ * a query, [attachTarget]), one at a time, and logs them with session ids and fixed categories (ENG-C8).
+ * Shows only [SessionMonitor.snapshot].
  * @throws IllegalArgumentException if [tick] is not positive.
  */
 @Suppress("LongParameterList") // tick is a test seam (AM-410 plan, question 3)
 public class MissionControlController(
     sessions: SessionsApi,
-    projects: ProjectsApi,
+    private val projects: ProjectsApi,
     selectedProject: StateFlow<ProjectId?>,
     clock: Clock,
     private val scope: CoroutineScope,
@@ -107,13 +109,26 @@ public class MissionControlController(
      * Actions of the selected visible session, for the palette (AM-410).
      * [SessionActionsState.canStop], `canRespawn` and `canRemove` are false while an action runs or a dialog is open;
      * `canPreview` stays true while an action runs and is false only with a dialog open.
+     * `canAttach` behaves like `canPreview` and also needs the project of the session in the project list.
      * The target of a run is read again from the snapshot, so this may lag one step behind.
      */
     public val actions: StateFlow<SessionActionsState> =
-        combine(monitor.snapshot, selection, ui, preview.open, ::actionsOf).stateIn(
+        combine(monitor.snapshot, selection, ui, preview.open, projects.projects, ::actionsOf).stateIn(
             scope,
             SharingStarted.Eagerly,
-            actionsOf(monitor.snapshot.value, selection.value, ui.value, preview.open.value),
+            actionsOf(monitor.snapshot.value, selection.value, ui.value, preview.open.value, projects.projects.value),
+        )
+
+    /**
+     * The session `⏎` attaches to, read now from the snapshot, the selection and the project list (not from [actions],
+     * which may lag one step); null without a selected visible session, for a session outside the registered projects
+     * and while a dialog of Mission Control is open. Pure query: no state change, no log.
+     */
+    public fun attachTarget(): AttachTarget? =
+        SessionAttach.targetOf(
+            SessionActions.target(monitor.snapshot.value.sessions, selection.value),
+            projects.projects.value,
+            ui.value.dialog != null,
         )
 
     /** Handles [intent] from the palette and window keys; ignored without a shown project, view or rows. */
@@ -208,6 +223,7 @@ private fun actionsOf(
     picked: Selection,
     acting: ActionUi,
     previewOpen: Boolean,
+    projects: List<Project>,
 ): SessionActionsState {
     val target = SessionActions.target(snapshot.sessions, picked)
     val blocked = acting.busy != null || acting.dialog != null
@@ -219,6 +235,7 @@ private fun actionsOf(
         dialogOpen = acting.dialog != null,
         canPreview = target != null && acting.dialog == null,
         previewOpen = previewOpen,
+        canAttach = SessionAttach.targetOf(target, projects, acting.dialog != null) != null,
     )
 }
 

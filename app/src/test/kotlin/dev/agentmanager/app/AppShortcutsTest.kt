@@ -9,6 +9,7 @@ import dev.agentmanager.commandpalette.api.Shortcut
 import dev.agentmanager.commandpalette.api.letterChord
 import dev.agentmanager.commandpalette.ui.toKeyShortcut
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import org.junit.jupiter.api.Test
 
 /** The one source of the key bindings of the window menu and of the palette rows (AM-408, decision 2). */
@@ -45,6 +46,13 @@ class AppShortcutsTest {
     }
 
     @Test
+    fun `window key shortcut attach is Enter`() {
+        AppShortcuts.ATTACH_SESSION shouldBe Shortcut.of(KeyChord(ChordKey.Named.ENTER))
+        // Not the maximize chord ⌘⇧⏎.
+        AppShortcuts.ATTACH_SESSION shouldNotBe AppShortcuts.MAXIMIZE_PANE
+    }
+
+    @Test
     fun `window key shortcuts have no meta`() {
         // Shortcuts with ⌘ belong to MenuBar; the window keys must not run twice (ADR 0011).
         val windowKeys =
@@ -53,6 +61,7 @@ class AppShortcutsTest {
                 AppShortcuts.PREVIOUS_SESSION,
                 AppShortcuts.STOP_SESSION,
                 AppShortcuts.PREVIEW_SESSION,
+                AppShortcuts.ATTACH_SESSION,
                 AppShortcuts.SWITCH_PROJECT,
             )
 
@@ -71,6 +80,7 @@ class AppShortcutsTest {
                 AppShortcuts.PREVIOUS_SESSION,
                 AppShortcuts.STOP_SESSION,
                 AppShortcuts.PREVIEW_SESSION,
+                AppShortcuts.ATTACH_SESSION,
                 AppShortcuts.SWITCH_PROJECT,
             )
 

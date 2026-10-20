@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
@@ -54,6 +55,7 @@ private fun ActionButton(
         modifier =
             Modifier
                 .testTag(tag)
+                .focusProperties { canFocus = false }
                 .clickable(role = Role.Button, onClick = onClick)
                 .background(color = Colors.button)
                 .padding(horizontal = 10.dp, vertical = 4.dp),

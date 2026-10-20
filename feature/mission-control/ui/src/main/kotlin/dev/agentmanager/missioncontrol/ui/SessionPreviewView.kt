@@ -15,6 +15,7 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
@@ -47,6 +48,7 @@ internal fun SessionPreviewView(
                 modifier =
                     Modifier
                         .testTag(MissionControlTags.PREVIEW_CLOSE)
+                        .focusProperties { canFocus = false }
                         .clickable(role = Role.Button) { onEvent(MissionControlEvent.TogglePreview) }
                         .background(color = Colors.button)
                         .padding(horizontal = 10.dp, vertical = 2.dp),
