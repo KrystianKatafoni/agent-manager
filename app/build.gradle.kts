@@ -25,6 +25,10 @@ dependencies {
     implementation(project(":feature:command-palette:impl"))
     implementation(project(":feature:command-palette:ui"))
     implementation(compose.desktop.currentOs)
+    // The terminal panel: tabs, panes and the key bridge (AM-503).
+    implementation(project(":feature:terminal:api"))
+    implementation(project(":feature:terminal:impl"))
+    implementation(project(":feature:terminal:ui"))
     implementation(libs.kotlinx.coroutines.swing)
     implementation(libs.slf4j.api)
     runtimeOnly(libs.slf4j.simple)
@@ -37,35 +41,9 @@ dependencies {
     testImplementation(testFixtures(project(":feature:sessions:api")))
     // FakeCommandRegistry and letterChord for the project commands and the palette scenarios (AM-408).
     testImplementation(testFixtures(project(":feature:command-palette:api")))
+    // FakeTerminalApi behind the terminal panel in the window test (AM-503).
+    testImplementation(testFixtures(project(":feature:terminal:api")))
 }
-
-// AM-501 spike: a separate source set, not part of `main` or the .dmg. `check` compiles it so it does not rot.
-// Run with `./gradlew :app:runTerminalSpike [-PspikeBlending=true]`; AM-503 removes it (docs/plans/AM-501.md).
-val terminalSpike =
-    kotlin.target.compilations.create("terminalSpike") {
-        associateWith(kotlin.target.compilations.getByName("main"))
-    }
-
-configurations["terminalSpikeImplementation"].extendsFrom(configurations["implementation"])
-configurations["terminalSpikeRuntimeOnly"].extendsFrom(configurations["runtimeOnly"])
-
-dependencies {
-    "terminalSpikeImplementation"(project(":feature:terminal:api"))
-    "terminalSpikeImplementation"(project(":feature:terminal:impl"))
-}
-
-tasks.register<JavaExec>("runTerminalSpike") {
-    group = "application"
-    description = "Opens the AM-501 JediTerm-in-SwingPanel test window (-PspikeBlending=true enables interop blending)."
-    mainClass = "dev.agentmanager.app.terminalspike.TerminalSpikeMainKt"
-    classpath = terminalSpike.output.allOutputs + terminalSpike.runtimeDependencyFiles
-    javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(21) }
-    if (providers.gradleProperty("spikeBlending").orNull == "true") {
-        systemProperty("compose.interop.blending", "true")
-    }
-}
-
-tasks.named("check") { dependsOn("compileTerminalSpikeKotlin") }
 
 compose.desktop {
     application {

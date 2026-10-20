@@ -78,3 +78,5 @@ Krótkie wnioski z review i błędów agenta, dopisywane przez PR (jedna linia k
 - Otwieranie zasobu w `suspend` przez kilka `withContext` gubi go przy anulowaniu (prompt cancellation): start, budowę i rejestrację opakuj w `NonCancellable` albo sprzątaj przy `CancellationException`.
 - `catching` łapie tylko `Exception`; błędy natywnych bibliotek (`LinkageError`) łap jawnie tam, gdzie KDoc obiecuje kategorię błędu.
 - pty4j zgłasza zakończenie procesu dopiero po odczycie wyjścia PTY, a login shell na macOS uruchamia `path_helper` — testy PTY czytają wyjście przed `waitFor` i filtrują potomków po komendzie.
+- `@file:OptIn` działa tylko w swoim pliku: pomocnik testów (TestKit) wołający `runCurrent` potrzebuje własnego OptIn, inaczej `-Werror` zatrzyma kompilację testów, czego lokalnie bez Compose nie widać.
+- Detekt LongParameterList nie zgłosił funkcji z 6–7 parametrami (także composable i pomocników testów UI) — ENG-C2 (≤ 5) sprawdzaj ręcznie przy dokładaniu slotów do composable okna.
