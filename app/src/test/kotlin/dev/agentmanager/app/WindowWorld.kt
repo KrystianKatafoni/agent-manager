@@ -30,6 +30,8 @@ import dev.agentmanager.projects.ui.DirectoryPicker
 import dev.agentmanager.projects.ui.ProjectsController
 import dev.agentmanager.sessions.api.FakeSessions
 import dev.agentmanager.sessions.api.SessionsApi
+import dev.agentmanager.terminal.ui.TerminalArea
+import dev.agentmanager.terminal.ui.TerminalController
 import kotlinx.coroutines.CoroutineScope
 import kotlin.time.Duration.Companion.hours
 
@@ -37,6 +39,9 @@ import kotlin.time.Duration.Companion.hours
  * The window of the app on fakes: sidebar, Mission Control and the palette over [AppCommands], registered in a
  * [FakeCommandRegistry] the way `Main.kt` registers it in the real one. `MenuBar` is not part of it
  * (it does not work in `runComposeUiTest`), so tests open the palette with [palette].
+ *
+ * With [terminal] the window also gets the terminal panel and its palette commands; the widgets of the fake sessions
+ * are replaced by markers tagged `terminal.content.<session id>` (see [RecordingTerminals]).
  *
  * Window keys: [WindowKeys] sits on a focused `Box` ([WindowTags.KEYS]) that wraps the content, the way
  * `Window(onKeyEvent = keys::onKeyEvent)` does in `Main.kt`; `runComposeUiTest` has no `Window`. Press keys
@@ -46,6 +51,7 @@ import kotlin.time.Duration.Companion.hours
 internal fun ComposeUiTest.showWindow(
     projects: FakeProjectsApi,
     sessions: FakeSessions = FakeSessions(),
+    terminal: RecordingTerminals? = null,
 ): CommandPaletteController {
     val built = mutableListOf<CommandPaletteController>()
     val keys = WindowKeys()
@@ -56,12 +62,21 @@ internal fun ComposeUiTest.showWindow(
         val registry = remember { FakeCommandRegistry(scope) }
         val palette = remember { CommandPaletteController(registry, scope, NoOpLogger).also { built += it } }
         remember { registry.register(AppCommands(projects, controller, missionControl, palette, scope)) }
+        val terminalController =
+            rememberTerminal(terminal, scope) {
+                registry.register(TerminalCommands(projects, controller, missionControl, it, scope))
+            }
         DisposableEffect(Unit) {
             val handle = keys.attach(palette::onKeyEvent)
             onDispose { handle.close() }
         }
         KeysBox(keys) {
-            AgentManagerApp(projects = controller, missionControl = missionControl, palette = palette)
+            AgentManagerApp(
+                projects = controller,
+                missionControl = missionControl,
+                palette = palette,
+                terminalPanel = terminalPanel(terminalController, terminal),
+            )
         }
     }
     waitUntil { built.isNotEmpty() }
@@ -121,3 +136,23 @@ private fun projectsController(
         scope = scope,
         logger = NoOpLogger,
     )
+
+/** The terminal controller over [terminals], handed to [register] once; null without [terminals]. */
+@Composable
+private fun rememberTerminal(
+    terminals: RecordingTerminals?,
+    scope: CoroutineScope,
+    register: (TerminalController) -> Unit,
+): TerminalController? =
+    remember {
+        terminals?.let { TerminalController(it, scope, NoOpLogger, "zsh") }?.also(register)
+    }
+
+/** The terminal panel slot of the window: the area over [controller] with markers for the widgets of [terminals]. */
+private fun terminalPanel(
+    controller: TerminalController?,
+    terminals: RecordingTerminals?,
+): (@Composable (Modifier) -> Unit)? {
+    if (controller == null) return null
+    return { modifier -> TerminalArea(controller, { false }, modifier, terminals?.paneContent) }
+}

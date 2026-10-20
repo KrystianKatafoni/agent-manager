@@ -26,6 +26,20 @@ internal object WindowTags {
     const val RENAME_FIELD = "projects.dialog.rename.field"
     const val RENAME_SAVE = "projects.dialog.rename.save"
 
+    const val TERMINAL_AREA = "terminal.area"
+
+    /** Tags of `terminal:ui`, which are `internal` there; tab and pane ids count from 1 in opening order. */
+    fun terminalGroup(projectId: String): String = "terminal.group.$projectId"
+
+    fun terminalTab(n: Int): String = "terminal.tab.$n"
+
+    fun terminalTabClose(n: Int): String = "terminal.tab.$n.close"
+
+    fun terminalPane(n: Int): String = "terminal.pane.$n"
+
+    /** The marker that stands for the widget of a fake session (see `RecordingTerminals.paneContent`). */
+    fun terminalContent(sessionId: String): String = "terminal.content.$sessionId"
+
     fun paletteRow(commandId: String): String = "palette.row.$commandId"
 
     fun projectRow(projectId: String): String = "projects.row.$projectId"

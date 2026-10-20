@@ -35,6 +35,13 @@ internal object AppShortcuts {
     val PREVIEW_SESSION: Shortcut = Shortcut.of(KeyChord(ChordKey.Named.SPACE))
     val SWITCH_PROJECT: Shortcut = Shortcut.of(chord('g'), chord('p'))
 
+    // Terminal (AM-503). The menu and the palette rows use these; ⌘⌥←/→ have no chord key, so no palette label.
+    val NEW_SHELL: Shortcut = Shortcut.of(chord('t', KeyModifier.META))
+    val SPLIT_SIDE_BY_SIDE: Shortcut = Shortcut.of(chord('d', KeyModifier.META))
+    val SPLIT_STACKED: Shortcut = Shortcut.of(chord('d', KeyModifier.META, KeyModifier.SHIFT))
+    val MAXIMIZE_PANE: Shortcut =
+        Shortcut.of(KeyChord(ChordKey.Named.ENTER, setOf(KeyModifier.META, KeyModifier.SHIFT)))
+
     private fun chord(
         char: Char,
         vararg modifiers: KeyModifier,

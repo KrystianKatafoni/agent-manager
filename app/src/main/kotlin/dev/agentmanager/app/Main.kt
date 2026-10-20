@@ -8,12 +8,16 @@ import androidx.compose.ui.window.rememberWindowState
 import dev.agentmanager.agentruntime.impl.agentRuntimeModule
 import dev.agentmanager.commandpalette.impl.commandPaletteModule
 import dev.agentmanager.core.domain.info
+import dev.agentmanager.core.process.LoginShellProcessRunner
 import dev.agentmanager.projects.impl.projectInspectorModule
 import dev.agentmanager.projects.impl.projectsModule
 import dev.agentmanager.sessions.impl.sessionsModule
+import dev.agentmanager.terminal.api.TerminalApi
+import dev.agentmanager.terminal.impl.terminalModule
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.runBlocking
+import java.nio.file.Path
 
 /**
  * Entry point: builds the dependency graph once, then opens the main window. The project list is read before
@@ -34,11 +38,18 @@ fun main() {
     // The registry only merges lists on Default; commands run in the window scope on Main (see MainWindow).
     val commandsScope = CoroutineScope(SupervisorJob() + core.dispatchers.default)
     val registry = commandPaletteModule(commandsScope, core.logger)
-    val modules = AppModules(projects, sessions, inspector, registry)
+    val shell = LoginShellProcessRunner.defaultShell()
+    val terminal = startTerminals(core, shell)
+    val modules = AppModules(projects, sessions, inspector, registry, terminal, shell.fileName.toString())
     val keys = WindowKeys()
+    // Before the first application {}: Compose content (the palette) must draw over the Swing terminals (ADR 0012).
+    System.setProperty("compose.interop.blending", "true")
     application {
         Window(
-            onCloseRequest = ::exitApplication,
+            onCloseRequest = {
+                terminal.close()
+                exitApplication()
+            },
             onKeyEvent = keys::onKeyEvent,
             title = Strings["app.title"],
             state = rememberWindowState(size = DpSize(width = 1280.dp, height = 800.dp)),
@@ -46,4 +57,18 @@ fun main() {
             MainWindow(core, modules, keys)
         }
     }
+}
+
+/**
+ * The terminal module on [shell]. Its scope lives as long as the app (it disposes widgets on Main). Cmd-Q bypasses
+ * `onCloseRequest`, so a shutdown hook also kills every shell tree.
+ */
+private fun startTerminals(
+    core: CoreDeps,
+    shell: Path,
+): TerminalApi {
+    val terminal =
+        terminalModule(core.dispatchers, CoroutineScope(SupervisorJob() + core.dispatchers.default), core.logger, shell)
+    Runtime.getRuntime().addShutdownHook(Thread { terminal.close() })
+    return terminal
 }
