@@ -13,7 +13,7 @@ class HitBoundsTest {
     @ParameterizedTest(name = "{0}")
     @MethodSource("cases")
     fun `hit box follows the cell grid`(
-        name: String,
+        @Suppress("UNUSED_PARAMETER") name: String,
         hit: SearchMatch,
         scroll: Scroll,
         expected: Rectangle,

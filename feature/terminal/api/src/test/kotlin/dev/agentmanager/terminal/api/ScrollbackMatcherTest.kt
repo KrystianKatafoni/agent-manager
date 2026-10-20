@@ -14,7 +14,7 @@ class ScrollbackMatcherTest {
     @ParameterizedTest(name = "{0}")
     @MethodSource("cases")
     fun `matcher finds the hits of the table`(
-        name: String,
+        @Suppress("UNUSED_PARAMETER") name: String,
         rows: List<String>,
         query: SearchQuery,
         expected: List<SearchMatch>,
