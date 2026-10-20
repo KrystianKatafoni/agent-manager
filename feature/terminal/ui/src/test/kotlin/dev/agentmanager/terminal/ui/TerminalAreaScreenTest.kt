@@ -58,7 +58,7 @@ class TerminalAreaScreenTest {
                 Box(Modifier.testTag(contentTag(id)))
             })
         }
-        waitUntil(WAIT_MS) { built.isNotEmpty() }
+        waitUntil(timeoutMillis = WAIT_MS) { built.isNotEmpty() }
         return built.single()
     }
 
@@ -73,7 +73,10 @@ class TerminalAreaScreenTest {
     ) {
         val before = api.fake.sessions.size
         runOnIdle { controller.openShell(project) }
-        waitUntil(WAIT_MS) { api.fake.sessions.size > before && controller.state.value.tabs.size > before }
+        waitUntil(timeoutMillis = WAIT_MS) {
+            api.fake.sessions.size > before &&
+                controller.state.value.tabs.size > before
+        }
     }
 
     private fun ComposeUiTest.splitTo(
@@ -89,7 +92,10 @@ class TerminalAreaScreenTest {
         ) {
             val before = api.fake.sessions.size
             runOnIdle { controller.split(axis) }
-            waitUntil(WAIT_MS) { api.fake.sessions.size > before && controller.state.value.tabs.size > before }
+            waitUntil(timeoutMillis = WAIT_MS) {
+                api.fake.sessions.size > before &&
+                    controller.state.value.tabs.size > before
+            }
         }
     }
 
