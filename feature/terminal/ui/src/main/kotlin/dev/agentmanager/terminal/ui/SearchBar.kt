@@ -26,6 +26,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.isMetaPressed
 import androidx.compose.ui.input.key.isShiftPressed
@@ -128,14 +129,40 @@ private fun Modifier.searchKeys(
     onClose: () -> Unit,
 ): Modifier =
     onPreviewKeyEvent { event ->
-        val enter = event.key == Key.Enter || event.key == Key.NumPadEnter
-        val down = event.type == KeyEventType.KeyDown
-        when {
-            !down -> false
-            event.key == Key.Escape -> true.also { onClose() }
-            enter -> true.also { search.step(if (event.isShiftPressed) SearchDirection.DOWN else SearchDirection.UP) }
-            event.isMetaPressed && event.key == Key.F -> true.also { search.open() }
-            else -> false
+        val action = searchKeyAction(event)
+        when (action) {
+            SearchKeyAction.CLOSE -> onClose()
+            SearchKeyAction.STEP_UP -> search.step(SearchDirection.UP)
+            SearchKeyAction.STEP_DOWN -> search.step(SearchDirection.DOWN)
+            SearchKeyAction.REOPEN -> search.open()
+            null -> Unit
+        }
+        action != null
+    }
+
+private enum class SearchKeyAction { CLOSE, STEP_UP, STEP_DOWN, REOPEN }
+
+/** Maps a key event to the search action it triggers; `null` when the field should handle the key itself. */
+private fun searchKeyAction(event: KeyEvent): SearchKeyAction? =
+    when {
+        event.type != KeyEventType.KeyDown -> {
+            null
+        }
+
+        event.key == Key.Escape -> {
+            SearchKeyAction.CLOSE
+        }
+
+        event.key == Key.Enter || event.key == Key.NumPadEnter -> {
+            if (event.isShiftPressed) SearchKeyAction.STEP_DOWN else SearchKeyAction.STEP_UP
+        }
+
+        event.isMetaPressed && event.key == Key.F -> {
+            SearchKeyAction.REOPEN
+        }
+
+        else -> {
+            null
         }
     }
 
@@ -143,18 +170,21 @@ private fun Modifier.searchKeys(
 @Composable
 private fun SearchStatus(state: SearchBarState) {
     when {
-        state.invalid ->
+        state.invalid -> {
             Label(
                 TerminalStrings["search.invalid"],
                 Modifier.testTag(TerminalTags.SEARCH_INVALID),
                 TerminalColors.error,
             )
+        }
 
-        state.result.count > 0 ->
+        state.result.count > 0 -> {
             Label(counterText(state.result), Modifier.testTag(TerminalTags.SEARCH_COUNTER), statusColor)
+        }
 
-        state.query.text.isNotEmpty() ->
+        state.query.text.isNotEmpty() -> {
             Label(TerminalStrings["search.noHits"], Modifier.testTag(TerminalTags.SEARCH_NO_HITS), statusColor)
+        }
     }
 }
 

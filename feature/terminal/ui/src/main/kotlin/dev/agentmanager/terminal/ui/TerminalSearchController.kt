@@ -129,7 +129,9 @@ internal class TerminalSearchController(
                 )
             }
 
-            is Outcome.Err -> publish(SearchResult.NONE, invalid = found.error == SearchError.InvalidPattern)
+            is Outcome.Err -> {
+                publish(SearchResult.NONE, invalid = found.error == SearchError.InvalidPattern)
+            }
         }
     }
 

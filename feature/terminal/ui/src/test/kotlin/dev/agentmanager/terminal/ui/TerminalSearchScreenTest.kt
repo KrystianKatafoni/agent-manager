@@ -61,7 +61,8 @@ class TerminalSearchScreenTest {
         val project = project("alpha", Files.createDirectory(root.resolve("Alpha")), "Alpha")
         runOnIdle { controller.openShell(project) }
         waitUntil(timeoutMillis = WAIT_MS) {
-            controller.state.value.tabs.isNotEmpty() && api.fake.sessions.isNotEmpty()
+            controller.state.value.tabs
+                .isNotEmpty() && api.fake.sessions.isNotEmpty()
         }
         val session = api.fake.sessions.first()
         lines.forEach(session::print)

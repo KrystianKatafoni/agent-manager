@@ -54,8 +54,14 @@ public abstract class TerminalSearchContract {
         runTest {
             val session = showing("Error", "no err", "ERR")
 
-            session.search.find(SearchQuery("err")).hit().count shouldBe 3
-            session.search.find(SearchQuery("err", matchCase = true)).hit().count shouldBe 1
+            session.search
+                .find(SearchQuery("err"))
+                .hit()
+                .count shouldBe 3
+            session.search
+                .find(SearchQuery("err", matchCase = true))
+                .hit()
+                .count shouldBe 1
         }
 
     @Test
@@ -63,8 +69,14 @@ public abstract class TerminalSearchContract {
         runTest {
             val session = showing("a12b3", "none", "7")
 
-            session.search.find(SearchQuery("""\d+""", regex = true)).hit().count shouldBe 3
-            session.search.find(SearchQuery("""\d+""", regex = false)).hit().count shouldBe 0
+            session.search
+                .find(SearchQuery("""\d+""", regex = true))
+                .hit()
+                .count shouldBe 3
+            session.search
+                .find(SearchQuery("""\d+""", regex = false))
+                .hit()
+                .count shouldBe 0
         }
 
     @Test
@@ -122,7 +134,10 @@ public abstract class TerminalSearchContract {
             val session = showing("one", "two", "one more")
             endProcess(session)
 
-            session.search.find(SearchQuery("one")).hit().count shouldBe 2
+            session.search
+                .find(SearchQuery("one"))
+                .hit()
+                .count shouldBe 2
         }
 
     @Test
@@ -138,7 +153,10 @@ public abstract class TerminalSearchContract {
     public fun `clear twice is harmless`(): Unit =
         runTest {
             val session = showing("abc")
-            session.search.find(SearchQuery("abc")).hit().count shouldBe 1
+            session.search
+                .find(SearchQuery("abc"))
+                .hit()
+                .count shouldBe 1
 
             session.search.clear()
             session.search.clear()

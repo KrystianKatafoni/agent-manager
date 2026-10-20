@@ -83,7 +83,12 @@ class JediTermSearchTest {
         runTest {
             val session = numbered()
             val widget = session.widget()
-            val expectedRows = widget.rows().withIndex().filter { "line 1" in it.value }.map { it.index }
+            val expectedRows =
+                widget
+                    .rows()
+                    .withIndex()
+                    .filter { "line 1" in it.value }
+                    .map { it.index }
 
             val result = session.search.find(SearchQuery("line 1"))
 
@@ -108,7 +113,7 @@ class JediTermSearchTest {
             repeat(times = 5) {
                 session.search.step(SearchDirection.UP)
                 val selected = onSwing { widget.highlights().selected }
-                selected?.let { widget.isVisible(it.row) } shouldBe true
+                selected?.let { hit -> widget.isVisible(hit.row) } shouldBe true
             }
             session.search.step(SearchDirection.DOWN)
             val back = onSwing { widget.highlights().selected }

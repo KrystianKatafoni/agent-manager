@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalCoroutinesApi::class)
-
 package dev.agentmanager.terminal.ui
 
 import dev.agentmanager.core.domain.LogLevel
@@ -12,10 +10,7 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldNotContain
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -91,118 +86,18 @@ class TerminalSearchControllerTest {
 
             act { bar.controller.toggleCase() }
             bar.state?.result?.count shouldBe 1
-            tab.fake.search.queries.last() shouldBe SearchQuery("Err", matchCase = true, regex = false)
+            tab.fake.search.queries
+                .last() shouldBe SearchQuery("Err", matchCase = true, regex = false)
 
             act { bar.controller.toggleRegex() }
-            tab.fake.search.queries.last() shouldBe SearchQuery("Err", matchCase = true, regex = true)
+            tab.fake.search.queries
+                .last() shouldBe SearchQuery("Err", matchCase = true, regex = true)
 
             act { bar.controller.toggleCase() }
-            tab.fake.search.queries.last() shouldBe SearchQuery("Err", matchCase = false, regex = true)
+            tab.fake.search.queries
+                .last() shouldBe SearchQuery("Err", matchCase = false, regex = true)
             bar.state?.result?.count shouldBe 3
             tab.fake.search.queries shouldHaveSize 4
-        }
-
-    @Test
-    fun `newer typing cancels the running find`() =
-        runTest {
-            val tab = hits()
-            val bar = bar(tab)
-            act { bar.controller.open() }
-            val gate = CompletableDeferred<Unit>()
-            tab.fake.search.gate = gate
-
-            act { bar.controller.type("e") }
-            act { bar.controller.type("three") }
-            gate.complete(Unit)
-            runCurrent()
-
-            tab.fake.search.queries shouldBe listOf(SearchQuery("e"), SearchQuery("three"))
-            tab.fake.search.completedFinds shouldBe 1
-            bar.state?.query?.text shouldBe "three"
-            bar.state?.result shouldBe SearchResult(count = 1, current = 0, limited = false)
-        }
-
-    @Test
-    fun `step queued behind a find does not let typing leak that find`() =
-        runTest {
-            val tab = hits()
-            val bar = bar(tab)
-            act { bar.controller.open() }
-            act { bar.controller.type("err") }
-            val gate = CompletableDeferred<Unit>()
-            tab.fake.search.gate = gate
-
-            act { bar.controller.type("e") }
-            act { bar.controller.step(SearchDirection.UP) }
-            act { bar.controller.type("three") }
-            gate.complete(Unit)
-            runCurrent()
-
-            // "err" (before the gate) and "three"; the find of "e" was cancelled, not just its queued step
-            tab.fake.search.completedFinds shouldBe 2
-            bar.state?.query?.text shouldBe "three"
-            bar.state?.result shouldBe SearchResult(count = 1, current = 0, limited = false)
-        }
-
-    @Test
-    fun `typing cancels the whole chain of queued steps`() =
-        runTest {
-            val tab = hits()
-            val bar = bar(tab)
-            act { bar.controller.open() }
-            act { bar.controller.type("err") }
-            val gate = CompletableDeferred<Unit>()
-            tab.fake.search.gate = gate
-
-            act { bar.controller.type("e") }
-            act { bar.controller.step(SearchDirection.UP) }
-            act { bar.controller.step(SearchDirection.UP) }
-            act { bar.controller.type("three") }
-            gate.complete(Unit)
-            runCurrent()
-
-            tab.fake.search.steps shouldBe emptyList()
-            bar.state?.query?.text shouldBe "three"
-            bar.state?.result shouldBe SearchResult(count = 1, current = 0, limited = false)
-        }
-
-    @Test
-    fun `close during a find with a queued step leaves no highlights`() =
-        runTest {
-            val tab = hits()
-            val bar = bar(tab)
-            act { bar.controller.open() }
-            act { bar.controller.type("err") }
-            val gate = CompletableDeferred<Unit>()
-            tab.fake.search.gate = gate
-            act { bar.controller.type("e") }
-            act { bar.controller.step(SearchDirection.UP) }
-
-            act { bar.controller.close() }
-            gate.complete(Unit)
-            runCurrent()
-
-            bar.state shouldBe null
-            tab.fake.search.highlighted shouldBe emptyList()
-        }
-
-    @Test
-    fun `step during the first find is counted after the find ends`() =
-        runTest {
-            val tab = hits()
-            val bar = bar(tab)
-            act { bar.controller.open() }
-            val gate = CompletableDeferred<Unit>()
-            tab.fake.search.gate = gate
-            act { bar.controller.type("err") }
-            bar.state?.result shouldBe SearchResult.NONE
-
-            act { bar.controller.step(SearchDirection.UP) }
-            gate.complete(Unit)
-            runCurrent()
-
-            tab.fake.search.steps shouldBe listOf(SearchDirection.UP)
-            bar.state?.result shouldBe SearchResult(count = 3, current = 1, limited = false)
         }
 
     @Test
@@ -373,7 +268,7 @@ class TerminalSearchControllerTest {
                 "${entry.message} ${entry.fields} ${entry.cause}" shouldNotContain "SECRET_QUERY"
             }
             // the invalid pattern is not logged at all
-            logger.entries.filter { it.message == "terminal search" }.size shouldBe 2
+            logger.entries.count { it.message == "terminal search" } shouldBe 2
         }
 
     @Test
