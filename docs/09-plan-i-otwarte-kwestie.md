@@ -22,7 +22,7 @@ Każdy etap kończy się czymś, czego da się realnie używać.
 | --- | --- | --- |
 | Agent View jest w research preview; flagi i format `--json` mogą się zmienić | Wysoki | Cała integracja za `ClaudeCli`; testy kontraktowe na nagranych odpowiedziach; ostrzeżenie o nieznanej wersji |
 | Agent View wyłączony (`disableAgentView`, MDM) | Wysoki | Wykrycie przy starcie; tryb ograniczony (tylko terminal) albo przyszły backend na Agent SDK |
-| Odpowiedź i zgoda bez attach: brak oficjalnej komendy `reply` | Średni | MVP: odpowiedź przez ukryty attach i wpisanie tekstu; sprawdzić możliwości Agent SDK |
+| Odpowiedź i zgoda bez attach: brak oficjalnej komendy `reply` (`claude --bg --resume` na działającej sesji tworzy kopię) | Średni | [ADR 0013](adr/0013-strategia-odpowiedzi-na-pytania-agenta.md): MVP — `r` otwiera `claude attach` w karcie terminala (AM-506); odpowiedź bez terminala (FR-S5) dopiero po spike'u ukrytego attach (AM-507), przy złym wyniku Agent SDK |
 | JediTerm w Compose (`SwingPanel`): fokus, skróty, HiDPI | Średni | Spike w etapie 0; plan B: osobne okno Swing dla terminala |
 | Hooki HTTP z tokenem: zmienna środowiskowa musi dotrzeć do procesów supervisora | Średni | Sprawdzić dziedziczenie env przez supervisor; alternatywnie token w URL albo hook typu `command` z małym klientem |
 | Edycja `~/.claude/settings.json` przez aplikację | Średni | Tylko za zgodą, backup, możliwość odinstalowania hooków jednym kliknięciem |
@@ -31,7 +31,7 @@ Każdy etap kończy się czymś, czego da się realnie używać.
 ## Otwarte kwestie do decyzji
 
 - [ ] Gdzie instalować hooki: globalnie w `~/.claude/settings.json` czy per projekt w `.claude/settings.local.json`?
-- [ ] Odpowiedź na pytanie agenta: wystarczy przez attach, czy potrzebny własny widok czatu (wtedy Agent SDK jako sidecar)? — odroczone do AM-506 (po AM-502, PTY); AM-411 dostarcza tylko podgląd outputu (`space`)
+- [x] Odpowiedź na pytanie agenta: wystarczy przez attach, czy potrzebny własny widok czatu (wtedy Agent SDK jako sidecar)? — rozstrzygnięte 2026-10-19 „Etapami” ([ADR 0013](adr/0013-strategia-odpowiedzi-na-pytania-agenta.md)): AM-411 podgląd (`space`), AM-506 `r` = attach w karcie terminala, AM-507 spike ukrytego attach dla FR-S5, fallback Agent SDK
 - [ ] Streszczenia modelem Haiku: domyślnie włączone czy opcjonalne (koszt i limity)?
 - [ ] Popup systemowy macOS: potrzebny w 1.0, czy wystarczy własny?
 - [ ] Nazwa produktu i ikona (robocza nazwa: Agent Manager).
