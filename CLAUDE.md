@@ -82,3 +82,4 @@ Krótkie wnioski z review i błędów agenta, dopisywane przez PR (jedna linia k
 - Detekt LongParameterList nie zgłosił funkcji z 6–7 parametrami (także composable i pomocników testów UI) — ENG-C2 (≤ 5) sprawdzaj ręcznie przy dokładaniu slotów do composable okna.
 - Detekt obejmuje też testy (detektTest): tabele `@MethodSource` > 30 linii potrzebują `@Suppress("LongMethod")`; ReturnCount (max 2) działa w `src/main`, ale nie w `testFixtures`.
 - Kroki kolejkowane za jobem (`join`) anuluj całym łańcuchem albo sprawdzaj licznik pokolenia po `join` — anulowanie tylko ostatniego joba zostawia wcześniejsze przy życiu.
+- `awk 'length>120'` liczy bajty, więc znaki jak ⏎ zawyżają długość linii; ktlint liczy znaki.
