@@ -253,6 +253,7 @@ internal class SessionActionsControllerTest {
         }
 
     @Test
+    @Suppress("LongMethod")
     fun `actions follow the selected session`() =
         runTest {
             val fake = world(session("a", 1), session("b", 2, SessionState.Done))
@@ -281,7 +282,13 @@ internal class SessionActionsControllerTest {
             fake.setState(SessionId("b"), SessionState.AwaitingPermission("Bash"))
             runCurrent()
             controller.actions.value shouldBe
-                SessionActionsState(canStop = true, canRespawn = false, canPreview = true, canAttach = true)
+                SessionActionsState(
+                    canStop = true,
+                    canRespawn = false,
+                    canPreview = true,
+                    canAttach = true,
+                    canReply = true,
+                )
         }
 
     @Test

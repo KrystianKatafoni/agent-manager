@@ -44,6 +44,7 @@ public sealed interface MissionControlIntent {
  * @property previewOpen the preview is open: the palette offers "Zamknij podgląd".
  * @property canAttach a visible session of a registered project is selected and no dialog is open; also while an
  *   action runs.
+ * @property canReply [canAttach] and the session waits for the user (`r`, ADR 0013); also while an action runs.
  */
 public data class SessionActionsState(
     val canStop: Boolean,
@@ -53,4 +54,5 @@ public data class SessionActionsState(
     val canPreview: Boolean = false,
     val previewOpen: Boolean = false,
     val canAttach: Boolean = false,
+    val canReply: Boolean = false,
 )
