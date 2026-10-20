@@ -42,6 +42,8 @@ public sealed interface MissionControlIntent {
  * @property dialogOpen a dialog of Mission Control is open: `app` offers no palette commands and disables the menu.
  * @property canPreview a visible session is selected and no dialog is open; also while an action runs.
  * @property previewOpen the preview is open: the palette offers "Zamknij podgląd".
+ * @property canAttach a visible session of a registered project is selected and no dialog is open; also while an
+ *   action runs.
  */
 public data class SessionActionsState(
     val canStop: Boolean,
@@ -50,4 +52,5 @@ public data class SessionActionsState(
     val dialogOpen: Boolean = false,
     val canPreview: Boolean = false,
     val previewOpen: Boolean = false,
+    val canAttach: Boolean = false,
 )

@@ -9,6 +9,7 @@ import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsNotFocused
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -330,5 +331,31 @@ internal class SessionActionsScreenTest {
                 ).fetchSemanticsNodes()
             leaks.size shouldBe 0
             await(MissionControlTags.DETAILS_REMOVE).assertIsEnabled()
+        }
+
+    @Test
+    fun `action buttons do not take the focus when clicked`() =
+        runComposeUiTest {
+            // Given a working session whose stop fails (so the Stop button stays), selected
+            val sessions = fake(SessionState.Working)
+            sessions.failStop(SessionId("7c5dcf5d"))
+            showMissionControl(sessions)
+            selectSession()
+
+            // When the user clicks "Zatrzymaj"
+            await(MissionControlTags.DETAILS_STOP).performClick()
+            await(MissionControlTags.DETAILS_FAILURE)
+
+            // Then the button does not hold the focus, so a later Enter would not click it again
+            onNodeWithTag(MissionControlTags.DETAILS_STOP).assertIsNotFocused()
+
+            // When the user opens the preview and closes it with its own button
+            await(MissionControlTags.DETAILS_PREVIEW).performClick()
+            onNodeWithTag(MissionControlTags.DETAILS_PREVIEW).assertIsNotFocused()
+            await(MissionControlTags.PREVIEW_CLOSE).performClick()
+
+            // Then neither button holds the focus
+            awaitGone(MissionControlTags.PREVIEW_CLOSE)
+            onNodeWithTag(MissionControlTags.DETAILS_PREVIEW).assertIsNotFocused()
         }
 }

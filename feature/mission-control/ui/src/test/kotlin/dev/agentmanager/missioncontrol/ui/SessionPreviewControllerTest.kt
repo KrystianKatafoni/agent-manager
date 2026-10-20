@@ -203,7 +203,7 @@ internal class SessionPreviewControllerTest : PreviewTestKit by DefaultPreviewTe
             send(controller, MissionControlIntent.StopSelected)
 
             controller.actions.value shouldBe
-                SessionActionsState(canStop = false, canRespawn = false, canPreview = true)
+                SessionActionsState(canStop = false, canRespawn = false, canPreview = true, canAttach = true)
             send(controller, MissionControlIntent.TogglePreview)
             controller.preview() shouldBe text("a")
             controller.actions.value.canPreview shouldBe true
