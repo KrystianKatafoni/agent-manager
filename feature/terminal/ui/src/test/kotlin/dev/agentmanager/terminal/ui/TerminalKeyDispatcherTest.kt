@@ -52,6 +52,14 @@ class TerminalKeyDispatcherTest {
     }
 
     @Test
+    fun `meta F in a terminal runs Find and is consumed`() {
+        press(KeyEvent.VK_F, InputEvent.META_DOWN_MASK) shouldBe true
+
+        ran shouldBe listOf(PaneCommand.Find)
+        appKeys shouldBe emptyList()
+    }
+
+    @Test
     fun `other meta keys go to onAppKey`() {
         press(KeyEvent.VK_K, InputEvent.META_DOWN_MASK or InputEvent.SHIFT_DOWN_MASK)
 

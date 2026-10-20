@@ -241,7 +241,7 @@ internal interface SpeechPort { suspend fun speak(text: String, voice: VoiceId, 
 ```
 
 ```kotlin
-// terminal:api (AM-502; profile, settings i find dochodzą w AM-504)
+// terminal:api (AM-502, find w AM-504; profile i settings dochodzą w AM-508)
 interface TerminalApi : AutoCloseable {
     suspend fun openShell(dir: Path): Outcome<TerminalSession, TerminalError>
     suspend fun openCommand(command: ShellCommand): Outcome<TerminalSession, TerminalError>  // np. attachCommand z AgentRuntime
@@ -249,9 +249,21 @@ interface TerminalApi : AutoCloseable {
 interface TerminalSession : AutoCloseable {
     val id: TerminalId; val exitCode: StateFlow<Int?>
     fun component(): javax.swing.JComponent   // osadzany w Compose przez SwingPanel
+    val search: TerminalSearch                // FR-T3, działa także po zakończeniu procesu
     suspend fun send(text: String): Outcome<Unit, TerminalError>
 }
 sealed interface TerminalError { WorkDirMissing; StartFailed; Closed }
+
+interface TerminalSearch {
+    suspend fun find(query: SearchQuery): Outcome<SearchResult, SearchError>   // podświetla wszystko, wybiera najnowsze
+    suspend fun step(direction: SearchDirection): Outcome<SearchResult, SearchError>  // UP = starsze, DOWN = nowsze, cyklicznie
+    suspend fun clear()
+}
+data class SearchQuery(val text: String, val matchCase: Boolean = false, val regex: Boolean = false)
+data class SearchMatch(val row: Int, val start: Int, val end: Int)   // wiersz 0 = najstarszy wiersz migawki
+data class SearchResult(val count: Int, val current: Int?, val limited: Boolean)
+sealed interface SearchError { InvalidPattern; Closed }
+object ScrollbackMatcher { const val MAX_MATCHES = 10_000; fun find(rows: List<String>, query: SearchQuery): Outcome<List<SearchMatch>, SearchError> }  // czysta reguła w `api`, wspólna dla impl i fake'a
 ```
 
 ```kotlin

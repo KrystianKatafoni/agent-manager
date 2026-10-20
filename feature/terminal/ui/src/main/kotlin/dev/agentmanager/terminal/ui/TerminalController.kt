@@ -38,6 +38,9 @@ public class TerminalController(
 
     internal val state: StateFlow<TerminalUiState> = store
 
+    /** The search bar of the active pane (AM-504). */
+    internal val search = TerminalSearchController(scope, logger) { activeTab() }
+
     /** What the terminal can do now; `app` enables menu items and palette commands from it. */
     public val menu: StateFlow<TerminalMenuState> = menuState
 
@@ -169,6 +172,7 @@ public class TerminalController(
     private fun dispatch(event: TerminalEvent) {
         store.value = TerminalState.reduce(store.value, event)
         publishMenu()
+        search.onActiveTabChanged(activeTab())
     }
 
     private fun publishMenu() {

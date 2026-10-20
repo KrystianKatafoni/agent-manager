@@ -2,7 +2,7 @@ package dev.agentmanager.terminal.ui
 
 import java.awt.event.KeyEvent
 
-/** Pane keys of the terminal (plan AM-503, table 3). */
+/** Pane keys of the terminal (plan AM-503, table 3) and Cmd-F for the search bar (plan AM-504). */
 internal object TerminalShortcuts {
     private data class Binding(
         val keyCode: Int,
@@ -17,6 +17,7 @@ internal object TerminalShortcuts {
             Binding(KeyEvent.VK_RIGHT, shift = false, alt = true) to PaneCommand.FocusNext,
             Binding(KeyEvent.VK_LEFT, shift = false, alt = true) to PaneCommand.FocusPrevious,
             Binding(KeyEvent.VK_ENTER, shift = true, alt = false) to PaneCommand.ToggleMaximized,
+            Binding(KeyEvent.VK_F, shift = false, alt = false) to PaneCommand.Find,
         )
 
     /** The pane command of [key], null for any other key. */

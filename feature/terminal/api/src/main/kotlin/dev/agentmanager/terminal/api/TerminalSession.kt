@@ -17,6 +17,9 @@ public interface TerminalSession : AutoCloseable {
     /** The same widget on every call, embedded by `terminal:ui` via `SwingPanel`. Swing event thread only. */
     public fun component(): JComponent
 
+    /** Search in this terminal's scrollback and screen (FR-T3); works after the process exited, until [close]. */
+    public val search: TerminalSearch
+
     /**
      * Types [text] into the PTY as if from the keyboard (UTF-8, no newline added; `"\r"` is Enter).
      * Any dispatcher; does not block the caller. Err([TerminalError.Closed]) after [close] or process exit.

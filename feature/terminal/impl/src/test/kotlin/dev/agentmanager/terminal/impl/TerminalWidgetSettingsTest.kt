@@ -39,6 +39,11 @@ class TerminalWidgetSettingsTest {
         settings.clearBufferActionPresentation.keyStrokes shouldBe emptyList()
     }
 
+    @Test
+    fun `find action has no shortcut`() {
+        settings.findActionPresentation.keyStrokes shouldBe emptyList()
+    }
+
     companion object {
         @JvmStatic
         fun flags(): Stream<Arguments> =

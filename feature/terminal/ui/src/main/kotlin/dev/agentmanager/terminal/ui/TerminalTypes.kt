@@ -120,4 +120,7 @@ internal sealed interface PaneCommand {
     data object FocusPrevious : PaneCommand
 
     data object ToggleMaximized : PaneCommand
+
+    /** ⌘F: opens the search bar of the active pane. */
+    data object Find : PaneCommand
 }

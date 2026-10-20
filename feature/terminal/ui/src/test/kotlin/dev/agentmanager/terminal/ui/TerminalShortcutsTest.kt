@@ -30,6 +30,16 @@ internal class TerminalShortcutsTest {
         TerminalShortcuts.commandOf(key(KeyEvent.VK_RIGHT, alt = true)) shouldBe null
     }
 
+    @Test
+    fun `meta F opens search`() {
+        TerminalShortcuts.commandOf(key(KeyEvent.VK_F, meta = true)) shouldBe PaneCommand.Find
+    }
+
+    @Test
+    fun `meta shift F is not a shortcut`() {
+        TerminalShortcuts.commandOf(key(KeyEvent.VK_F, meta = true, shift = true)) shouldBe null
+    }
+
     companion object {
         @JvmStatic
         fun bound(): Stream<Arguments> =

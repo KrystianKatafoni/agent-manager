@@ -72,6 +72,7 @@ internal fun TerminalController.perform(command: PaneCommand) {
         PaneCommand.FocusNext -> focusNext()
         PaneCommand.FocusPrevious -> focusPrevious()
         PaneCommand.ToggleMaximized -> toggleMaximized()
+        PaneCommand.Find -> search.open()
     }
 }
 
