@@ -1,6 +1,5 @@
 package dev.agentmanager.terminal.impl
 
-import com.jediterm.terminal.ui.JediTermWidget
 import dev.agentmanager.core.domain.AppDispatchers
 import dev.agentmanager.core.domain.Logger
 import dev.agentmanager.core.domain.Outcome
@@ -8,6 +7,7 @@ import dev.agentmanager.core.domain.catching
 import dev.agentmanager.core.domain.info
 import dev.agentmanager.terminal.api.TerminalError
 import dev.agentmanager.terminal.api.TerminalId
+import dev.agentmanager.terminal.api.TerminalSearch
 import dev.agentmanager.terminal.api.TerminalSession
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,11 +24,11 @@ internal class SessionContext(
     val logger: Logger,
 )
 
-/** A pty4j process shown in a JediTerm [widget]; built on the Swing thread by [JediTermTerminalApi]. */
+/** A pty4j process shown in a searchable JediTerm [widget]; built on the Swing thread by [JediTermTerminalApi]. */
 internal class JediTermSession(
     override val id: TerminalId,
     private val connector: PtyTtyConnector,
-    private val widget: JediTermWidget,
+    private val widget: SearchableWidget,
     private val context: SessionContext,
     private val onClosed: (TerminalId) -> Unit,
 ) : TerminalSession {
@@ -36,6 +36,8 @@ internal class JediTermSession(
     private val closed = AtomicBoolean(false)
 
     override val exitCode: StateFlow<Int?> = exit
+
+    override val search: TerminalSearch = JediTermSearch(widget, context.dispatchers) { closed.get() }
 
     init {
         connector.process.onExit().thenAccept { process ->

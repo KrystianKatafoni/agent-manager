@@ -1,6 +1,5 @@
 package dev.agentmanager.terminal.impl
 
-import com.jediterm.terminal.ui.JediTermWidget
 import com.pty4j.PtyProcess
 import dev.agentmanager.core.domain.Outcome
 import dev.agentmanager.core.domain.ShellCommand
@@ -82,7 +81,7 @@ internal class JediTermTerminalApi(
             TerminalError.StartFailed
         }) {
             val connector = PtyTtyConnector(process)
-            val widget = JediTermWidget(TerminalWidgetSettings())
+            val widget = SearchableWidget(TerminalWidgetSettings())
             widget.setTtyConnector(connector)
             widget.start()
             val id = TerminalId("t-${counter.incrementAndGet()}")
