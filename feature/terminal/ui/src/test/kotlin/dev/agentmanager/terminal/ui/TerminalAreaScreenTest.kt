@@ -25,6 +25,12 @@ import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Files
 import java.nio.file.Path
 
+/**
+ * Cold JVM start-up (AWT, first Swing panel, first Compose frame) can exceed the default 1 s of `waitUntil`
+ * in the first test of a class on a slow CI runner; the waits use this bound instead.
+ */
+private const val WAIT_MS = 5_000L
+
 /** User scenarios of the tab bar and the panes on a fake terminal API; widgets are replaced by markers (FR-T2). */
 @OptIn(ExperimentalTestApi::class)
 class TerminalAreaScreenTest {
@@ -52,12 +58,12 @@ class TerminalAreaScreenTest {
                 Box(Modifier.testTag(contentTag(id)))
             })
         }
-        waitUntil { built.isNotEmpty() }
+        waitUntil(WAIT_MS) { built.isNotEmpty() }
         return built.single()
     }
 
     private fun ComposeUiTest.await(tag: String): SemanticsNodeInteraction {
-        waitUntilExactlyOneExists(hasTestTag(tag))
+        waitUntilExactlyOneExists(hasTestTag(tag), WAIT_MS)
         return onNodeWithTag(tag)
     }
 
@@ -67,7 +73,7 @@ class TerminalAreaScreenTest {
     ) {
         val before = api.fake.sessions.size
         runOnIdle { controller.openShell(project) }
-        waitUntil { api.fake.sessions.size > before && controller.state.value.tabs.size > before }
+        waitUntil(WAIT_MS) { api.fake.sessions.size > before && controller.state.value.tabs.size > before }
     }
 
     private fun ComposeUiTest.splitTo(
@@ -83,7 +89,7 @@ class TerminalAreaScreenTest {
         ) {
             val before = api.fake.sessions.size
             runOnIdle { controller.split(axis) }
-            waitUntil { api.fake.sessions.size > before && controller.state.value.tabs.size > before }
+            waitUntil(WAIT_MS) { api.fake.sessions.size > before && controller.state.value.tabs.size > before }
         }
     }
 

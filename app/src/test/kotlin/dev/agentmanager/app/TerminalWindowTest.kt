@@ -8,6 +8,7 @@ import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.test.waitUntilDoesNotExist
 import dev.agentmanager.commandpalette.ui.CommandPaletteController
@@ -39,24 +40,43 @@ class TerminalWindowTest {
         await(WindowTags.projectRow(project)).performClick()
     }
 
-    /** Opens the palette and picks the command [id]. */
+    /** Title keys of the terminal commands; the palette list is clipped, so rows are found by typing the title. */
+    private val titleKeys =
+        mapOf(
+            "terminal.newShell" to "command.newShell",
+            "terminal.splitSideBySide" to "command.splitSideBySide",
+            "terminal.splitStacked" to "command.splitStacked",
+            "terminal.nextPane" to "command.nextPane",
+            "terminal.maximize" to "command.maximizePane",
+            "terminal.restore" to "command.restorePanes",
+        )
+
+    private fun titleOf(id: String): String = Strings[titleKeys.getValue(id)]
+
+    /** Opens the palette, narrows it to the command [id] by its title and picks it. */
     private fun ComposeUiTest.runCommand(
         palette: CommandPaletteController,
         id: String,
     ) {
         runOnIdle { palette.open() }
+        await(WindowTags.PALETTE_FIELD).performTextInput(titleOf(id))
         await(WindowTags.paletteRow(id)).performClick()
         waitUntilDoesNotExist(hasTestTag(WindowTags.PALETTE))
     }
 
+    /** Narrows the palette to each command by its title: an offered command would show as a row after the filter. */
     private fun ComposeUiTest.assertNotOffered(
         palette: CommandPaletteController,
         vararg ids: String,
     ) {
-        runOnIdle { palette.open() }
-        await(WindowTags.paletteRow("projects.add"))
-        ids.forEach { onNodeWithTag(WindowTags.paletteRow(it)).assertDoesNotExist() }
-        runOnIdle { palette.close() }
+        ids.forEach { id ->
+            runOnIdle { palette.open() }
+            await(WindowTags.PALETTE_FIELD).performTextInput(titleOf(id))
+            waitForIdle()
+            onNodeWithTag(WindowTags.paletteRow(id)).assertDoesNotExist()
+            runOnIdle { palette.close() }
+            waitUntilDoesNotExist(hasTestTag(WindowTags.PALETTE))
+        }
     }
 
     @Test
