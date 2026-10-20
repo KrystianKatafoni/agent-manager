@@ -63,4 +63,5 @@ internal object TerminalColors {
     val accent = Color(color = 0xFF0A84FF)
     val text = Color(color = 0xFFF2F2F7)
     val secondary = Color(color = 0xFF8E8E93)
+    val error = Color(color = 0xFFFF453A)
 }

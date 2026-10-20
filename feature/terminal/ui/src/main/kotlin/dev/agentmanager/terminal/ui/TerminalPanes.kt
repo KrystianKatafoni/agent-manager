@@ -20,6 +20,7 @@ import javax.swing.JComponent
 private class PaneEnv(
     val tabs: Map<TabId, TerminalTab>,
     val active: PaneId?,
+    val search: TerminalSearchController,
     val content: @Composable (JComponent) -> Unit,
 )
 
@@ -36,11 +37,12 @@ internal fun EmbeddedWidget(component: JComponent) {
 @Composable
 internal fun TerminalPanes(
     state: TerminalUiState,
+    search: TerminalSearchController,
     content: @Composable (JComponent) -> Unit,
 ) {
     val layout = state.layout ?: return
     val shown = if (state.maximized) layout.leaves().firstOrNull { it.pane == state.active } ?: layout else layout
-    PaneNode(shown, PaneEnv(state.tabs.associateBy { it.id }, state.active, content), Modifier.fillMaxSize())
+    PaneNode(shown, PaneEnv(state.tabs.associateBy { it.id }, state.active, search, content), Modifier.fillMaxSize())
 }
 
 @Composable
@@ -78,7 +80,7 @@ private fun SplitPanes(
     }
 }
 
-/** A pane: the widget of its tab inside a frame that is accent-colored while the pane is active. */
+/** A pane: the widget of its tab (and the search bar, if open for it) inside a frame, accent-colored when active. */
 @Composable
 private fun PaneFrame(
     leaf: PaneTree.Leaf,
@@ -94,6 +96,9 @@ private fun PaneFrame(
             .border(width = 2.dp, color = color)
             .padding(all = 2.dp),
     ) {
-        env.tabs[leaf.tab]?.let { tab -> key(tab.id) { env.content(tab.session.component()) } }
+        env.tabs[leaf.tab]?.let { tab ->
+            key(tab.id) { env.content(tab.session.component()) }
+            SearchBarHost(tab, env.search)
+        }
     }
 }

@@ -5,11 +5,18 @@ package dev.agentmanager.terminal.ui
 import dev.agentmanager.core.domain.Outcome
 import dev.agentmanager.core.domain.ProjectId
 import dev.agentmanager.core.domain.ShellCommand
+import dev.agentmanager.core.domain.getOrNull
 import dev.agentmanager.core.testing.RecordingLogger
 import dev.agentmanager.terminal.api.FakeTerminalApi
+import dev.agentmanager.terminal.api.FakeTerminalSession
+import dev.agentmanager.terminal.api.SearchDirection
+import dev.agentmanager.terminal.api.SearchError
+import dev.agentmanager.terminal.api.SearchQuery
+import dev.agentmanager.terminal.api.SearchResult
 import dev.agentmanager.terminal.api.TerminalApi
 import dev.agentmanager.terminal.api.TerminalError
 import dev.agentmanager.terminal.api.TerminalId
+import dev.agentmanager.terminal.api.TerminalSearch
 import dev.agentmanager.terminal.api.TerminalSession
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -31,6 +38,17 @@ internal class StubSession(
     private val panel = JPanel()
 
     override fun component(): JComponent = panel
+
+    override val search: TerminalSearch =
+        object : TerminalSearch {
+            override suspend fun find(query: SearchQuery): Outcome<SearchResult, SearchError> =
+                Outcome.Ok(SearchResult.NONE)
+
+            override suspend fun step(direction: SearchDirection): Outcome<SearchResult, SearchError> =
+                Outcome.Ok(SearchResult.NONE)
+
+            override suspend fun clear() = Unit
+        }
 
     override suspend fun send(text: String): Outcome<Unit, TerminalError> = Outcome.Ok(Unit)
 
@@ -131,3 +149,18 @@ internal fun TestScope.act(block: () -> Unit) {
     block()
     runCurrent()
 }
+
+/** A tab over a fresh [FakeTerminalSession] whose screen shows [lines] (searchable text). */
+internal suspend fun searchableTab(
+    id: Int,
+    vararg lines: String,
+): TerminalTab {
+    val api = FakeTerminalApi()
+    val session =
+        api.openShell(Path.of(System.getProperty("java.io.tmpdir"))).getOrNull() as? FakeTerminalSession
+            ?: error("fake shell did not open")
+    lines.forEach(session::print)
+    return TerminalTab(TabId(id), ALPHA, "zsh", TabKind.SHELL, session, exitCode = null)
+}
+
+internal val TerminalTab.fake: FakeTerminalSession get() = session as FakeTerminalSession
