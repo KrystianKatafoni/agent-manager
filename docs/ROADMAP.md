@@ -62,11 +62,13 @@
 
 - [x] AM-501 · Spike: JediTerm w SwingPanel (fokus, skróty, HiDPI) · moduły: terminal:impl, app · zależy: AM-108 · wymagania: FR-T1 · issue: #31
 - [x] AM-502 · terminal:api/impl: shell i attach w PTY · moduły: terminal:api, terminal:impl, app (terminalSpike) · zależy: AM-501 · wymagania: FR-T1 · issue: #32
-- [~] AM-503 · terminal:ui: karty per projekt, panele, maksymalizacja · moduły: terminal:ui, app · zależy: AM-502 · wymagania: FR-T2 · issue: #33
-- [ ] AM-504 · Szukanie (regex) i ustawienia terminala · moduły: terminal:* · zależy: AM-503 · wymagania: FR-T3, FR-T7 · issue: #34
+- [x] AM-503 · terminal:ui: karty per projekt, panele, maksymalizacja · moduły: terminal:ui, app · zależy: AM-502 · wymagania: FR-T2 · issue: #33
+- [ ] AM-504 · Szukanie w scrollbacku (⌘F, wielkość liter, regex) · moduły: terminal:* · zależy: AM-503 · wymagania: FR-T3 · issue: #34
 - [ ] AM-505 · Skrót ⏎: attach wybranej sesji w terminalu (komenda palety i skrót) · moduły: mission-control:ui, app · zależy: AM-503, AM-409 · wymagania: FR-K2 (część) · issue: #90
 - [ ] AM-506 · Skrót r: attach wybranej sesji w karcie terminala z fokusem na odpowiedzi (ADR 0013) · moduły: mission-control:ui, app · zależy: AM-503, AM-505, AM-411 · wymagania: FR-K2 (część) · issue: #96
 - [ ] AM-507 · Spike: odpowiedź przez ukryty attach w PTY (pytanie tekstowe, opcje, zgoda), fallback Agent SDK (ADR 0013) · moduły: terminal:impl, sessions:impl · zależy: AM-502 · wymagania: FR-S5 · issue: #101
+- [ ] AM-508 · Ustawienia terminala: powłoka, katalog startowy, font i rozmiar, scrollback, ligatury, Option jako Meta (zapis i zastosowanie) · moduły: terminal:*, core:storage, app · zależy: AM-503 · wymagania: FR-T7 (bez dzwonka) · issue: #104
+- [ ] AM-509 · Dzwonek terminala → powiadomienie · moduły: terminal:impl, notifications:impl, app · zależy: AM-508, AM-701 · wymagania: FR-T7 (dzwonek) · issue: #105
 
 ## M6 · Hooki i podsumowania
 
