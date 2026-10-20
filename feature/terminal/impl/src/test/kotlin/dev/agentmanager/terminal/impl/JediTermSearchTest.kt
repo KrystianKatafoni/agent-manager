@@ -56,11 +56,9 @@ class JediTermSearchTest {
     private suspend fun numbered(): TerminalSession =
         sh("i=1; while [ \$i -le 60 ]; do echo line \$i; i=\$((i+1)); done").also { it.widget().awaitRow("line 60") }
 
-    private fun JediTermWidget.highlights(): SearchHighlights {
-        var panel: SearchHighlights? = null
-        SwingUtilities.invokeAndWait { panel = terminalPanel as? SearchHighlights }
-        return panel ?: error("the terminal panel does not draw search highlights")
-    }
+    /** Swing thread only (call it inside [onSwing]): `invokeAndWait` from the event thread throws. */
+    private fun JediTermWidget.highlights(): SearchHighlights =
+        terminalPanel as? SearchHighlights ?: error("the terminal panel does not draw search highlights")
 
     private fun <T> onSwing(block: () -> T): T {
         var outcome: Result<T>? = null
