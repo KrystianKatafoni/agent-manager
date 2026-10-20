@@ -11,7 +11,7 @@ Terminal jest pełnoprawną częścią aplikacji, nie dodatkiem. Działa w dwóc
 | Karty per projekt | Karty pogrupowane nazwą projektu; kropka stanu przy karcie `attach` |
 | Rodzaje kart | `attach · <sesja>` (`claude attach <id>`), `zsh` (login shell w katalogu projektu lub worktree), `logs · <sesja>` (`claude logs <id> --follow`, tylko odczyt) |
 | Panele | Podział na dwa panele obok siebie ⌘D i jeden pod drugim ⌘⇧D (najwyżej 4, bez przeciągania granic), przełączanie ⌘⌥←→, maksymalizacja aktywnego panelu ⌘⇧↵ (ten sam skrót przywraca układ); aktywny panel ma ramkę w kolorze akcentu |
-| Szukanie | ⌘F w scrollbacku, licznik trafień, przełączniki *Aa* (wielkość liter) i `.*` (regex) |
+| Szukanie | ⌘F otwiera pasek w prawym górnym rogu aktywnego panelu (ponowne ⌘F zaznacza tekst w polu); wszystkie trafienia w historii i na ekranie są podświetlone, bieżące mocniej; licznik `3/12`, przełączniki *Aa* (wielkość liter) i `.*` (regex, składnia Javy); ⏎ i ↑ idą do starszego trafienia, ⇧⏎ i ↓ do nowszego (cyklicznie); Esc zamyka pasek, czyści podświetlenia i oddaje fokus terminalowi |
 | Bloki komend | Każda komenda w shellu jako blok z kodem wyjścia i czasem; akcje *Uruchom ponownie*, *Kopiuj jako Markdown*, **Wyślij do agenta** (przekazuje output błędu do wybranej sesji) |
 | Linki | `plik.kt:88` i URL-e klikalne; pliki otwierają się w IntelliJ IDEA |
 | Broadcast | Jedna komenda do kilku zaznaczonych paneli (⌘⇧B), np. `git pull --rebase` w dwóch projektach |

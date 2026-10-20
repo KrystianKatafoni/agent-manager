@@ -38,3 +38,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/pl/1.1.0/), wersjonowanie:
 - Moduły `feature:terminal:api` i `feature:terminal:impl`: `TerminalApi` otwiera login shell w katalogu projektu i komendy (np. `claude attach`) w sesjach PTY z JediTerm, `send(text)`, zamykanie bez procesów-sierot; ⌘K nie czyści już bufora terminala.
 - Podgląd outputu sesji (`space`, przycisk „Podgląd”, komenda palety „Podgląd outputu”): panel pod listą pokazuje ogon `claude logs` wybranej sesji i odświeża go co 3 s. Zmiana w `feature:sessions:api`: `SessionMonitor.recentOutput(id)` i typ `RecentOutput` (każda implementacja `SessionMonitor` musi dodać metodę, ENG-I6); odpowiedź na pytanie agenta (`r`) przechodzi do AM-506.
 - Terminal w oknie głównym (`feature:terminal:ui`): karty terminala per projekt, podział na panele (⌘D / ⌘⇧D, przełączanie ⌘⌥←/→), maksymalizacja panelu (⌘⇧↵) i nowa karta powłoki (⌘T).
+- Szukanie w scrollbacku terminala (⌘F): wielkość liter, regex, podświetlenia wszystkich trafień, ⏎ starsze / ⇧⏎ nowsze, Esc zamyka pasek (FR-T3).
+
+### Changed
+
+- API `feature:terminal:api`: `TerminalSession` ma nowe pole `search` (`TerminalSearch`, `SearchQuery`, `ScrollbackMatcher`) — zmiana kontraktu wg ENG-I6.
