@@ -83,3 +83,4 @@ Krótkie wnioski z review i błędów agenta, dopisywane przez PR (jedna linia k
 - Detekt obejmuje też testy (detektTest): tabele `@MethodSource` > 30 linii potrzebują `@Suppress("LongMethod")`; ReturnCount (max 2) działa w `src/main`, ale nie w `testFixtures`.
 - Kroki kolejkowane za jobem (`join`) anuluj całym łańcuchem albo sprawdzaj licznik pokolenia po `join` — anulowanie tylko ostatniego joba zostawia wcześniejsze przy życiu.
 - `awk 'length>120'` liczy bajty, więc znaki jak ⏎ zawyżają długość linii; ktlint liczy znaki.
+- Fokusowalny `Popup` dialogu zabiera fokus z `Box` KEYS, więc test okna „skrót nic nie robi przy dialogu” przechodzi bez strażników w komendach — strażniki dialogu sprawdzaj testem jednostkowym, a test okna opisuj jako blokadę przez Popup.

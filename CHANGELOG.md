@@ -39,7 +39,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/pl/1.1.0/), wersjonowanie:
 - Podgląd outputu sesji (`space`, przycisk „Podgląd”, komenda palety „Podgląd outputu”): panel pod listą pokazuje ogon `claude logs` wybranej sesji i odświeża go co 3 s. Zmiana w `feature:sessions:api`: `SessionMonitor.recentOutput(id)` i typ `RecentOutput` (każda implementacja `SessionMonitor` musi dodać metodę, ENG-I6); odpowiedź na pytanie agenta (`r`) przechodzi do AM-506.
 - Terminal w oknie głównym (`feature:terminal:ui`): karty terminala per projekt, podział na panele (⌘D / ⌘⇧D, przełączanie ⌘⌥←/→), maksymalizacja panelu (⌘⇧↵) i nowa karta powłoki (⌘T).
 - Szukanie w scrollbacku terminala (⌘F): wielkość liter, regex, podświetlenia wszystkich trafień, ⏎ starsze / ⇧⏎ nowsze, Esc zamyka pasek (FR-T3).
-- ⏎ i komenda palety »Attach sesji w terminalu« otwierają `claude attach` zaznaczonej sesji w nowej karcie terminala jej projektu; przyciski panelu Mission Control nie przejmują fokusu po kliknięciu.
+- ⏎ i komenda palety „Attach sesji w terminalu” otwierają `claude attach` zaznaczonej sesji w nowej karcie terminala jej projektu; przyciski panelu Mission Control nie przejmują fokusu po kliknięciu.
+- r i komenda palety „Odpowiedz w terminalu” otwierają `claude attach` zaznaczonej sesji, która czeka na użytkownika (pytanie albo zgoda), w nowej karcie terminala projektu; odpowiedź wpisuje się w pełnym TUI (ADR 0013). Dla sesji, która nie czeka, `r` nic nie robi.
 
 ### Changed
 
