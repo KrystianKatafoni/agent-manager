@@ -55,7 +55,8 @@ Do sprawdzenia w krokach 1–2:
 - Ekran bez widżetu (jediterm-core: `JediTerminal`, `JediEmulator`, własny `TerminalDisplay`) działa w testach, ale nie jest udokumentowaną drogą. Plan B: ukryty `JediTermWidget`.
 - Markery TUI w `ScreenClassifier` są przybliżone. Spinner może łapać także punkty listy typu `* Coś…`. Krok 1 porównuje je z nagranymi ramkami.
 - Klawisz odłączenia `claude attach` jest nieznany. `DETACH_KEY` (strzałka w lewo) to placeholder. Pole `cleanDetach` mierzy, czy klient odłączył się sam.
-- Potwierdzenie przyjęcia tekstu (T): po wpisaniu pole znika, a stan to `Busy`, `None` albo puste pole.
+- Potwierdzenie przyjęcia tekstu (T): pole wejścia zostaje widoczne, więc potwierdzeniem jest `Busy`, `None` albo puste pole po wcześniej widzianym polu z tekstem (`TextFilled`).
+- Zamknięcie ukrytego PTY po odłączeniu: na macOS pty4j przy zamykaniu PTY prawdopodobnie zabija całą grupę procesów klienta (test z potomkiem w tej samej grupie padał tylko w CI na macOS; fixture uruchamia go teraz w osobnej sesji, jak demon). Jeśli `claude attach` zostawia w swojej grupie proces potrzebny sesji, odłączenie może ją zabić. Każda próba sprawdza po odłączeniu, czy sesja żyje (`SESSION_LOST`).
 - Reguła „sesja gotowa (DONE), a `waitingFor` = input” jest mapowana na `BLOCKED`. Do weryfikacji, ryzyko `STILL_BLOCKED`.
 - Scenariusze T i O zapisują plik. W domyślnym trybie zgód może to wywołać prośbę o zgodę i fałszywe porażki. Rozważyć `--permission-mode acceptEdits` tylko dla T i O (Z zostaje w trybie domyślnym). Decyzja przed krokiem 2.
 - Odpowiedź przez Esc przy odmowie może zostawić sesję czekającą na tekst. Kalibracja porównuje opcję 3 z Esc.

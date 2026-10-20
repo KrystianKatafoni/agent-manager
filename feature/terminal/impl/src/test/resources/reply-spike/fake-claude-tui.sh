@@ -12,7 +12,8 @@
 #                            with FAKE_TUI_STUCK=1 neither is drawn after Enter: the text stays in the box
 #   FAKE_TUI_IGNORE_HUP=1    SIGHUP is ignored: the client does not end by itself
 #   FAKE_TUI_DETACH_EXITS=1  the detach key (ESC [ D) ends the client
-#   FAKE_TUI_CHILD_PID_FILE  starts a SIGHUP-immune child (outside the client) and receives its pid
+#   FAKE_TUI_CHILD_PID_FILE  starts a SIGHUP-immune child in its own session, like a daemon (outside the client's
+#                            process group, so killing the group spares it), and receives its pid
 # The prompt goes away (screen cleared, spinner drawn) after Enter, a digit or a lone Esc outside a bracketed paste.
 if [ "$1" != "attach" ]; then
     echo "fake-claude-tui: unsupported: $*" >&2
@@ -21,7 +22,8 @@ fi
 
 if [ -n "$FAKE_TUI_PID_FILE" ]; then echo "$$" > "$FAKE_TUI_PID_FILE"; fi
 if [ -n "$FAKE_TUI_CHILD_PID_FILE" ]; then
-    nohup sleep 60 > /dev/null 2>&1 &
+    # perl (on macOS too, unlike setsid) leaves the client's session and group, then execs: $! is the pid of sleep.
+    perl -e 'use POSIX qw(setsid); $SIG{HUP} = "IGNORE"; setsid(); exec @ARGV' sleep 60 > /dev/null 2>&1 &
     echo "$!" > "$FAKE_TUI_CHILD_PID_FILE"
 fi
 
