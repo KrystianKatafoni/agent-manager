@@ -20,6 +20,7 @@ internal object WindowTags {
     const val PREVIEW_CLOSE = "missionControl.preview.close"
     const val DETAILS_PREVIEW = "missionControl.details.preview"
     const val SIDEBAR = "projects.sidebar"
+    const val ADD_BUTTON = "projects.add"
     const val MODE_BAR = "missionControl.modeBar"
     const val HEADER = "missionControl.header"
     const val RENAME_DIALOG = "projects.dialog.rename"

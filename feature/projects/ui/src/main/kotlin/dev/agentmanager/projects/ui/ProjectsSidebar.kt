@@ -56,7 +56,7 @@ public fun ProjectsSidebar(
             Label(ProjectsStrings["sidebar.title"], SidebarColors.secondaryText)
             state.banner?.let { Banner(it) { controller.onEvent(SidebarEvent.DismissBanner) } }
             ProjectList(state, controller)
-            TextButton(ProjectsStrings["sidebar.add"], ProjectsTags.ADD_BUTTON) {
+            TextButton(ProjectsStrings["sidebar.add"], ProjectsTags.ADD_BUTTON, focusable = false) {
                 controller.onIntent(ProjectsIntent.AddRequested)
             }
         }
@@ -189,11 +189,19 @@ private fun Banner(
         verticalArrangement = Arrangement.spacedBy(space = 4.dp),
     ) {
         Label(ProjectsStrings.format(text), SidebarColors.text)
-        TextButton(ProjectsStrings["banner.dismiss"], ProjectsTags.BANNER_DISMISS, onClick = onDismiss)
+        TextButton(
+            ProjectsStrings["banner.dismiss"],
+            ProjectsTags.BANNER_DISMISS,
+            focusable = false,
+            onClick = onDismiss,
+        )
     }
 }
 
-/** A clickable text: Material is not a dependency (AM-304 plan, decision 4). A click focuses it only if [focusable]. */
+/** A clickable text: Material is not a dependency (AM-304 plan, decision 4). A click focuses it only if [focusable].
+ * Pass `focusable = false` outside a focusable `Popup`; otherwise the button keeps the focus after a click and eats the
+ * window shortcuts `⏎` and space.
+ */
 @Composable
 internal fun TextButton(
     text: String,
