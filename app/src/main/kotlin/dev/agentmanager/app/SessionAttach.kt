@@ -59,20 +59,21 @@ private fun sessionCommand(
     run: () -> Unit,
 ): Command = Command(CommandId(id), Strings[title], CommandGroup.SESSION, keywords, shortcut) { run() }
 
-/** Opens `claude attach` of the selected session in a new terminal tab of its project (`⏎` AM-505, `r` AM-506). */
+/** Opens `claude attach` of the selected session in its project's terminal tab, or shows the tab it already has
+ * (`⏎` AM-505, `r` AM-506, one tab per session AM-510). */
 internal class SessionAttacher(
     private val missionControl: MissionControlController,
     private val terminal: TerminalController,
     private val attachCommand: (SessionId) -> ShellCommand,
     private val logger: Logger,
 ) {
-    /** Opens `claude attach` of [MissionControlController.attachTarget] in a new tab of its project; no-op without. */
+    /** Shows the attach tab of [MissionControlController.attachTarget], opening it when missing; no-op without. */
     fun attachSelected() {
         val target = missionControl.attachTarget() ?: return
         open(target, "session attach")
     }
 
-    /** Like [attachSelected], but only for a target that is [AttachTarget.waiting]; no-op otherwise. */
+    /** Like [attachSelected], but only for a target that is [AttachTarget.waiting] (the same tab); no-op otherwise. */
     fun replySelected() {
         val target = missionControl.attachTarget()?.takeIf { it.waiting } ?: return
         open(target, "session reply")
@@ -83,8 +84,9 @@ internal class SessionAttacher(
         event: String,
     ) {
         logger.info(event, "sessionId" to target.session.value)
-        terminal.openCommand(
+        terminal.focusOrOpen(
             terminalProjectOf(target.project),
+            attachTabKey(target.session),
             Strings.format("terminal.attachTab", target.name),
             attachCommand(target.session),
         )

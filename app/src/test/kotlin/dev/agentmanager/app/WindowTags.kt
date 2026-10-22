@@ -36,6 +36,13 @@ internal object WindowTags {
 
     fun terminalTabClose(n: Int): String = "terminal.tab.$n.close"
 
+    fun terminalTabExit(n: Int): String = "terminal.tab.$n.exit"
+
+    /** The state dot of a keyed tab (AM-510); its `stateDescription` is the text of the status. */
+    fun terminalTabStatus(n: Int): String = "terminal.tab.$n.status"
+
+    fun terminalGroupAdd(projectId: String): String = "terminal.group.$projectId.add"
+
     fun terminalPane(n: Int): String = "terminal.pane.$n"
 
     /** The marker that stands for the widget of a fake session (see `RecordingTerminals.paneContent`). */
