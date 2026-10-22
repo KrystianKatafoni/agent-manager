@@ -26,10 +26,11 @@ public fun TerminalArea(
     paneContent: (@Composable (JComponent) -> Unit)? = null,
 ) {
     val state by controller.state.collectAsState()
+    val statuses by controller.statuses.collectAsState()
     if (state.tabs.isEmpty() && state.error == null) return
     TerminalFocus(controller, onAppKey)
     Column(modifier = modifier.testTag(TerminalTags.AREA).background(color = TerminalColors.background)) {
-        TerminalTabBar(TabGroups.of(state.tabs), state.activeTab(), controller)
+        TerminalTabBar(TabGroups.of(state.tabs), state.activeTab(), statuses, controller)
         state.error?.let { ErrorBar(it, onDismiss = controller::dismissError) }
         Box(modifier = Modifier.weight(weight = 1f).fillMaxWidth()) {
             TerminalPanes(state, controller.search, paneContent ?: embeddedPaneContent)

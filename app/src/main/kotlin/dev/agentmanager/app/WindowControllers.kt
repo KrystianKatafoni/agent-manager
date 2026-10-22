@@ -29,6 +29,10 @@ internal class WindowControllers(
 
     private val attacher = SessionAttacher(missionControl, terminal, modules.terminal.attachCommand, core.logger)
 
+    init {
+        terminal.followSessions(modules.sessions.monitor.snapshot, scope)
+    }
+
     val providers: List<CommandProvider> =
         listOf(
             AppCommands(modules.projects, projects, missionControl, palette, scope),

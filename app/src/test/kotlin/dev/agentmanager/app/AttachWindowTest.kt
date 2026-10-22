@@ -139,24 +139,6 @@ class AttachWindowTest {
         }
 
     @Test
-    fun `FR-K2 Enter twice opens two attach tabs`() =
-        runComposeUiTest {
-            // Given a selected session
-            window(session("fix-login", 0))
-            selectProject()
-            selectSession("fix-login")
-
-            // When the user presses Enter twice
-            press(Key.Enter)
-            await(WindowTags.terminalTab(1))
-            press(Key.Enter)
-
-            // Then two tabs run `claude attach` of the session (plan, decision 4)
-            await(WindowTags.terminalTab(2)).assertTextContains("attach · fix-login", substring = true)
-            terminals.fake.commands shouldBe attached("fix-login", "fix-login")
-        }
-
-    @Test
     fun `FR-K1 palette attach opens the tab in the session project group`() =
         runComposeUiTest {
             // Given a selected session

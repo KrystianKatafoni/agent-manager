@@ -72,6 +72,9 @@ internal fun aTab(
     exitCode: Int? = null,
 ): TerminalTab = TerminalTab(TabId(id), project, label, kind, StubSession(id), exitCode)
 
+/** The same tab opened with [key] (AM-510). */
+internal fun TerminalTab.keyed(key: String): TerminalTab = copy(key = TabKey(key))
+
 internal fun leaf(
     pane: Int,
     tab: Int,

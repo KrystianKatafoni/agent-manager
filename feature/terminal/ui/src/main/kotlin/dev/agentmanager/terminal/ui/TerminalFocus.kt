@@ -45,16 +45,20 @@ internal fun TerminalFocus(
     }
 }
 
-/** Gives the focus to the widget of the active pane whenever the active pane or its tab changes. */
+/**
+ * Gives the focus to the widget of the active pane whenever the active pane or its tab changes, and on every
+ * `focusOrOpen` request (AM-510): the shown tab is then active already, but the focus may be in another place.
+ */
 @Composable
 private fun FocusActivePane(controller: TerminalController) {
     val state by controller.state.collectAsState()
+    val requests by controller.focusRequests.collectAsState()
     val activeTab =
         state.layout
             ?.leaves()
             ?.firstOrNull { it.pane == state.active }
             ?.tab
-    LaunchedEffect(state.active, activeTab) {
+    LaunchedEffect(state.active, activeTab, requests) {
         val widget =
             state.tabs
                 .firstOrNull { it.id == activeTab }

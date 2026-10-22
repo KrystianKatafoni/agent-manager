@@ -69,7 +69,7 @@
 - [~] AM-507 · Spike: odpowiedź przez ukryty attach w PTY (pytanie tekstowe, opcje, zgoda), fallback Agent SDK (ADR 0013) · moduły: terminal:impl · zależy: AM-502 · wymagania: FR-S5 · issue: #101
 - [ ] AM-508 · Ustawienia terminala: powłoka, katalog startowy, font i rozmiar, scrollback, ligatury, Option jako Meta (zapis i zastosowanie) · moduły: terminal:*, core:storage, app · zależy: AM-503 · wymagania: FR-T7 (bez dzwonka) · issue: #104
 - [ ] AM-509 · Dzwonek terminala → powiadomienie · moduły: terminal:impl, notifications:impl, app · zależy: AM-508, AM-701 · wymagania: FR-T7 (dzwonek) · issue: #105
-- [ ] AM-510 · Karty attach: fokus istniejącej karty sesji i kropka stanu · moduły: terminal:ui, app · zależy: AM-505 · wymagania: FR-T2, FR-K2 (część) · issue: #109
+- [~] AM-510 · Karty attach: fokus istniejącej karty sesji i kropka stanu · moduły: terminal:ui, app · zależy: AM-505 · wymagania: FR-T2, FR-K2 (część) · issue: #109
 
 ## M6 · Hooki i podsumowania
 

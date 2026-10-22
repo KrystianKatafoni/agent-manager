@@ -41,6 +41,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/pl/1.1.0/), wersjonowanie:
 - Szukanie w scrollbacku terminala (⌘F): wielkość liter, regex, podświetlenia wszystkich trafień, ⏎ starsze / ⇧⏎ nowsze, Esc zamyka pasek (FR-T3).
 - ⏎ i komenda palety „Attach sesji w terminalu” otwierają `claude attach` zaznaczonej sesji w nowej karcie terminala jej projektu; przyciski panelu Mission Control nie przejmują fokusu po kliknięciu.
 - r i komenda palety „Odpowiedz w terminalu” otwierają `claude attach` zaznaczonej sesji, która czeka na użytkownika (pytanie albo zgoda), w nowej karcie terminala projektu; odpowiedź wpisuje się w pełnym TUI (ADR 0013). Dla sesji, która nie czeka, `r` nic nie robi.
+- Karty attach: ⏎, `r` i komenda palety pokazują istniejącą kartę attach sesji i dają jej fokus zamiast otwierać drugą kartę i drugi proces `claude attach`; karta po zakończonym procesie attach jest zastępowana w tym samym miejscu; kropka stanu sesji przy karcie attach (kolory jak w Mission Control).
 
 ### Changed
 

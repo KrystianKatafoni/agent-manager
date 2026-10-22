@@ -71,12 +71,10 @@ internal fun ComposeUiTest.showWindow(
         remember { registry.register(AppCommands(projects, controller, missionControl, palette, scope)) }
         val terminalController =
             rememberTerminal(terminal, scope) {
-                TerminalWiring(projects, controller, missionControl, scope).register(registry, it, attachCommand)
+                TerminalWiring(projects, sessions, controller, missionControl, scope)
+                    .register(registry, it, attachCommand)
             }
-        DisposableEffect(Unit) {
-            val handle = keys.attach(palette::onKeyEvent)
-            onDispose { handle.close() }
-        }
+        PaletteKeys(keys, palette)
         KeysBox(keys) {
             AgentManagerApp(
                 projects = controller,
@@ -90,9 +88,22 @@ internal fun ComposeUiTest.showWindow(
     return built.single()
 }
 
-/** Registers the Terminal and Attach commands of the window (the way `Main.kt` does). */
+/** Routes the palette's keys through [keys] while the window is shown. */
+@Composable
+private fun PaletteKeys(
+    keys: WindowKeys,
+    palette: CommandPaletteController,
+) {
+    DisposableEffect(Unit) {
+        val handle = keys.attach(palette::onKeyEvent)
+        onDispose { handle.close() }
+    }
+}
+
+/** Registers the Terminal and Attach commands and feeds the tab dots (the way `Main.kt` does, AM-510). */
 private class TerminalWiring(
     private val projects: FakeProjectsApi,
+    private val sessions: FakeSessions,
     private val controller: ProjectsController,
     private val missionControl: MissionControlController,
     private val scope: CoroutineScope,
@@ -102,6 +113,7 @@ private class TerminalWiring(
         terminal: TerminalController,
         attachCommand: (SessionId) -> ShellCommand,
     ) {
+        terminal.followSessions(sessions.snapshot, scope)
         registry.register(TerminalCommands(projects, controller, missionControl, terminal, scope))
         val attacher = SessionAttacher(missionControl, terminal, attachCommand, NoOpLogger)
         registry.register(AttachCommands(controller, missionControl, attacher, scope))

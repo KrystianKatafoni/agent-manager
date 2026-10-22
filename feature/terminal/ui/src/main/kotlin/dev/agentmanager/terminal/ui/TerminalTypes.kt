@@ -31,6 +31,18 @@ public data class TerminalMenuState(
     val maximized: Boolean,
 )
 
+/**
+ * Identity of a tab chosen by the caller (e.g. `attach:<sessionId>`), so a later request finds the same tab (AM-510).
+ * Not logged.
+ */
+@JvmInline
+public value class TabKey(
+    public val value: String,
+)
+
+/** The state shown as a dot next to a keyed tab; `app` maps its domain state to it (AM-510). */
+public enum class TabStatus { WAITING, WORKING, DONE, FAILED, STOPPED }
+
 @JvmInline
 internal value class TabId(
     val value: Int,
@@ -50,6 +62,7 @@ internal data class TerminalTab(
     val kind: TabKind,
     val session: TerminalSession,
     val exitCode: Int?,
+    val key: TabKey? = null,
 )
 
 internal enum class OpenFailure { WORK_DIR_MISSING, START_FAILED }
@@ -71,6 +84,11 @@ internal sealed interface TerminalEvent {
     sealed interface OfPane : TerminalEvent
 
     data class Opened(
+        val tab: TerminalTab,
+    ) : OfTab
+
+    data class Replaced(
+        val old: TabId,
         val tab: TerminalTab,
     ) : OfTab
 
@@ -123,4 +141,41 @@ internal sealed interface PaneCommand {
 
     /** ⌘F: opens the search bar of the active pane. */
     data object Find : PaneCommand
+}
+
+/** What [TerminalController.focusOrOpen] does for a key (AM-510, table 1). */
+internal sealed interface TabReuse {
+    data class Focus(
+        val tab: TabId,
+    ) : TabReuse
+
+    data class Replace(
+        val tab: TabId,
+    ) : TabReuse
+
+    data object Open : TabReuse
+}
+
+/** What a new tab is: its [project], [label], [kind] and the [key] chosen by the caller, if any (AM-510). */
+internal data class TabSpec(
+    val project: TerminalProject,
+    val label: String,
+    val kind: TabKind,
+    val key: TabKey? = null,
+)
+
+/** Where [TerminalController] puts the process it started (AM-510). */
+internal sealed interface Placement {
+    /** A new tab in the active pane. */
+    data object Active : Placement
+
+    /** A new pane next to the active one. */
+    data class Split(
+        val axis: SplitAxis,
+    ) : Placement
+
+    /** A new tab in the place of the exited tab [old]. */
+    data class Replace(
+        val old: TabId,
+    ) : Placement
 }

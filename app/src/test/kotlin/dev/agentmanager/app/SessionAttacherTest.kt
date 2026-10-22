@@ -253,4 +253,54 @@ class SessionAttacherTest {
             logged shouldNotContain "Agent Manager"
             logged shouldNotContain "Continue?"
         }
+
+    @Test
+    fun `attach of a session with a live tab opens no second process`() =
+        runTest {
+            val parts = parts()
+            parts.missionControl.onIntent(MissionControlIntent.NextSession)
+            parts.attacher.attachSelected()
+            runCurrent()
+
+            parts.attacher.attachSelected()
+            runCurrent()
+
+            terminals.fake.commands shouldBe listOf(attachCommand(SessionId("s1")))
+            terminals.fake.sessions.size shouldBe 1
+        }
+
+    @Test
+    fun `reply of a session with a live attach tab opens no second process`() =
+        runTest {
+            val parts = parts(SessionState.AwaitingInput("Continue?"))
+            parts.missionControl.onIntent(MissionControlIntent.NextSession)
+            parts.attacher.attachSelected()
+            runCurrent()
+
+            parts.attacher.replySelected()
+            runCurrent()
+
+            terminals.fake.commands shouldBe listOf(attachCommand(SessionId("s1")))
+            terminals.fake.sessions.size shouldBe 1
+        }
+
+    @Test
+    fun `attach of a session whose tab exited reopens it in place`() =
+        runTest {
+            val parts = parts()
+            parts.missionControl.onIntent(MissionControlIntent.NextSession)
+            parts.attacher.attachSelected()
+            runCurrent()
+            terminals.fake.sessions
+                .single()
+                .finish(0)
+            runCurrent()
+
+            parts.attacher.attachSelected()
+            runCurrent()
+
+            terminals.fake.commands shouldBe List(2) { attachCommand(SessionId("s1")) }
+            terminals.fake.sessions
+                .map { it.isClosed } shouldBe listOf(true, false)
+        }
 }

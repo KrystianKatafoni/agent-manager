@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
  * (the window scope, Main dispatcher; not thread-safe). [shellLabel] names shell tabs, e.g. `zsh`. Logs tab and
  * pane ids, kinds and fixed failure categories only, never commands, paths or project names (ENG-C8).
  *
- * The 11 operations are the API of the panel, the menu and the key dispatcher; the logic is in the reducers.
+ * The 13 operations are the API of the panel, the menu and the key dispatcher; the logic is in the reducers.
  */
 @Suppress("TooManyFunctions")
 public class TerminalController(
@@ -35,8 +35,18 @@ public class TerminalController(
     private val exitWatchers = mutableMapOf<TabId, Job>()
     private var lastTab = 0
     private var splitPending = false
+    private val opening = mutableSetOf<TabKey>()
 
     internal val state: StateFlow<TerminalUiState> = store
+
+    private val statusStore = MutableStateFlow(emptyMap<TabKey, TabStatus>())
+    private val focusStore = MutableStateFlow(0)
+
+    /** Status dots by tab key (AM-510). */
+    internal val statuses: StateFlow<Map<TabKey, TabStatus>> = statusStore
+
+    /** Counts requests to give the widget the focus again (AM-510). */
+    internal val focusRequests: StateFlow<Int> = focusStore
 
     /** The search bar of the active pane (AM-504). */
     internal val search = TerminalSearchController(scope, logger) { activeTab() }
@@ -46,7 +56,7 @@ public class TerminalController(
 
     /** Opens a login shell in [project]'s dir as a new tab shown in the active pane. Failures show in the panel. */
     public fun openShell(project: TerminalProject) {
-        open(project, shellLabel, TabKind.SHELL, axis = null) { terminals.openShell(project.dir) }
+        open(TabSpec(project, shellLabel, TabKind.SHELL), Placement.Active) { terminals.openShell(project.dir) }
     }
 
     /** Runs [command] (e.g. `attachCommand`) in a new tab labelled [label], shown in the active pane (AM-505). */
@@ -55,7 +65,32 @@ public class TerminalController(
         label: String,
         command: ShellCommand,
     ) {
-        open(project, label, TabKind.COMMAND, axis = null) { terminals.openCommand(command) }
+        open(TabSpec(project, label, TabKind.COMMAND), Placement.Active) { terminals.openCommand(command) }
+    }
+
+    /**
+     * Activates the tab opened with [key] and gives its widget the focus; starts no process. Without such a tab,
+     * runs [command] in a new tab labelled [label] in [project]'s group, shown in the active pane. A tab of [key]
+     * whose process exited is replaced in place by a new one. Ignored while a tab of [key] is still opening.
+     */
+    public fun focusOrOpen(
+        project: TerminalProject,
+        key: TabKey,
+        label: String,
+        command: ShellCommand,
+    ) {
+        if (key in opening) return
+        val spec = TabSpec(project, label, TabKind.COMMAND, key)
+        when (val reuse = TerminalTabs.reuseOf(store.value.tabs, key)) {
+            is TabReuse.Focus -> focus(reuse.tab)
+            is TabReuse.Replace -> start(spec, Placement.Replace(reuse.tab), command)
+            TabReuse.Open -> start(spec, Placement.Active, command)
+        }
+    }
+
+    /** Shows a dot next to every tab whose key is in [statuses]; other tabs show none. Replaces the previous map. */
+    public fun showStatuses(statuses: Map<TabKey, TabStatus>) {
+        statusStore.value = statuses
     }
 
     /** Closes the tab of the active pane and its session. */
@@ -74,7 +109,8 @@ public class TerminalController(
         if (project == null || !menuState.value.canSplit) return
         splitPending = true
         publishMenu()
-        open(project, shellLabel, TabKind.SHELL, axis) { terminals.openShell(project.dir) }
+        val spec = TabSpec(project, shellLabel, TabKind.SHELL)
+        open(spec, Placement.Split(axis)) { terminals.openShell(project.dir) }
     }
 
     /** Activates the next pane in reading order, cyclic. */
@@ -110,21 +146,33 @@ public class TerminalController(
         return current.tabs.firstOrNull { it.id == leaf?.tab }
     }
 
+    private fun focus(tab: TabId) {
+        dispatch(TerminalEvent.Select(tab))
+        focusStore.value += 1
+        logger.info("terminal tab focused", "tabId" to tab.value)
+    }
+
+    private fun start(
+        spec: TabSpec,
+        placement: Placement,
+        command: ShellCommand,
+    ) = open(spec, placement) { terminals.openCommand(command) }
+
     private fun open(
-        project: TerminalProject,
-        label: String,
-        kind: TabKind,
-        axis: SplitAxis?,
+        spec: TabSpec,
+        placement: Placement,
         start: suspend () -> Outcome<TerminalSession, TerminalError>,
     ) {
+        spec.key?.let { opening += it }
         scope.launch {
             try {
                 when (val result = start()) {
-                    is Outcome.Ok -> opened(newTab(project, label, kind, result.value), axis)
+                    is Outcome.Ok -> opened(newTab(spec, result.value), placement)
                     is Outcome.Err -> failed(result.error)
                 }
             } finally {
-                if (axis != null) {
+                spec.key?.let { opening -= it }
+                if (placement is Placement.Split) {
                     splitPending = false
                     publishMenu()
                 }
@@ -133,20 +181,31 @@ public class TerminalController(
     }
 
     private fun newTab(
-        project: TerminalProject,
-        label: String,
-        kind: TabKind,
+        spec: TabSpec,
         session: TerminalSession,
-    ): TerminalTab = TerminalTab(TabId(++lastTab), project, label, kind, session, exitCode = null)
+    ): TerminalTab =
+        TerminalTab(TabId(++lastTab), spec.project, spec.label, spec.kind, session, exitCode = null, key = spec.key)
 
     private fun opened(
         tab: TerminalTab,
-        axis: SplitAxis?,
+        placement: Placement,
     ) {
-        dispatch(if (axis == null) TerminalEvent.Opened(tab) else TerminalEvent.SplitOpened(tab, axis))
+        val replaced = (placement as? Placement.Replace)?.let { exitedTab(it.old) }
+        dispatch(
+            when (placement) {
+                Placement.Active -> TerminalEvent.Opened(tab)
+                is Placement.Split -> TerminalEvent.SplitOpened(tab, placement.axis)
+                is Placement.Replace -> TerminalEvent.Replaced(placement.old, tab)
+            },
+        )
+        replaced?.let {
+            it.session.close()
+        }
         exitWatchers[tab.id] = scope.launch { exited(tab) }
         logger.info("terminal tab opened", "tabId" to tab.id.value, "kind" to tab.kind.name)
     }
+
+    private fun exitedTab(id: TabId): TerminalTab? = store.value.tabs.firstOrNull { it.id == id }
 
     private suspend fun exited(tab: TerminalTab) {
         val code =
