@@ -64,4 +64,14 @@ internal object TerminalColors {
     val text = Color(color = 0xFFF2F2F7)
     val secondary = Color(color = 0xFF8E8E93)
     val error = Color(color = 0xFFFF453A)
+
+    /** The dot of a tab status; the values match the tones of Mission Control (AM-510). */
+    fun of(status: TabStatus): Color =
+        when (status) {
+            TabStatus.WAITING -> Color(color = 0xFFFFD60A)
+            TabStatus.WORKING -> Color(color = 0xFF64D2FF)
+            TabStatus.DONE -> Color(color = 0xFF30D158)
+            TabStatus.FAILED -> Color(color = 0xFFFF453A)
+            TabStatus.STOPPED -> secondary
+        }
 }

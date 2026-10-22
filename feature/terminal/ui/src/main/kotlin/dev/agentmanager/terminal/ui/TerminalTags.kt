@@ -38,5 +38,8 @@ internal object TerminalTags {
     /** The `exit N` marker of an exited tab. */
     fun tabExit(tab: TabId): String = "terminal.tab.${tab.value}.exit"
 
+    /** The status dot of a keyed tab (AM-510); its `stateDescription` is the text of the status. */
+    fun tabStatus(tab: TabId): String = "terminal.tab.${tab.value}.status"
+
     fun pane(pane: PaneId): String = "terminal.pane.${pane.value}"
 }

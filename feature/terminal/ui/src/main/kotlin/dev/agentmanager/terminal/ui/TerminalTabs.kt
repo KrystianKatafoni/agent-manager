@@ -8,6 +8,7 @@ internal object TerminalTabs {
     ): TerminalUiState =
         when (event) {
             is TerminalEvent.Opened -> open(state, event.tab)
+            is TerminalEvent.Replaced -> replace(state, event.old, event.tab)
             is TerminalEvent.Select -> select(state, event.tab)
             is TerminalEvent.Close -> close(state, event.tab)
             is TerminalEvent.Exited -> state.copy(tabs = state.tabs.map { it.exited(event) })
@@ -25,6 +26,34 @@ internal object TerminalTabs {
             state.copy(tabs = tabs, layout = PaneTree.Leaf(FIRST_PANE, tab.id), active = FIRST_PANE)
         } else {
             state.copy(tabs = tabs, layout = layout.replace(active, PaneTree.Leaf(active, tab.id)))
+        }
+    }
+
+    /** [tab] takes the place of [old] in the list and in its pane, or in the active pane when [old] is hidden. */
+    fun replace(
+        state: TerminalUiState,
+        old: TabId,
+        tab: TerminalTab,
+    ): TerminalUiState {
+        val layout = state.layout
+        val active = state.active
+        if (state.tabs.none { it.id == old } || layout == null || active == null) return open(state, tab)
+        val tabs = state.tabs.map { if (it.id == old) tab else it }
+        val pane = layout.leafOf(old)?.pane ?: active
+        return state.copy(tabs = tabs, layout = layout.replace(pane, PaneTree.Leaf(pane, tab.id)), active = pane)
+    }
+
+    /** A live tab of [key] is focused, else an exited one is replaced, else a new tab opens. */
+    fun reuseOf(
+        tabs: List<TerminalTab>,
+        key: TabKey,
+    ): TabReuse {
+        val keyed = tabs.filter { it.key == key }
+        val found = keyed.firstOrNull { it.exitCode == null }
+        return when {
+            found != null -> TabReuse.Focus(found.id)
+            keyed.isNotEmpty() -> TabReuse.Replace(keyed.first().id)
+            else -> TabReuse.Open
         }
     }
 
